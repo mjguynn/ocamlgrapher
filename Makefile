@@ -1,4 +1,4 @@
-MODULES=ocamlgrapher config
+MODULES=ocamlgrapher config cmdline
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
