@@ -1,22 +1,19 @@
-MODULES=add modules here
+MODULES=ocamlgrapher
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
 TEST=test.byte
-MAIN=main.byte
+MAIN=ocamlgrapher.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
 
 default: build
 	OCAMLRUNPARAM=b utop
 
 build:
-	$(OCAMLBUILD) $(OBJECTS)
+	$(OCAMLBUILD) -tag 'debug' $(MAIN)
 
 test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
-
-play:
-	$(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
 
 docs: docs-public docs-private
 	
