@@ -17,6 +17,7 @@ type t = {
   output_file : string option;
 }
 
+(** [starts_with str sub] returns whether [str] starts with [sub].*)
 let rec starts_with str sub =
   try String.sub str 0 (String.length sub) = sub
   with Invalid_argument s -> false
@@ -24,10 +25,42 @@ let rec starts_with str sub =
 (** [ch @^ str] concatenates [str] onto [ch].*)
 let ( @^ ) ch str = String.make 1 ch ^ str
 
+(** [drop str n] returns [str] without the first [n] characters. If
+    [str] is shorter than [n] characters, the empty string is returned.*)
 let drop str n =
   try String.sub str n (String.length str - n) with _ -> ""
 
-let help () =
+(** [prepend_assoc key x] takes an association list where keys are
+    mapped to a list. Then, for all keys = [key], [x] is cons-ed onto
+    the list.*)
+let prepend_assoc key x =
+  List.map (fun (k, v) -> (k, if k = key then x :: v else v))
+
+(** [join c a b] returns [a ^ c ^ b]. *)
+let join connector a b = a ^ connector ^ b
+
+(** [read_lines] returns a list of strings, where each entry is a line
+    in [ch] (without the newline character). The list contains an entry
+    for each line in [ch] and with the same order. Requies: [ch] is
+    readable.*)
+let rec read_lines (ch : in_channel) : string list =
+  let rec step (acc : string list) =
+    try step (input_line ch :: acc) with End_of_file -> acc
+  in
+  List.rev (step [])
+
+(** [Bad_assume s] represents that assuming a [Result] was [Ok] was
+    incorrect, because that result was actually an [Error s].*)
+exception Bad_assume of string
+
+(** [assume_res result] assumes that [result] is [Ok] and returns the
+    contained value. If [result] is [Error s], throws [Bad_assume s].*)
+let assume_res x =
+  match x with Ok x -> x | Error s -> raise (Bad_assume s)
+
+(** [help errc] prints program help, then exits with a return code of
+    [errc]. *)
+let help errc =
   Printf.eprintf
     "ocamlgrapher\n\
      Usage: ocamlgrapher <options> <equation>\n\
@@ -46,8 +79,16 @@ let help () =
      range.\n\
      \t\"-h\", \"--help\": Print this help dialog and don't perform \
      any actual work. \n";
-  exit 0
+  exit errc
 
+(** [parse_rule_t] represents a rule that should be respected while
+    parsing. A [Flag] rule represents an option that takes no
+    parameters. A [Opt] rule represents an option that takes no
+    parameters, aka, a "parameterized option". The first element in the
+    parse rule is a non-zero string representing the GNU long option
+    name of the option, and the second element is an optional character
+    that can be used as a short option. For example, if you wanted to
+    use "-h" or "--help", you would add an [Opt ("help", Some 'h')].*)
 type parse_rule_t =
   | Flag of (string * char option)
   | Opt of (string * char option)
@@ -83,7 +124,7 @@ type parse_rule_t =
     the parameters assigned to the key's option on the command line in
     right-to-left order. If the value is an empty list, then the option
     did not appear on the command line. For example, if you ran
-    `./binary --open=sesame --debug 5 -o door`, with `-o` as a shortform
+    `./binary --open=sesame --debug=5 -o door`, with `-o` as a shortform
     for `--open`, [opts] could be
     [\[("open", \["door"; "sesame"\]); ("debug", \["5"\])\]] *)
 type parse_argv_t = {
@@ -92,19 +133,6 @@ type parse_argv_t = {
   flags : string list;
   opts : (string * string list) list;
 }
-
-(** Read the entirety of [ch] and return a list of strings, where each
-    entry is a line of the file (without the newline character).*)
-let rec read_lines (ch : in_channel) : string list =
-  let rec step (acc : string list) =
-    try step (input_line ch :: acc) with End_of_file -> acc
-  in
-  List.rev (step [])
-
-let prepend_assoc key new_val =
-  List.map (fun (k, v) -> (k, if k = key then new_val :: v else v))
-
-let join connector a b = a ^ connector ^ b
 
 let rec parse_long_arg token rules args acc =
   let has_rule f = List.exists f rules in
@@ -204,18 +232,14 @@ let extract_output opts =
   | [ filename ] -> Ok (Some filename)
   | _ -> Error "Multiple output files specified"
 
-let extract_bounds opts (default_min, default_max) dimension var =
+let extract_bounds opts (min, max) dimension var =
+  let float_opt suffix default =
+    match List.assoc (var @^ suffix) opts with
+    | [] -> default
+    | v :: _ -> float_of_string v
+  in
   try
-    let min =
-      match List.assoc (var @^ "min") opts with
-      | [] -> default_min
-      | v :: _ -> float_of_string v
-    in
-    let max =
-      match List.assoc (var @^ "max") opts with
-      | [] -> default_max
-      | v :: _ -> float_of_string v
-    in
+    let min, max = (float_opt "min" min, float_opt "max" max) in
     if min > max then
       Error ("Minimum bound on " ^ dimension ^ " > than maximum bound.")
     else Ok (min, max)
@@ -231,12 +255,7 @@ let extract_command = function
   | "extrema" :: _ -> Extrema
   | _ -> Graph
 
-exception Result_bad_assume of string
-
-let assume_res x =
-  match x with Ok x -> x | Error s -> raise (Result_bad_assume s)
-
-let from_argv argv default_domain default_range =
+let from_argv argv d r =
   match
     parse_argv
       [
@@ -255,23 +274,17 @@ let from_argv argv default_domain default_range =
   with
   | Error e -> Error e
   | Ok res -> (
-      if List.mem "help" res.flags then help ()
-        (* what is with this formatting man *)
-      else
-        try
-          Ok
-            {
-              command = extract_command res.flags;
-              equation = assume_res (extract_equation res.args);
-              domain =
-                assume_res
-                  (extract_bounds res.opts default_domain "domain" 'x');
-              range =
-                assume_res
-                  (extract_bounds res.opts default_range "range" 'y');
-              output_file = assume_res (extract_output res.opts);
-            }
-        with Result_bad_assume s -> Error s )
+      if List.mem "help" res.flags then help 0;
+      try
+        Ok
+          {
+            command = extract_command res.flags;
+            equation = assume_res (extract_equation res.args);
+            domain = assume_res (extract_bounds res.opts d "domain" 'x');
+            range = assume_res (extract_bounds res.opts r "range" 'y');
+            output_file = assume_res (extract_output res.opts);
+          }
+      with Bad_assume s -> Error s )
 
 let equation cfg = cfg.equation
 
@@ -284,8 +297,6 @@ let command cfg = cfg.command
 let output_file cfg = cfg.output_file
 
 let to_string cfg =
-  let a, b = cfg.domain in
-  let c, d = cfg.range in
   let verb =
     match cfg.command with
     | Graph -> "Graph"
@@ -293,6 +304,8 @@ let to_string cfg =
     | Roots -> "List the roots of"
     | Extrema -> "List the extrema of"
   in
+  let a, b = cfg.domain in
+  let c, d = cfg.range in
   Printf.sprintf "%s %s with x in [%f, %f] and y in [%f, %f]" verb
     cfg.equation a b c d
   ^

@@ -57,7 +57,9 @@ type command_t =
     representation will have [Graph] as the command.
 
     If the commands are invalid in another way (unknown command, etc) an
-    error message will be returned.*)
+    error message will be returned.
+
+    [argv] must have at least one entry.*)
 val from_argv :
   string array -> float * float -> float * float -> (t, string) result
 
