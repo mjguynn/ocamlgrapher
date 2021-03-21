@@ -12,8 +12,7 @@ E -> expr = expr
 expr -> term + term | term - term | term
 term -> factor * factor | factor / factor | factor
 factor -> elem ^ elem | elem
-elem -> num | var | ( expr ) | - elem | transc
-transc -> sqr [ expr ] | abs [ expr ] | ln [ expr ] | log [ expr ] | sin [ expr ] | cos [ expr ] | tan [ expr ] | cot [ expr ] | sec [ expr ] | csc [ expr ] | arcsin [ expr ] | arccos [ expr ] | arctan [ expr ] | arccot [ expr ] | arcsec [ expr ] | arccsc [ expr ]
+elem -> num | var | ( expr ) | - elem | func
+func -> sqr [ expr ] | abs [ expr ] | ln [ expr ] | log [ expr ] | sin [ expr ] | cos [ expr ] | tan [ expr ] | cot [ expr ] | sec [ expr ] | csc [ expr ] | arcsin [ expr ] | arccos [ expr ] | arctan [ expr ] | arccot [ expr ] | arcsec [ expr ] | arccsc [ expr ]
 var -> x | y
-...
 ```
