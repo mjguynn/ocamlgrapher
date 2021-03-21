@@ -9,10 +9,11 @@ Input for mathematical expressions and equations should follow the same conventi
 The context-free grammar used to parse expressions is defined according to the following productions.
 ```
 E -> expr = expr
-expr -> term + term | term - term | term
-term -> factor * factor | factor / factor | factor
-factor -> elem ^ elem | elem
+expr -> expr + term | expr - term | term
+term -> term * factor | term / factor | factor
+factor -> elem ^ factor | elem
 elem -> num | var | ( expr ) | - elem | func
 func -> sqr [ expr ] | abs [ expr ] | ln [ expr ] | log [ expr ] | sin [ expr ] | cos [ expr ] | tan [ expr ] | cot [ expr ] | sec [ expr ] | csc [ expr ] | arcsin [ expr ] | arccos [ expr ] | arctan [ expr ] | arccot [ expr ] | arcsec [ expr ] | arccsc [ expr ]
 var -> x | y
 ```
+Note that for explicit functions, one of either of the nonterminal `expr`s in the first production must necessarily be a nonterminal `var`. For implicit functions, this restriction does not apply.
