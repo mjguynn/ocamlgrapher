@@ -197,7 +197,8 @@ type parse_rule_t =
     of an option. By convention, if the token "--" is encountered on the
     command line, all tokens afterwards are interpreted as options.
     Similarly, if the token "-" is encountered on the command line, each
-    line of stdin is interpreted as an argument.
+    line of stdin is interpreted as an argument. This list is in
+    left-to-right order with respect to the command line.
 
     [flags] is the list of all flags passed on the command line, where a
     flag is defined as an option that takes no parameter. [flags] is in
@@ -221,15 +222,91 @@ type parse_rule_t =
     for `--open`, [opts] could be
     [\[("open", \["door"; "sesame"\]); ("debug", \["5"\])\]] *)
 type parse_argv_t = {
-  name : string list;
+  name : string;
   args : string list;
   flags : string list;
   opts : (string * string list) list;
 }
 
-let parse_argv (rules : parse_rule_t list) (argv : string list) :
-    (parse_argv_t, string) result =
-  failwith "Unimplemented"
+type worker_rules_t = {
+  short_flags : (char * string) list;
+  long_flags : string list;
+  short_opts : (char * string) list;
+  long_opts : string list;
+}
+
+let worker_rules (rules : parse_rule_t list) =
+  let filter_rules f = List.filter_map f rules in
+  {
+    short_flags =
+      filter_rules (function
+        | Flag (long, Some s) -> Some (s, long)
+        | _ -> None);
+    short_opts =
+      filter_rules (function
+        | Opt (long, Some s) -> Some (s, long)
+        | _ -> None);
+    long_flags =
+      filter_rules (function Flag (long, _) -> Some long | _ -> None);
+    long_opts =
+      filter_rules (function Opt (long, _) -> Some long | _ -> None);
+  }
+
+(** Read the entirety of [ch] and return a list of strings, where each
+    entry is a line of the file (without the newline character). The
+    returned list is in the reverse order from how they appear in the
+    file.*)
+let rec read_lines (ch : in_channel) : string list =
+  let rec step (acc : string list) =
+    try step (input_line ch :: acc) with End_of_file -> acc
+  in
+  step []
+
+let replace_assoc key new_val =
+  List.map (fun (k, v) -> (k, if k = key then new_val else v))
+
+let join connector a b = a ^ connector ^ b
+
+let rec parse_worker (rules : worker_rules_t) (acc : parse_argv_t) =
+  function
+  | "--" :: t -> Ok { acc with args = t @ acc.args }
+  | "-" :: t ->
+      parse_worker rules
+        { acc with args = List.rev_append (read_lines stdin) acc.args }
+        t
+  | token :: t ->
+      if starts_with token "--" then
+        match String.split_on_char '=' token with
+        (* it must be a long flag *)
+        | [ arg ] ->
+            if List.mem arg rules.long_flags then
+              parse_worker rules { acc with flags = arg :: acc.flags } t
+            else Error ("Unrecognized option \"" ^ arg ^ "\"")
+        (* it must be a long option *)
+        | arg :: param_lst ->
+            if List.mem arg rules.long_opts then
+              let param = List.fold_left (join "=") "" param_lst in
+              failwith "Unimplemented"
+            else Error ("Unrecognized option \"" ^ arg ^ "\"")
+        | [] -> failwith "Impossible state"
+      else if starts_with token "-" then Error "uh oh"
+      else parse_worker rules { acc with args = acc.args @ [ token ] } t
+  | [] -> Ok acc
+
+let parse_argv (rules : parse_rule_t list) = function
+  | [] -> raise (Invalid_argument "argv must have at least one entry")
+  | name :: tail ->
+      let worker_rules = worker_rules rules in
+      let initial =
+        {
+          name;
+          args = [];
+          flags = [];
+          (* invariant: [opts] contains a key for each opt rule *)
+          opts = List.map (fun key -> (key, [])) worker_rules.long_opts;
+        }
+      in
+      parse_worker worker_rules initial tail
 
 let extract_equation = function
   | [ eq ] -> Ok eq
@@ -287,13 +364,14 @@ let from_argv argv default_domain default_range =
         Opt ("xmin", Some 'x');
         Opt ("xmax", Some 'X');
         Opt ("ymin", Some 'y');
-        Opt ("ymax", Some 'y');
+        Opt ("ymax", Some 'Y');
       ]
       (Array.to_list argv)
   with
   | Error e -> Error e
   | Ok res -> (
       if List.mem "help" res.flags then help ()
+        (* what is with this formatting man *)
       else
         try
           Ok
