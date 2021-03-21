@@ -149,7 +149,7 @@ let rec arg_step (eq : string option) (cfg : t) = function
       else if str = "--" then
         (* Convention: "--" treats the following argument as input. *)
         match t with
-        | [ last ] when eq <> None -> arg_step (Some last) cfg []
+        | [ last ] when eq = None -> arg_step (Some last) cfg []
         | _ -> multi_eq ()
       else if starts_with str "--" then opt_parse arg_parse_long 2
       else if starts_with str "-" then opt_parse arg_parse_short 1
