@@ -158,7 +158,7 @@ let rec arg_step (eq : string option) (cfg : t) = function
         | None -> arg_step (Some str) cfg t
         | Some _ -> multi_eq () )
 
-let from_argv argv default_domain default_range =
+let from_argv2 argv default_domain default_range =
   match Array.to_list argv with
   | [] ->
       raise (Invalid_argument "argv must contain at least one entry")
@@ -182,6 +182,133 @@ let from_argv argv default_domain default_range =
           then Ok cfg
           else Error "Invalid domain and/or range"
       | Error e -> Error e )
+
+type parse_rule_t =
+  | Flag of (string * char option)
+  | Opt of (string * char option)
+
+(** [parse_argv_t] represents the parsed command line. It is
+    program-and-meaning agnostic.
+
+    [name] is the name of the binary being executed.
+
+    [args] is the list of arguments on the command line. An "argument"
+    is defined as anything that is not an option and isn't a parameter
+    of an option. By convention, if the token "--" is encountered on the
+    command line, all tokens afterwards are interpreted as options.
+    Similarly, if the token "-" is encountered on the command line, each
+    line of stdin is interpreted as an argument.
+
+    [flags] is the list of all flags passed on the command line, where a
+    flag is defined as an option that takes no parameter. [flags] is in
+    right-to-left order; that is, the rightmost flags on the command
+    line are the leftmost flags in [flags]. If a flag has a long and
+    short form, the long form will be the one present in [flags],
+    regardless of which form appears on the command line. For example,
+    if you ran `./binary --no-color --confirm`, [flags] would be
+    [\["confirm";"no-color"\]].
+
+    [opts] is an association list. Each key in the association list
+    represents a parameter-taking option in the parse rules -- that is,
+    every option in the rules is represented. Each key is unique, and if
+    the option has long and short forms, then the long form is the key,
+    regardless of what form(s) appeared on the command line. The order
+    of the keys are unspecified. The value of each key is a list of all
+    the parameters assigned to the key's option on the command line in
+    right-to-left order. If the value is an empty list, then the option
+    did not appear on the command line. For example, if you ran
+    `./binary --open=sesame --debug 5 -o door`, with `-o` as a shortform
+    for `--open`, [opts] could be
+    [\[("open", \["door"; "sesame"\]); ("debug", \["5"\])\]] *)
+type parse_argv_t = {
+  name : string list;
+  args : string list;
+  flags : string list;
+  opts : (string * string list) list;
+}
+
+let parse_argv (rules : parse_rule_t list) (argv : string list) :
+    (parse_argv_t, string) result =
+  failwith "Unimplemented"
+
+let extract_equation = function
+  | [ eq ] -> Ok eq
+  | [] -> Error "No equation provided (provide exactly one)"
+  | _ -> Error "Multiple equations provided (provide exactly one)"
+
+let extract_output opts =
+  match List.assoc "output" opts with
+  | [] -> Ok None
+  | [ filename ] -> Ok (Some filename)
+  | _ -> Error "Multiple output files specified"
+
+let extract_bounds opts (default_min, default_max) dimension var =
+  try
+    let min =
+      match List.assoc (var @^ "min") opts with
+      | [] -> default_min
+      | v :: _ -> float_of_string v
+    in
+    let max =
+      match List.assoc (var @^ "max") opts with
+      | [] -> default_max
+      | v :: _ -> float_of_string v
+    in
+    if min > max then
+      Error ("Minimum bound on " ^ dimension ^ " > than maximum bound.")
+    else Ok (min, max)
+  with Invalid_argument _ -> Error "Bounds must be floats"
+
+(** [extract_command flags] gets the command from the flag list [flags],
+    where [flags] is defined in the same way as [prase_argv_t.flags].
+    Requires: the only flags in [flags] are "graph", "roots", "points",
+    and "extrema". *)
+let extract_command = function
+  | "roots" :: _ -> Roots
+  | "points" :: _ -> Points
+  | "extrema" :: _ -> Extrema
+  | _ -> Graph
+
+exception Result_bad_assume of string
+
+let assume_res x =
+  match x with Ok x -> x | Error s -> raise (Result_bad_assume s)
+
+let from_argv argv default_domain default_range =
+  match
+    parse_argv
+      [
+        Flag ("help", Some 'h');
+        Flag ("roots", Some 'r');
+        Flag ("graph", Some 'g');
+        Flag ("points", Some 'p');
+        Flag ("extrema", Some 'e');
+        Opt ("output", Some 'o');
+        Opt ("xmin", Some 'x');
+        Opt ("xmax", Some 'X');
+        Opt ("ymin", Some 'y');
+        Opt ("ymax", Some 'y');
+      ]
+      (Array.to_list argv)
+  with
+  | Error e -> Error e
+  | Ok res -> (
+      if List.mem "help" res.flags then help ()
+      else
+        try
+          Ok
+            {
+              command = extract_command res.flags;
+              equation = assume_res (extract_equation res.args);
+              domain =
+                assume_res
+                  (extract_bounds res.opts default_domain "domain" 'x');
+              range =
+                assume_res
+                  (extract_bounds res.opts default_range "range" 'y');
+              output_file = assume_res (extract_output res.opts);
+            }
+        with Result_bad_assume s -> Error s )
 
 let equation cfg = cfg.equation
 
