@@ -1,4 +1,6 @@
 (** [main ()] is the entry point for ocamlgrapher. *)
-let main () = print_endline "Hello, world!"
+let main () =
+  let (Some cfg) = Config.from_args Sys.argv in
+  print_endline (Config.to_string cfg)
 
 let () = main ()

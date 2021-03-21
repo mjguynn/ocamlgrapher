@@ -1,4 +1,4 @@
-MODULES=ocamlgrapher
+MODULES=ocamlgrapher config
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
