@@ -21,10 +21,13 @@ type t
     rules specified in [rules], according to the GNU Program Argument
     Syntax conventions. If an error is encountered, it returs [Error s],
     where s is a descriptive error message; otherwise, it returns
-    [Ok v], where v is a valid [t].
+    [Ok v], where v is a valid [t]. [istream] represents the stream that
+    should be used for program input. (Unless you're writing unit tests,
+    it should probably be stdin.)
 
     Requires: [argv] must have at least one entry.*)
-val parse_argv : parse_rule_t list -> string array -> (t, string) result
+val parse_cmdline :
+  parse_rule_t list -> in_channel -> string array -> (t, string) result
 
 (** [name t] returns the name of the binary being executed, based off of
     command line t.*)

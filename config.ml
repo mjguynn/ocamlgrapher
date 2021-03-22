@@ -100,9 +100,9 @@ let extract_command cmdline =
   | "extrema" :: _ -> Extrema
   | _ -> Graph
 
-let from_argv argv d r =
+let from_cmdline argv ic d r =
   match
-    parse_argv
+    parse_cmdline
       [
         Flag ("help", Some 'h');
         Flag ("roots", Some 'r');
@@ -115,7 +115,7 @@ let from_argv argv d r =
         Opt ("ymin", Some 'y');
         Opt ("ymax", Some 'Y');
       ]
-      argv
+      ic argv
   with
   | Error e -> Error e
   | Ok res -> (

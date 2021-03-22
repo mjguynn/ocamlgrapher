@@ -16,9 +16,9 @@ type command_t =
   | Roots
   | Extrema
 
-(** [from_argv argv default_domain default_range] takes an argv-style
-    list of args [argv] and uses it to construct a [Config.t]. It
-    follows the
+(** [from_cmdline argv ic default_domain default_range] takes an
+    argv-style list of args [argv] and uses it to construct a
+    [Config.t]. It follows the
     {{:https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html}
     GNU Program Argument Syntax Conventions}. It recognizes the
     following options:
@@ -59,9 +59,16 @@ type command_t =
     If the commands are invalid in another way (unknown command, etc) an
     error message will be returned.
 
+    [istream] represents an input stream to read from. Outside of test
+    suites, it should probably be stdin.
+
     [argv] must have at least one entry.*)
-val from_argv :
-  string array -> float * float -> float * float -> (t, string) result
+val from_cmdline :
+  string array ->
+  in_channel ->
+  float * float ->
+  float * float ->
+  (t, string) result
 
 (** [equation cfg] returns the unaltered equation string which the user
     supplied to [ocamlgrapher].*)

@@ -62,9 +62,10 @@ let rec read_lines (ch : in_channel) : string list =
 let rec parse_worker
     (rules : parse_rule_t list)
     (args : string list)
+    (ic : in_channel)
     (acc : t) =
   let rec parse_short_arg token args acc =
-    if token = "" then parse_worker rules args acc
+    if token = "" then parse_worker rules args ic acc
     else
       let cur, rest = (token.[0], drop token 1) in
       match
@@ -80,7 +81,7 @@ let rec parse_worker
             { acc with flags = arg :: acc.flags }
       | Some (Opt (arg, _)) -> (
           let continue_with_param param remaining_args =
-            parse_worker rules remaining_args
+            parse_worker rules remaining_args ic
               { acc with opts = prepend_assoc arg param acc.opts }
           in
           match args with
@@ -99,7 +100,8 @@ let rec parse_worker
             | Flag (f, _) when f = arg -> true
             | _ -> false)
         then
-          parse_worker rules args { acc with flags = arg :: acc.flags }
+          parse_worker rules args ic
+            { acc with flags = arg :: acc.flags }
         else Error ("Unrecognized long flag --" ^ arg)
     | arg :: h :: t ->
         if
@@ -108,7 +110,7 @@ let rec parse_worker
             | _ -> false)
         then
           let param = List.fold_left (fun a b -> a ^ "=" ^ b) h t in
-          parse_worker rules args
+          parse_worker rules args ic
             { acc with opts = prepend_assoc arg param acc.opts }
         else Error ("Unrecognized long option --" ^ arg)
   in
@@ -116,16 +118,19 @@ let rec parse_worker
   | "--" :: t -> Ok { acc with args = List.rev_append t acc.args }
   | "-" :: t ->
       let new_acc =
-        { acc with args = List.append (read_lines stdin) acc.args }
+        { acc with args = List.append (read_lines ic) acc.args }
       in
-      parse_worker rules t new_acc
+      parse_worker rules t ic new_acc
   | h :: t ->
       if starts_with h "--" then parse_long_arg (drop h 2) t acc
       else if starts_with h "-" then parse_short_arg (drop h 1) t acc
-      else parse_worker rules t { acc with args = h :: acc.args }
+      else parse_worker rules t ic { acc with args = h :: acc.args }
   | [] -> Ok acc
 
-let parse_argv (rules : parse_rule_t list) (argv : string array) =
+let parse_cmdline
+    (rules : parse_rule_t list)
+    (ic : in_channel)
+    (argv : string array) =
   match Array.to_list argv with
   | [] -> raise (Invalid_argument "argv must have at least one entry")
   | name :: args ->
@@ -136,7 +141,7 @@ let parse_argv (rules : parse_rule_t list) (argv : string array) =
              | Opt (key, _) -> Some (key, [])
              | _ -> None)
       in
-      parse_worker rules args { name; args = []; flags = []; opts }
+      parse_worker rules args ic { name; args = []; flags = []; opts }
 
 let name t = t.name
 
