@@ -47,20 +47,37 @@ let help errc =
      any actual work. \n";
   exit errc
 
-let extract_equation = function
+(** [extract_equation cmdline]: if there is exactly one free argument
+    (an equation) on [cmdline], returns that with an [Ok] result;
+    otherwise, returns an [Error] result with an error message.*)
+let extract_equation cmdline =
+  match arguments cmdline with
   | [ eq ] -> Ok eq
   | [] -> Error "No equation provided (provide exactly one)"
   | _ -> Error "Multiple equations provided (provide exactly one)"
 
-let extract_output opts =
-  match List.assoc "output" opts with
+(** [extract_output cmdline]: if one output file [f] was specified on
+    [cmdline], it returns [Some f] with an [Ok] result; if none were
+    specified, it returns [None] with an [Ok] result; otherwise, returns
+    an [Error] result with an error message.*)
+let extract_output cmdline =
+  match List.assoc "output" (options cmdline) with
   | [] -> Ok None
   | [ filename ] -> Ok (Some filename)
   | _ -> Error "Multiple output files specified"
 
-let extract_bounds opts (min, max) dimension var =
+(** [extract_bounds cmdline (min, max) dim var]: returns an [Ok] result
+    containing the pair (a, b) bounding [dim] as specified on [cmdline].
+    [dim] is the name of of the dimension (ex. "domain", "range") and
+    [var] is the name of is the variable on that dimension (ex. "x",
+    "y"). If a minimum bound was not specified on the command line, it
+    defaults to [min]; if a maximum bound was not specified on the
+    command line, it defaults to [max]. If the minimum bound ends up
+    being less than the maximum bound, an [Error] with an error message
+    is returned instead.*)
+let extract_bounds cmdline (min, max) dimension var =
   let float_opt suffix default =
-    match List.assoc (var ^ suffix) opts with
+    match List.assoc (var ^ suffix) (options cmdline) with
     | [] -> default
     | v :: _ -> float_of_string v
   in
@@ -71,11 +88,13 @@ let extract_bounds opts (min, max) dimension var =
     else Ok (min, max)
   with Failure _ -> Error "Bounds must be floats"
 
-(** [extract_command flags] gets the command from the flag list [flags],
-    where [flags] is defined in the same way as [prase_argv_t.flags].
-    Requires: the only flags in [flags] are "graph", "roots", "points",
-    and "extrema". *)
-let extract_command = function
+(** [extract_command cmdline] identitifies and returns the command from
+    command line [cmdline]. If none is found, returns [Graph].
+
+    Requires: the only flags in [cmdline] are "graph", "roots",
+    "points", and "extrema". *)
+let extract_command cmdline =
+  match flags cmdline with
   | "roots" :: _ -> Roots
   | "points" :: _ -> Points
   | "extrema" :: _ -> Extrema
@@ -104,13 +123,11 @@ let from_argv argv d r =
       try
         Ok
           {
-            command = extract_command (flags res);
-            equation = assume_res (extract_equation (arguments res));
-            domain =
-              assume_res (extract_bounds (options res) d "domain" "x");
-            range =
-              assume_res (extract_bounds (options res) r "range" "y");
-            output_file = assume_res (extract_output (options res));
+            command = extract_command res;
+            equation = assume_res (extract_equation res);
+            domain = assume_res (extract_bounds res d "domain" "x");
+            range = assume_res (extract_bounds res r "range" "y");
+            output_file = assume_res (extract_output res);
           }
       with Bad_assume s -> Error s )
 
