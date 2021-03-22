@@ -84,8 +84,8 @@ let rec parse_worker
               { acc with opts = prepend_assoc arg param acc.opts }
           in
           match args with
-          | h :: t -> continue_with_param h t
           | _ when rest <> "" -> continue_with_param rest args
+          | h :: t -> continue_with_param h t
           | [] -> Error ("Short option -" ^ arg ^ " requires parameter")
           )
   in
