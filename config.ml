@@ -103,15 +103,17 @@ let from_argv argv d r =
   with
   | Error e -> Error e
   | Ok res -> (
-      if List.mem "help" res.flags then help 0;
+      if List.mem "help" (flags res) then help 0;
       try
         Ok
           {
-            command = extract_command res.flags;
-            equation = assume_res (extract_equation res.args);
-            domain = assume_res (extract_bounds res.opts d "domain" "x");
-            range = assume_res (extract_bounds res.opts r "range" "y");
-            output_file = assume_res (extract_output res.opts);
+            command = extract_command (flags res);
+            equation = assume_res (extract_equation (arguments res));
+            domain =
+              assume_res (extract_bounds (options res) d "domain" "x");
+            range =
+              assume_res (extract_bounds (options res) r "range" "y");
+            output_file = assume_res (extract_output (options res));
           }
       with Bad_assume s -> Error s )
 
