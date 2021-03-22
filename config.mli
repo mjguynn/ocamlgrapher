@@ -88,3 +88,7 @@ val output_file : t -> string option
 (** [to_string cfg] returns the human-readable string representation of
     [cfg]. *)
 val to_string : t -> string
+
+(** [help errc] prints program help, then exits with a return code of
+    [errc]. *)
+val help : int -> 'a

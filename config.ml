@@ -27,14 +27,11 @@ exception Bad_assume of string
 let assume_res x =
   match x with Ok x -> x | Error s -> raise (Bad_assume s)
 
-(** [help errc] prints program help, then exits with a return code of
-    [errc]. *)
 let help errc =
   Printf.eprintf
-    "ocamlgrapher\n\
-     Usage: ocamlgrapher <options> <equation>\n\
-     Example Usage: ocamlgrapher -g -o my_graph.png \"y=2x^2-4ln(x)\"\n\
-     Options are:\n\
+    "Usage: ocamlgrapher <options> <equation>\n\
+     Example: ocamlgrapher -g -o my_graph.png \"y=2x^2-4ln(x)\"\n\
+     Options:\n\
      \t\"-g\", \"--graph\": Generate a visual graph of the provided \
      equation and save it to the specified output file, or \
      \"graph.svg\" if none was specified. Default mode. \n\
