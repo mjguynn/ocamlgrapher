@@ -52,6 +52,53 @@ let rec read_lines (ch : in_channel) : string list =
   in
   List.rev (step [])
 
+let rec parse_short_arg rules token args acc =
+  if token = "" then Ok (args, acc)
+  else
+    let cur, rest = (token.[0], drop token 1) in
+    match
+      rules
+      |> List.find_opt (function
+           | Flag (_, Some s) -> s = cur
+           | Opt (_, Some s) -> s = cur
+           | _ -> false)
+    with
+    | None -> Error ("Unrecognized short option -" ^ String.make 1 cur)
+    | Some (Flag (arg, _)) ->
+        parse_short_arg rules rest args
+          { acc with flags = arg :: acc.flags }
+    | Some (Opt (arg, _)) -> (
+        let return_with param remaining_args =
+          Ok
+            ( remaining_args,
+              { acc with opts = prepend_assoc arg param acc.opts } )
+        in
+        match args with
+        | _ when rest <> "" -> return_with rest args
+        | h :: t -> return_with h t
+        | [] -> Error ("Short option -" ^ arg ^ " requires parameter") )
+
+let parse_long_arg rules token args acc =
+  let has_rule f = List.exists f rules in
+  match String.split_on_char '=' token with
+  | [] -> raise (Invalid_argument "Impossible state")
+  | [ arg ] ->
+      if
+        has_rule (function
+          | Flag (f, _) when f = arg -> true
+          | _ -> false)
+      then Ok (args, { acc with flags = arg :: acc.flags })
+      else Error ("Unrecognized long flag --" ^ arg)
+  | arg :: h :: t ->
+      if
+        has_rule (function
+          | Opt (f, _) when f = arg -> true
+          | _ -> false)
+      then
+        let param = List.fold_left (fun a b -> a ^ "=" ^ b) h t in
+        Ok (args, { acc with opts = prepend_assoc arg param acc.opts })
+      else Error ("Unrecognized long option --" ^ arg)
+
 (** [parse_worker rules args acc] is the entry point for command line
     parsing. If successful, it will return an [Ok v], where [v] is a
     proper value of [t]. If unsuccessful, it will return an [Error e],
@@ -61,70 +108,26 @@ let rec read_lines (ch : in_channel) : string list =
     a key for every parametrized option in [rules].*)
 let rec parse_worker
     (rules : parse_rule_t list)
-    (args : string list)
     (ic : in_channel)
+    (args : string list)
     (acc : t) =
-  let rec parse_short_arg token args acc =
-    if token = "" then parse_worker rules args ic acc
-    else
-      let cur, rest = (token.[0], drop token 1) in
-      match
-        rules
-        |> List.find_opt (function
-             | Flag (_, Some s) -> s = cur
-             | Opt (_, Some s) -> s = cur
-             | _ -> false)
-      with
-      | None -> Error ("Unrecognized short option -" ^ String.make 1 cur)
-      | Some (Flag (arg, _)) ->
-          parse_short_arg rest args
-            { acc with flags = arg :: acc.flags }
-      | Some (Opt (arg, _)) -> (
-          let continue_with_param param remaining_args =
-            parse_worker rules remaining_args ic
-              { acc with opts = prepend_assoc arg param acc.opts }
-          in
-          match args with
-          | _ when rest <> "" -> continue_with_param rest args
-          | h :: t -> continue_with_param h t
-          | [] -> Error ("Short option -" ^ arg ^ " requires parameter")
-          )
-  in
-  let parse_long_arg token args acc =
-    let has_rule f = List.exists f rules in
-    match String.split_on_char '=' token with
-    | [] -> raise (Invalid_argument "Impossible state")
-    | [ arg ] ->
-        if
-          has_rule (function
-            | Flag (f, _) when f = arg -> true
-            | _ -> false)
-        then
-          parse_worker rules args ic
-            { acc with flags = arg :: acc.flags }
-        else Error ("Unrecognized long flag --" ^ arg)
-    | arg :: h :: t ->
-        if
-          has_rule (function
-            | Opt (f, _) when f = arg -> true
-            | _ -> false)
-        then
-          let param = List.fold_left (fun a b -> a ^ "=" ^ b) h t in
-          parse_worker rules args ic
-            { acc with opts = prepend_assoc arg param acc.opts }
-        else Error ("Unrecognized long option --" ^ arg)
-  in
   match args with
   | "--" :: t -> Ok { acc with args = List.rev_append t acc.args }
   | "-" :: t ->
       let new_acc =
         { acc with args = List.append (read_lines ic) acc.args }
       in
-      parse_worker rules t ic new_acc
+      parse_worker rules ic t new_acc
   | h :: t ->
-      if starts_with h "--" then parse_long_arg (drop h 2) t acc
-      else if starts_with h "-" then parse_short_arg (drop h 1) t acc
-      else parse_worker rules t ic { acc with args = h :: acc.args }
+      let continue_with = function
+        | Ok (rest, res) -> parse_worker rules ic rest res
+        | Error e -> Error e
+      in
+      if starts_with h "--" then
+        continue_with (parse_long_arg rules (drop h 2) t acc)
+      else if starts_with h "-" then
+        continue_with (parse_short_arg rules (drop h 1) t acc)
+      else parse_worker rules ic t { acc with args = h :: acc.args }
   | [] -> Ok acc
 
 let parse_cmdline
@@ -141,7 +144,7 @@ let parse_cmdline
              | Opt (key, _) -> Some (key, [])
              | _ -> None)
       in
-      parse_worker rules args ic { name; args = []; flags = []; opts }
+      parse_worker rules ic args { name; args = []; flags = []; opts }
 
 let name t = t.name
 
