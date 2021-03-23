@@ -25,7 +25,11 @@ Note that for explicit functions, one of either of the nonterminal `expr`s in th
 The reassociated right-recursive grammar is defined according to the following productions.
 ```
 E -> expr = expr
-expr -> term { + term }* | term { - term }*
-...
+expr -> term { + term }* | expr { - term }*
+term -> factor { * factor }* | factor { / factor }* | - factor
+factor -> elem factor | elem ^ elem | elem
+elem -> num | var | func | ( expr )
+func -> sqr ( expr ) | abs ( expr ) | ln ( expr ) | log ( expr ) | sin ( expr ) | cos ( expr ) | tan ( expr ) | cot ( expr ) | sec ( expr ) | csc ( expr ) | arcsin ( expr ) | arccos ( expr ) | arctan ( expr ) | arccot ( expr ) | arcsec ( expr ) | arccsc ( expr )
+var -> x | y
 ```
 Note that the brackets `{ ... }` are metasyntax and the asterisk `*` represents a Kleene star.
