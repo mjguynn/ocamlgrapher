@@ -15,9 +15,8 @@ E -> expr = expr
 expr -> expr + term | expr - term | term
 term -> term * factor | term / factor | factor
 factor -> group | num group | - factor | num
-group -> subgroup group | subgroup
-subgroup -> elem ^ subgroup | elem
-elem -> var | func | ( expr )
+group -> elem group | elem
+elem -> elem ^ elem | var | func | ( expr )
 func -> sqr [ expr ] | abs [ expr ] | ln [ expr ] | log [ expr ] | sin [ expr ] | cos [ expr ] | tan [ expr ] | cot [ expr ] | sec [ expr ] | csc [ expr ] | arcsin [ expr ] | arccos [ expr ] | arctan [ expr ] | arccot [ expr ] | arcsec [ expr ] | arccsc [ expr ]
 var -> x | y
 ```
