@@ -1,4 +1,4 @@
-(** Representation of the program's command-line configuration. *)
+(** Representation of the program's current configuration. *)
 
 (** The abstract type representing the way the program was configured on
     the command line.*)
@@ -16,9 +16,9 @@ type command_t =
   | Roots
   | Extrema
 
-(** [from_argv argv default_domain default_range] takes an argv-style
-    list of args [argv] and uses it to construct a [Config.t]. It
-    follows the
+(** [from_cmdline argv ic default_domain default_range] takes an
+    argv-style list of args [argv] and uses it to construct a
+    [Config.t]. It follows the
     {{:https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html}
     GNU Program Argument Syntax Conventions}. It recognizes the
     following options:
@@ -57,9 +57,18 @@ type command_t =
     representation will have [Graph] as the command.
 
     If the commands are invalid in another way (unknown command, etc) an
-    error message will be returned.*)
-val from_argv :
-  string array -> float * float -> float * float -> (t, string) result
+    error message will be returned.
+
+    [istream] represents an input stream to read from. Outside of test
+    suites, it should probably be stdin.
+
+    [argv] must have at least one entry.*)
+val from_cmdline :
+  string array ->
+  in_channel ->
+  float * float ->
+  float * float ->
+  (t, string) result
 
 (** [equation cfg] returns the unaltered equation string which the user
     supplied to [ocamlgrapher].*)
@@ -86,3 +95,7 @@ val output_file : t -> string option
 (** [to_string cfg] returns the human-readable string representation of
     [cfg]. *)
 val to_string : t -> string
+
+(** [help errc] prints program help, then exits with a return code of
+    [errc]. *)
+val help : int -> 'a
