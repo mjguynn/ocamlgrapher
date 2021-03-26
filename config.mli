@@ -31,13 +31,13 @@ type command_t =
 
     "-e", "--extrema": Make [Extrema] the command to be executed.
 
-    "-x[num]", "--xmin=[num]": Set minimum value on domain
+    "--domain-min=[num]": Set minimum value on domain
 
-    "-X[num]", "--xmax=[num]": Set maximum value on domain
+    "--domain-max=[num]": Set maximum value on domain
 
-    "-y[num]", "--ymin=[num]": Set minumum value on range
+    "--range-min=[num]": Set minimum value on domain
 
-    "-Y[num]", "--ymax=[num]": Set maximum value on range
+    "--range-max=[num]": Set maximum value on domain
 
     "-o[file]", "--output=[file]": Write output to [file].
 
@@ -58,6 +58,9 @@ type command_t =
 
     If the commands are invalid in another way (unknown command, etc) an
     error message will be returned.
+
+    Duplicate options are disallowed, and will cause an error message to
+    be returned.
 
     [istream] represents an input stream to read from. Outside of test
     suites, it should probably be stdin.

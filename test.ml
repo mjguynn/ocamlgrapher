@@ -92,30 +92,29 @@ let suite =
     test_config "Config w/ Changed Default Bounds (program)" [| "y=x" |]
       ~domain:(2.0, 2.5) ~range:(-12.0, 2.0) cfg_dr
       ((2.0, 2.5), (-12.0, 2.0));
-    test_config "Config w/ Changed Bounds (short names, cmdline)"
-      [| "y=x"; "-x 7"; "-X12"; "-y-6.72"; "-Y12" |]
+    test_config "Config w/ Changed Bounds (cmdline)"
+      [|
+        "y=x";
+        "--domain-min=7";
+        "--domain-max=12";
+        "--range-min=-6.72";
+        "--range-max=12";
+      |]
       cfg_dr
       ((7., 12.), (-6.72, 12.));
-    test_config "Config w/ Changed Bounds (long names, cmdline)"
-      [| "y=x"; "--xmin=8"; "--xmax=8.1"; "--ymin=111"; "--ymax=123" |]
-      cfg_dr
-      ((8., 8.1), (111., 123.));
-    test_config "Config w/ Changed Bounds (long names, cmdline)"
-      [| "y=x"; "--xmin=8"; "--xmax=8.1"; "--ymin=111"; "--ymax=123" |]
-      cfg_dr
-      ((8., 8.1), (111., 123.));
     test_mode "graph" "-g" Graph;
     test_mode "points" "-p" Points;
     test_mode "roots" "-r" Roots;
     test_mode "extrema" "-e" Extrema;
     test_config "Config w/ short flag chaining" [| "-pe"; "y=x" |]
       command Extrema;
-    test_config "Config w/ short option chaining" [| "-px-7"; "y=x" |]
-      (fun cfg -> (command cfg, domain cfg |> fst))
-      (Points, -7.);
+    test_config "Config w/ short option chaining"
+      [| "-potest.txt"; "y=x" |]
+      (fun cfg -> (command cfg, output_file cfg))
+      (Points, Some "test.txt");
     (* Advanced Valid Cases *)
     test_config "Config w/ --"
-      [| "-X7"; "--ymax=12"; "--"; "-x-4=y" |]
+      [| "--domain-max=7"; "--range-max=12"; "--"; "-x-4=y" |]
       equation "-x-4=y";
     ( "Config w/ - (read from input channel)" >:: fun ctxt ->
       assert_equal "y=12x^2"
@@ -125,22 +124,32 @@ let suite =
             default_domain default_range
         |> Result.get_ok |> equation ) );
     (*Intentionally Failing Cases*)
-    test_config_error "Unknown Short Flag" [| "-x7"; "-t"; "y=x" |];
-    test_config_error "Unknown Long Flag"
-      [| "--xmin=7"; "--test"; "y=x" |];
-    test_config_error "Unknown Short Option"
-      [| "--xmin=7"; "-t2"; "y=x" |];
+    test_config_error "Unknown Short Flag" [| "-t"; "y=x" |];
+    test_config_error "Unknown Long Flag" [| "--test"; "y=x" |];
+    test_config_error "Unknown Short Option" [| "-t2"; "y=x" |];
     test_config_error
       "Unknown Short Option, chained w/ valid short option"
-      [| "--xmin=7"; "-tx7"; "y=x" |];
-    test_config_error "Unknown Long Option"
-      [| "--xmin=7"; "--test=2"; "y=x" |];
-    test_config_error "Short Option w/ no param" [| "y=x"; "-x" |];
-    test_config_error "Long Option w/ no param" [| "y=x"; "--xmin" |];
-    test_config_error "Invalid Domain" [| "y=x"; "-x7"; "-X6" |];
-    test_config_error "Invalid Range" [| "y=x"; "-y7"; "-Y6" |];
+      [| "-totest.txt"; "y=x" |];
+    test_config_error "Unknown Long Option" [| "--test=2"; "y=x" |];
+    test_config_error "Short Option w/ no param" [| "y=x"; "-o" |];
+    test_config_error "Long Option w/ no param"
+      [| "y=x"; "--default-min" |];
+    test_config_error "Invalid Domain"
+      [| "y=x"; "--domain-min=7"; "--domain-max=6" |];
+    test_config_error "Multiply Defined Domain Bounds"
+      [| "y=x"; "--domain-min=7"; "--domain-max=8"; "--domain-min=6" |];
+    test_config_error "Multiply Defined Range Bounds"
+      [| "y=x"; "--range-min=7"; "--range-max=8"; "--range-min=6" |];
+    test_config_error "Invalid Range"
+      [| "y=x"; "--range-min=7"; "--range-max=6" |];
     test_config_error "Invalid Domain & Range"
-      [| "y=x"; "-x7"; "--xmax=6"; "-y2"; "--ymax=1" |];
+      [|
+        "y=x";
+        "--domain-min7";
+        "--domain-max=6";
+        "--range-min=2";
+        "--range-max=1";
+      |];
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];

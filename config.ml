@@ -36,13 +36,10 @@ let help errc =
      equation and save it to the specified output file, or \
      \"graph.svg\" if none was specified. Default mode. \n\
      \t\"-o\", \"--output\": Filename to save output to.\n\
-     \t\"-x <float>\", \"--xmin=<float>\": Set the low end of the \
-     domain.\n\
-     \t\"-X <float>\", \"--xmax=<float>\": Set the high end of the \
-     domain.\n\
-     \t\"-y <float>\", \"--ymin=<float>\": Set the low end of the range.\n\
-     \t\"-Y <float>\", \"--ymax=<float>\": Set the high end of the \
-     range.\n\
+     \"--domain-min=<float>\": Set the low end of the domain.\n\
+     \t\"--domain-max=<float>\": Set the high end of the domain.\n\
+     \t\"--range-min=<float>\": Set the low end of the range.\n\
+     \t\"--range-max=<float>\": Set the high end of the range.\n\
      \t\"-h\", \"--help\": Print this help dialog and don't perform \
      any actual work. \n";
   exit errc
@@ -75,18 +72,23 @@ let extract_output cmdline =
     command line, it defaults to [max]. If the minimum bound ends up
     being less than the maximum bound, an [Error] with an error message
     is returned instead.*)
-let extract_bounds cmdline (min, max) dimension var =
+let extract_bounds cmdline (default_min, default_max) dimension =
   let float_opt suffix default =
-    match List.assoc (var ^ suffix) (options cmdline) with
-    | [] -> default
-    | v :: _ -> float_of_string v
+    match List.assoc (dimension ^ suffix) (options cmdline) with
+    | [] -> Ok default
+    | [ v ] ->
+        float_of_string_opt v
+        |> Option.to_result ~none:(dimension ^ " bound must be floats")
+    | _ -> Error ("Multiple bounds specified on " ^ dimension)
   in
   try
-    let min, max = (float_opt "min" min, float_opt "max" max) in
-    if min > max then
-      Error ("Minimum bound on " ^ dimension ^ " > than maximum bound.")
-    else Ok (min, max)
-  with Failure _ -> Error "Bounds must be floats"
+    let min, max =
+      ( float_opt "-min" default_min |> assume_res,
+        float_opt "-max" default_max |> assume_res )
+    in
+    if min <= max then Ok (min, max)
+    else Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
+  with Bad_assume s -> Error s
 
 (** [extract_command cmdline] identitifies and returns the command from
     command line [cmdline]. If none is found, returns [Graph].
@@ -110,10 +112,10 @@ let from_cmdline argv ic d r =
         Flag ("points", Some 'p');
         Flag ("extrema", Some 'e');
         Opt ("output", Some 'o');
-        Opt ("xmin", Some 'x');
-        Opt ("xmax", Some 'X');
-        Opt ("ymin", Some 'y');
-        Opt ("ymax", Some 'Y');
+        Opt ("domain-min", None);
+        Opt ("domain-max", None);
+        Opt ("range-min", None);
+        Opt ("range-max", None);
       ]
       ic argv
   with
@@ -125,8 +127,8 @@ let from_cmdline argv ic d r =
           {
             command = extract_command res;
             equation = assume_res (extract_equation res);
-            domain = assume_res (extract_bounds res d "domain" "x");
-            range = assume_res (extract_bounds res r "range" "y");
+            domain = assume_res (extract_bounds res d "domain");
+            range = assume_res (extract_bounds res r "range");
             output_file = assume_res (extract_output res);
           }
       with Bad_assume s -> Error s )
