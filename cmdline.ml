@@ -44,13 +44,13 @@ let prepend_assoc key x =
 
 (** [read_lines] returns a list of strings, where each entry is a line
     in [ch] (without the newline character). The list contains an entry
-    for each line in [ch] and with the same order. Requies: [ch] is
+    for each line in [ch] and in *reverse* order. Requies: [ch] is
     readable.*)
 let rec read_lines (ch : in_channel) : string list =
   let rec step (acc : string list) =
     try step (input_line ch :: acc) with End_of_file -> acc
   in
-  List.rev (step [])
+  step []
 
 let rec parse_short_arg rules token args acc =
   if token = "" then Ok (args, acc)

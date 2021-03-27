@@ -17,7 +17,7 @@ type parse_rule_t =
 (** The abstract type representing a valid, parsed command line.*)
 type t
 
-(** [parse_argv rules argv] parses the command line [argv] using the
+(** [parse_cmdline rules argv] parses the command line [argv] using the
     rules specified in [rules], according to the GNU Program Argument
     Syntax conventions. If an error is encountered, it returs [Error s],
     where s is a descriptive error message; otherwise, it returns
