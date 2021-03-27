@@ -1,3 +1,5 @@
+(** Implementation of module [Tokenizer].*)
+
 type variable =
   | X
   | Y

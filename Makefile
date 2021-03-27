@@ -1,4 +1,4 @@
-MODULES=ocamlgrapher config cmdline
+MODULES=ocamlgrapher config cmdline tokenizer
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
