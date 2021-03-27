@@ -35,9 +35,9 @@ type command_t =
 
     "--domain-max=[num]": Set maximum value on domain
 
-    "--range-min=[num]": Set minimum value on domain
+    "--range-min=[num]": Set minimum value on range
 
-    "--range-max=[num]": Set maximum value on domain
+    "--range-max=[num]": Set maximum value on range
 
     "-o[file]", "--output=[file]": Write output to [file].
 
@@ -60,7 +60,8 @@ type command_t =
     error message will be returned.
 
     Duplicate options are disallowed, and will cause an error message to
-    be returned.
+    be returned. Conflicting options (-g, -p, -r, -e) will also cause an
+    error message to be returned.
 
     [istream] represents an input stream to read from. Outside of test
     suites, it should probably be stdin.

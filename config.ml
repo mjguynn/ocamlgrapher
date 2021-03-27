@@ -22,9 +22,9 @@ type t = {
     incorrect, because that result was actually an [Error s].*)
 exception Bad_assume of string
 
-(** [assume_res result] assumes that [result] is [Ok] and returns the
+(** [assume_ok result] assumes that [result] is [Ok] and returns the
     contained value. If [result] is [Error s], throws [Bad_assume s].*)
-let assume_res x =
+let assume_ok x =
   match x with Ok x -> x | Error s -> raise (Bad_assume s)
 
 let help errc =
@@ -83,8 +83,8 @@ let extract_bounds cmdline (default_min, default_max) dimension =
   in
   try
     let min, max =
-      ( float_opt "-min" default_min |> assume_res,
-        float_opt "-max" default_max |> assume_res )
+      ( float_opt "-min" default_min |> assume_ok,
+        float_opt "-max" default_max |> assume_ok )
     in
     if min <= max then Ok (min, max)
     else Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
@@ -97,10 +97,11 @@ let extract_bounds cmdline (default_min, default_max) dimension =
     "points", and "extrema". *)
 let extract_command cmdline =
   match flags cmdline with
-  | "roots" :: _ -> Roots
-  | "points" :: _ -> Points
-  | "extrema" :: _ -> Extrema
-  | _ -> Graph
+  | [ "roots" ] -> Ok Roots
+  | [ "points" ] -> Ok Points
+  | [ "extrema" ] -> Ok Extrema
+  | [ "graph" ] | [] -> Ok Graph
+  | _ -> Error "Only specify one mode (graph, roots, points, extrema)"
 
 let from_cmdline argv ic d r =
   match
@@ -125,11 +126,11 @@ let from_cmdline argv ic d r =
       try
         Ok
           {
-            command = extract_command res;
-            equation = assume_res (extract_equation res);
-            domain = assume_res (extract_bounds res d "domain");
-            range = assume_res (extract_bounds res r "range");
-            output_file = assume_res (extract_output res);
+            command = extract_command res |> assume_ok;
+            equation = extract_equation res |> assume_ok;
+            domain = extract_bounds res d "domain" |> assume_ok;
+            range = extract_bounds res r "range" |> assume_ok;
+            output_file = extract_output res |> assume_ok;
           }
       with Bad_assume s -> Error s )
 

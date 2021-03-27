@@ -106,8 +106,6 @@ let suite =
     test_mode "points" "-p" Points;
     test_mode "roots" "-r" Roots;
     test_mode "extrema" "-e" Extrema;
-    test_config "Config w/ short flag chaining" [| "-pe"; "y=x" |]
-      command Extrema;
     test_config "Config w/ short option chaining"
       [| "-potest.txt"; "y=x" |]
       (fun cfg -> (command cfg, output_file cfg))
@@ -157,6 +155,10 @@ let suite =
     test_config_error "No Equation (with --)" [| "--" |];
     test_config_error "Multiple Equations (with --)"
       [| "--"; "y=x"; "y=2x" |];
+    test_config_error "Duplicate Modes (chaining)" [| "-pe"; "y=x" |];
+    test_config_error "Duplicate Modes (short)" [| "-p"; "-g"; "y=x" |];
+    test_config_error "Duplicate Modes (long)"
+      [| "--points"; "--extrema"; "y=x" |];
     test_config_error_stdin "No Equation (with -)" "";
     test_config_error_stdin "Multiple Equations (with -)" "y=x^2\ny=2x";
   ]
