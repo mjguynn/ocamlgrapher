@@ -1,10 +1,15 @@
-MODULES=ocamlgrapher config cmdline tokenizer
+MODULES=ocamlgrapher config cmdline numericalmethods tokenizer 
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
-TEST=test.byte
+TESTS=test_config.byte test_numerical_methods.byte test_parser.byte 
 MAIN=ocamlgrapher.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
+
+define \n
+
+
+endef
 
 default: build
 	OCAMLRUNPARAM=b utop
@@ -13,7 +18,7 @@ build:
 	$(OCAMLBUILD) -tag 'debug' $(MAIN)
 
 test:
-	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
+	$(foreach TEST,$(TESTS),$(OCAMLBUILD) -tag 'debug' $(TEST) && echo RUNNING $(TEST) && ./$(TEST) -runner sequential ${\n})
 
 docs: docs-public docs-private
 	
