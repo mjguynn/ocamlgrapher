@@ -75,9 +75,11 @@ let tokenize str =
                   add_numerical_token tl (acc ^ Char.escaped hd)
                 else begin
                   add_token (Constant (Number (Float.of_string acc)));
-                  tl
+                  hd :: tl
                 end
-            | [] -> []
+            | [] ->
+                add_token (Constant (Number (Float.of_string acc)));
+                []
           in
           lex (add_numerical_token t (Char.escaped h))
         else if h <> ' ' then raise (Invalid_argument "Syntax error")
