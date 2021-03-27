@@ -4,36 +4,45 @@ let default_domain = (-5.0, 5.0)
 
 let default_range = (-5.0, 5.0)
 
+let dummy_stdin contents cxt =
+  let name, out = bracket_tmpfile cxt in
+  output_string out contents;
+  close_out out;
+  open_in name
+
+let test_config_base domain range input_override name argv func expect =
+  name >:: fun ctxt ->
+  let chan =
+    match input_override with
+    | None -> stdin
+    | Some contents -> dummy_stdin contents ctxt
+  in
+  assert_equal expect
+    ( Array.append [| "./ocamlgrapher" |] argv
+    |> Config.from_cmdline domain range chan
+    |> func )
+
 let test_config
     ?domain:(d = default_domain)
     ?range:(r = default_range)
-    ?channel:(ic = stdin)
+    ?input_override:(o = None)
     name
     argv
     func
-    expected =
-  name >:: fun _ ->
-  assert_equal expected
-    ( Config.from_cmdline
-        (Array.append [| "./ocamlgrapher" |] argv)
-        ic d r
-    |> Result.get_ok |> func )
+    expect =
+  test_config_base d r o name argv
+    (fun x -> Result.get_ok x |> func)
+    expect
 
 let test_config_error
     ?domain:(d = default_domain)
     ?range:(r = default_range)
-    ?channel:(ic = stdin)
+    ?input_override:(o = None)
     name
     argv =
-  name >:: fun _ ->
-  assert_equal false
-    ( match
-        Config.from_cmdline
-          (Array.append [| "./ocamlgrapher" |] argv)
-          ic d r
-      with
-    | Ok _ -> true
-    | Error _ -> false )
+  test_config_base d r o name argv
+    (function Ok _ -> true | Error _ -> false)
+    false
 
 let test_simple name =
   test_config ("Simple Valid Config - " ^ name) [| "y=12x+4" |]
@@ -48,31 +57,13 @@ let test_mode name flag =
     ("Config w/ Command " ^ name)
     [| "y=x"; flag |] Config.command
 
-let dummy_stdin contents cxt =
-  let name, out = bracket_tmpfile cxt in
-  output_string out contents;
-  close_out out;
-  open_in name
-
-let test_config_error_stdin name contents =
-  name >:: fun ctxt ->
-  assert_equal false
-    ( match
-        Config.from_cmdline
-          [| "./ocamlrunner"; "-" |]
-          (dummy_stdin contents ctxt)
-          default_domain default_range
-      with
-    | Error _ -> false
-    | Ok _ -> true )
-
 let suite =
   "ocamlgrapher [Config] test suite"
   >:::
   let open Config in
   [
     (* Valid Cases *)
-    test_simple "Equation" equation "y=12x+4";
+    test_simple "Equation" equations [ "y=12x+4" ];
     test_simple "Command" command Graph;
     test_simple "Default Domain" domain default_domain;
     test_simple "Default Range" range default_range;
@@ -113,14 +104,21 @@ let suite =
     (* Advanced Valid Cases *)
     test_config "Config w/ --"
       [| "--domain-max=7"; "--range-max=12"; "--"; "-x-4=y" |]
-      equation "-x-4=y";
-    ( "Config w/ - (read from input channel)" >:: fun ctxt ->
-      assert_equal "y=12x^2"
-        ( Config.from_cmdline
-            [| "./ocamlrunner"; "-" |]
-            (dummy_stdin "y=12x^2\n" ctxt)
-            default_domain default_range
-        |> Result.get_ok |> equation ) );
+      equations [ "-x-4=y" ];
+    test_config "Multiple Equations (with --)"
+      [| "--"; "y=x"; "y=2x" |]
+      equations [ "y=x"; "y=2x" ];
+    test_config "Multiple Equations" [| "y=x"; "y=2x" |] equations
+      [ "y=x"; "y=2x" ];
+    test_config "Config w/ equation (read from input channel)"
+      ~input_override:(Some "y=12x^2\n")
+      [| "--domain-min=2"; "-" |]
+      equations [ "y=12x^2" ];
+    test_config "Config w/ multiple equations (read from input channel)"
+      ~input_override:(Some "y=12x^2\ny=2x+4ln(x)\n")
+      [| "--domain-min=2"; "-" |]
+      equations
+      [ "y=12x^2"; "y=2x+4ln(x)" ];
     (*Intentionally Failing Cases*)
     test_config_error "Unknown Short Flag" [| "-t"; "y=x" |];
     test_config_error "Unknown Long Flag" [| "--test"; "y=x" |];
@@ -151,16 +149,13 @@ let suite =
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];
-    test_config_error "Multiple Equations" [| "y=x"; "y=2x" |];
     test_config_error "No Equation (with --)" [| "--" |];
-    test_config_error "Multiple Equations (with --)"
-      [| "--"; "y=x"; "y=2x" |];
     test_config_error "Duplicate Modes (chaining)" [| "-pe"; "y=x" |];
     test_config_error "Duplicate Modes (short)" [| "-p"; "-g"; "y=x" |];
     test_config_error "Duplicate Modes (long)"
       [| "--points"; "--extrema"; "y=x" |];
-    test_config_error_stdin "No Equation (with -)" "";
-    test_config_error_stdin "Multiple Equations (with -)" "y=x^2\ny=2x";
+    test_config_error "No Equation (with -)" ~input_override:(Some "")
+      [| "-" |];
   ]
 
 let _ = run_test_tt_main suite
