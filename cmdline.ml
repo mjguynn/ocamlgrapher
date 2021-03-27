@@ -8,7 +8,8 @@ type parse_rule_t =
 (** AF: Represents a valid, parsed command line where the binary name is
     [name].
 
-    The list of free arguments is [args].
+    The list of free arguments, in the reverse order that they appeared
+    on the command line, is [args].
 
     The list [flags] is the list of all flags that appeared on the
     command line, including duplicates, using their longform names
