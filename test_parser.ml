@@ -1,26 +1,31 @@
 open OUnit2
 open Tokenizer
+open Parser
 
 let tokenizer_test name input exp_output =
   name >:: fun _ -> assert_equal (tokenize input) exp_output
 
+let parser_test name input =
+  name >:: fun _ -> assert_equal () (parse input)
+
 let suite =
   "Parser Suite"
   >::: [
+         parser_test "parser test" "x=3pi^2+2";
          tokenizer_test "Two variables" "x+y"
-           [ Variable X; Plus; Variable Y ];
+           [ Variable X; Operator Plus; Variable Y ];
          tokenizer_test "Variable times number" "y*23425"
-           [ Variable Y; Times; Constant (Number 23425.) ];
+           [ Variable Y; Operator Times; Constant (Number 23425.) ];
          tokenizer_test "Exponential function" "e^x+x^2+4"
            [
              Constant E;
-             Exponent;
+             Operator Exponent;
              Variable X;
-             Plus;
+             Operator Plus;
              Variable X;
-             Exponent;
+             Operator Exponent;
              Constant (Number 2.);
-             Plus;
+             Operator Plus;
              Constant (Number 4.);
            ];
          tokenizer_test "Transcendental function"
@@ -30,22 +35,22 @@ let suite =
              LParen;
              Variable X;
              RParen;
-             Plus;
+             Operator Plus;
              Function Cos;
              LParen;
              Variable X;
              RParen;
-             Minus;
+             Operator Minus;
              Function Arccot;
              LParen;
              Variable Y;
-             Exponent;
+             Operator Exponent;
              Constant (Number 2.);
-             Minus;
+             Operator Minus;
              Function Ln;
              LParen;
              Constant (Number 4.);
-             Divide;
+             Operator Divide;
              Variable Y;
              RParen;
              RParen;
@@ -58,16 +63,16 @@ let suite =
              Function Sin;
              LParen;
              Variable X;
-             Exponent;
+             Operator Exponent;
              Constant (Number 2.);
              RParen;
-             Plus;
+             Operator Plus;
              Constant (Number 25.22);
-             Times;
-             Minus;
+             Operator Times;
+             Operator Minus;
              Constant (Number 6.);
              Variable Y;
-             Minus;
+             Operator Minus;
              Constant (Number 3.);
            ];
        ]

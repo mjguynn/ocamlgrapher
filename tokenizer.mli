@@ -25,18 +25,22 @@ type m_function =
   | Arcsec
   | Arccsc
 
-type token =
+type operator =
   | Equals
   | Plus
   | Minus
   | Times
   | Divide
   | Exponent
+
+type token =
+  | Operator of operator
   | LParen
   | RParen
   | Constant of constant
   | Variable of variable
   | Function of m_function
+  | EOF
 
 val syntax_error : string -> 'a
 

@@ -27,18 +27,22 @@ type m_function =
   | Arcsec
   | Arccsc
 
-type token =
+type operator =
   | Equals
   | Plus
   | Minus
   | Times
   | Divide
   | Exponent
+
+type token =
+  | Operator of operator
   | LParen
   | RParen
   | Constant of constant
   | Variable of variable
   | Function of m_function
+  | EOF
 
 let is_unit_token ch =
   List.mem ch [ '='; '+'; '-'; '*'; '/'; '^'; '('; ')'; 'x'; 'y'; 'e' ]
@@ -66,12 +70,12 @@ let tokenize str =
       else if is_unit_token hd || hd = ' ' then begin
         begin
           match hd with
-          | '=' -> add_token Equals
-          | '+' -> add_token Plus
-          | '-' -> add_token Minus
-          | '*' -> add_token Times
-          | '/' -> add_token Divide
-          | '^' -> add_token Exponent
+          | '=' -> add_token (Operator Equals)
+          | '+' -> add_token (Operator Plus)
+          | '-' -> add_token (Operator Minus)
+          | '*' -> add_token (Operator Times)
+          | '/' -> add_token (Operator Divide)
+          | '^' -> add_token (Operator Exponent)
           | '(' -> add_token LParen
           | ')' -> add_token RParen
           | 'x' -> add_token (Variable X)
