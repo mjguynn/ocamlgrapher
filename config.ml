@@ -82,8 +82,8 @@ let extract_steps cmdline default_steps =
     "y"). If a minimum bound was not specified on the command line, it
     defaults to [min]; if a maximum bound was not specified on the
     command line, it defaults to [max]. If the minimum bound ends up
-    being less than the maximum bound, an [Error] with an error message
-    is returned instead.*)
+    being less than the maximum bound, or one or both bounds are inf or
+    nan, an [Error] with an error message is returned instead.*)
 let extract_bounds cmdline (default_min, default_max) dimension =
   let valid_float flt =
     let c = classify_float flt in
@@ -103,8 +103,7 @@ let extract_bounds cmdline (default_min, default_max) dimension =
         float_opt "-max" default_max |> assume_ok )
     in
     if Bool.not (valid_float min && valid_float max) then
-      Error
-        ("One or both bounds on " ^ dimension ^ " are NaN or infinite.")
+      Error ("Bounds on " ^ dimension ^ " are NaN or infinite.")
     else if min > max then
       Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
     else Ok (min, max)
