@@ -11,7 +11,7 @@ The context-free grammar used to parse expressions is defined as follows. We inc
 ### Left-Recursive Grammar
 The left-recursive grammar is defined according to the following productions.
 ```
-E -> expr = expr
+E -> y = expr | expr = y
 expr -> expr + term | expr - term | term
 term -> term * factor | term / factor | factor | - factor
 factor -> elem factor | elem ^ elem | elem
@@ -20,12 +20,12 @@ func -> sqrt ( expr ) | abs ( expr ) | ln ( expr ) | log ( expr ) | sin ( expr )
 const -> e | pi | num
 var -> x | y
 ```
-Note that for explicit functions, one of either of the nonterminal `expr`s in the first production must necessarily be a nonterminal `var`. For implicit functions, this restriction does not apply.
+Note that the current grammar only supports explicit functions in terms of a `var` token `x`.
 
 ### Reassociated Right-Recursive Grammar
 The reassociated right-recursive grammar is defined according to the following productions.
 ```
-E -> expr = expr
+E -> y = expr | expr = y
 expr -> term { + term }* | expr { - term }*
 term -> factor { * factor }* | factor { / factor }* | - factor
 factor -> elem factor | elem ^ elem | elem
