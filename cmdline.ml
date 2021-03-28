@@ -100,8 +100,9 @@ let parse_long_arg token args acc =
       | Some (Opt (o, _)), h :: t ->
           let param = List.fold_left (concat_with "=") h t in
           Ok (args, { acc with opts = prepend_assoc arg param acc.opts })
-      | None, _ -> Error ("Unrecognized long flag --" ^ arg)
-      | _ -> Error ("Unrecognized long option --" ^ arg) )
+      | Some (Opt (o, _)), [] ->
+          Error ("Long option --" ^ o ^ " requires a parameter")
+      | None, _ -> Error ("Unrecognized long flag or option --" ^ arg) )
 
 (** [parse_worker args acc] is the entry point for command line parsing.
     If successful, it will return an [Ok v], where [v] is a proper value

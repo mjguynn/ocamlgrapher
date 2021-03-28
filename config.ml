@@ -85,6 +85,10 @@ let extract_steps cmdline default_steps =
     being less than the maximum bound, an [Error] with an error message
     is returned instead.*)
 let extract_bounds cmdline (default_min, default_max) dimension =
+  let valid_float flt =
+    let c = classify_float flt in
+    c <> FP_infinite && c <> FP_nan
+  in
   let float_opt suffix default =
     match List.assoc (dimension ^ suffix) (options cmdline) with
     | [] -> Ok default
@@ -98,8 +102,12 @@ let extract_bounds cmdline (default_min, default_max) dimension =
       ( float_opt "-min" default_min |> assume_ok,
         float_opt "-max" default_max |> assume_ok )
     in
-    if min <= max then Ok (min, max)
-    else Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
+    if Bool.not (valid_float min && valid_float max) then
+      Error
+        ("One or both bounds on " ^ dimension ^ " are NaN or infinite.")
+    else if min > max then
+      Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
+    else Ok (min, max)
   with Bad_assume s -> Error s
 
 (** [extract_command cmdline] identitifies and returns the command from
@@ -176,8 +184,9 @@ let to_string cfg =
     | [ e1 ] -> e1
     | e1 :: t -> List.fold_left (fun a b -> a ^ ", " ^ b) e1 t
   in
-  Printf.sprintf "%s %s with x in [%f, %f] and y in [%f, %f]" verb
-    equation_str a b c d
+  Printf.sprintf
+    "%s %s with x in [%f, %f] and y in [%f, %f], using %i steps" verb
+    equation_str a b c d cfg.steps
   ^
   match cfg.output_file with
   | None -> ""

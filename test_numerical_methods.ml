@@ -9,6 +9,12 @@ let range_test name input exp_output range =
 let root_test name input exp_output =
   name >:: fun _ -> assert_equal exp_output (root_estimator input)
 
+let max_test name input exp_output =
+  name >:: fun _ -> assert_equal exp_output (max_output input)
+
+let min_test name (input : t) (exp_output : float * float) =
+  name >:: fun _ -> assert_equal exp_output (min_output input)
+
 let suite =
   "Numerical Methods Suite"
   >::: [
@@ -101,6 +107,27 @@ let suite =
                 (1.0, 1.7);
               ])
            [ -0.25; 0.25 ];
+         (*max_test "Failing Test: empty list" (get_t []) (2., 3.);*)
+         max_test "Maximum"
+           (get_t
+              [
+                (-1.0, 2.3);
+                (-0.5, 0.4);
+                (0.0, -0.5);
+                (0.5, 0.7);
+                (1.0, 1.7);
+              ])
+           (-1.0, 2.3);
+         min_test "Minimum"
+           (get_t
+              [
+                (-1.0, 2.3);
+                (-0.5, 0.4);
+                (0.0, -0.5);
+                (0.5, 0.7);
+                (1.0, 1.7);
+              ])
+           (0.0, -0.5);
        ]
 
 let _ = run_test_tt_main suite
