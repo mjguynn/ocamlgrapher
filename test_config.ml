@@ -147,8 +147,14 @@ let suite =
     test_config_error "Short Option w/ no param" [| "y=x"; "-o" |];
     test_config_error "Long Option w/ no param"
       [| "y=x"; "--default-min" |];
+    test_config_error "Long Option w/ no param but an equals"
+      [| "y=x"; "--default-min=" |];
     test_config_error "Invalid Domain"
       [| "y=x"; "--domain-min=7"; "--domain-max=6" |];
+    test_config_error "Invalid Domain Min (string)"
+      [| "y=x"; "--domain-min=THE" |];
+    test_config_error "Invalid Domain Max (string)"
+      [| "y=x"; "--domain-max=BUSTA" |];
     test_config_error "Multiply Defined Domain Bounds"
       [| "y=x"; "--domain-min=7"; "--domain-max=8"; "--domain-min=6" |];
     test_config_error "Multiply Defined Range Bounds"
@@ -163,6 +169,11 @@ let suite =
         "--range-min=2";
         "--range-max=1";
       |];
+    test_config_error "Invalid Steps (string)"
+      [| "y=x"; "--steps=gme" |];
+    test_config_error "Invalid Steps (0)" [| "y=x"; "--steps=0" |];
+    test_config_error "Invalid Steps (negative)"
+      [| "y=x"; "--steps=-12" |];
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];
