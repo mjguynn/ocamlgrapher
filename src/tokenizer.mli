@@ -44,8 +44,6 @@ type token =
 
 val syntax_error : string -> 'a
 
-val is_unit_token : char -> bool
-
 val is_numerical_subtoken : char -> bool
 
 val is_alpha_subtoken : char -> bool

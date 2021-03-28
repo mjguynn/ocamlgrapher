@@ -44,8 +44,20 @@ type token =
   | Function of m_function
   | EOF
 
-let is_unit_token ch =
-  List.mem ch [ '='; '+'; '-'; '*'; '/'; '^'; '('; ')'; 'x'; 'y'; 'e' ]
+let unit_token_map =
+  [
+    ('=', Operator Equals);
+    ('+', Operator Plus);
+    ('-', Operator Minus);
+    ('*', Operator Times);
+    ('/', Operator Divide);
+    ('^', Operator Exponent);
+    ('(', LParen);
+    (')', RParen);
+    ('x', Variable X);
+    ('y', Variable Y);
+    ('e', Constant E);
+  ]
 
 let is_numerical_subtoken ch =
   let code = Char.code ch in
@@ -67,93 +79,82 @@ let tokenize str =
         add_token (Constant (Number (Float.of_string acc)));
         lex (Char.escaped hd ^ tl) ""
       end
-      else if is_unit_token hd || hd = ' ' then begin
-        begin
-          match hd with
-          | '=' -> add_token (Operator Equals)
-          | '+' -> add_token (Operator Plus)
-          | '-' -> add_token (Operator Minus)
-          | '*' -> add_token (Operator Times)
-          | '/' -> add_token (Operator Divide)
-          | '^' -> add_token (Operator Exponent)
-          | '(' -> add_token LParen
-          | ')' -> add_token RParen
-          | 'x' -> add_token (Variable X)
-          | 'y' -> add_token (Variable Y)
-          | 'e' -> add_token (Constant E)
-          | _ -> ()
-        end;
-        lex tl ""
-      end
-      else if is_alpha_subtoken hd then
-        match hd with
-        | 'p' ->
-            if String.sub tl 0 1 = "i" then begin
-              add_token (Constant Pi);
-              lex (String.sub tl 1 (String.length tl - 1)) ""
-            end
-            else syntax_error "1"
-        | 's' -> (
-            match String.sub tl 0 2 with
-            | "in" ->
-                add_token (Function Sin);
-                lex (String.sub tl 2 (String.length tl - 2)) ""
-            | "ec" ->
-                add_token (Function Sec);
-                lex (String.sub tl 2 (String.length tl - 2)) ""
-            | "qr" ->
-                if String.sub tl 2 1 = "t" then begin
-                  add_token (Function Sqrt);
-                  lex (String.sub tl 3 (String.length tl - 3)) ""
-                end
-                else syntax_error "2"
-            | _ -> syntax_error "3")
-        | 'a' -> (
-            match String.sub tl 0 2 with
-            | "bs" ->
-                add_token (Function Abs);
-                lex (String.sub tl 2 (String.length tl - 2)) ""
-            | "rc" ->
-                begin
-                  match String.sub tl 2 3 with
-                  | "sin" -> add_token (Function Arcsin)
-                  | "cos" -> add_token (Function Arccos)
-                  | "tan" -> add_token (Function Arctan)
-                  | "cot" -> add_token (Function Arccot)
-                  | "sec" -> add_token (Function Arcsec)
-                  | "csc" -> add_token (Function Arccsc)
-                  | _ -> syntax_error "4"
-                end;
-                lex (String.sub tl 5 (String.length tl - 5)) ""
-            | _ -> syntax_error "5")
-        | 'l' -> (
-            match String.sub tl 0 1 with
-            | "n" ->
-                add_token (Function Ln);
-                lex (String.sub tl 1 (String.length tl - 1)) ""
-            | "o" ->
-                if String.sub tl 1 1 = "g" then begin
-                  add_token (Function Log);
+      else
+        match List.assoc_opt hd unit_token_map with
+        | Some tok ->
+            add_token tok;
+            lex tl ""
+        | None ->
+            if hd = ' ' then lex tl ""
+            else if is_alpha_subtoken hd then
+              match hd with
+              | 'p' ->
+                  if String.sub tl 0 1 = "i" then begin
+                    add_token (Constant Pi);
+                    lex (String.sub tl 1 (String.length tl - 1)) ""
+                  end
+                  else syntax_error "1"
+              | 's' -> (
+                  match String.sub tl 0 2 with
+                  | "in" ->
+                      add_token (Function Sin);
+                      lex (String.sub tl 2 (String.length tl - 2)) ""
+                  | "ec" ->
+                      add_token (Function Sec);
+                      lex (String.sub tl 2 (String.length tl - 2)) ""
+                  | "qr" ->
+                      if String.sub tl 2 1 = "t" then begin
+                        add_token (Function Sqrt);
+                        lex (String.sub tl 3 (String.length tl - 3)) ""
+                      end
+                      else syntax_error "2"
+                  | _ -> syntax_error "3" )
+              | 'a' -> (
+                  match String.sub tl 0 2 with
+                  | "bs" ->
+                      add_token (Function Abs);
+                      lex (String.sub tl 2 (String.length tl - 2)) ""
+                  | "rc" ->
+                      begin
+                        match String.sub tl 2 3 with
+                        | "sin" -> add_token (Function Arcsin)
+                        | "cos" -> add_token (Function Arccos)
+                        | "tan" -> add_token (Function Arctan)
+                        | "cot" -> add_token (Function Arccot)
+                        | "sec" -> add_token (Function Arcsec)
+                        | "csc" -> add_token (Function Arccsc)
+                        | _ -> syntax_error "4"
+                      end;
+                      lex (String.sub tl 5 (String.length tl - 5)) ""
+                  | _ -> syntax_error "5" )
+              | 'l' -> (
+                  match String.sub tl 0 1 with
+                  | "n" ->
+                      add_token (Function Ln);
+                      lex (String.sub tl 1 (String.length tl - 1)) ""
+                  | "o" ->
+                      if String.sub tl 1 1 = "g" then begin
+                        add_token (Function Log);
+                        lex (String.sub tl 2 (String.length tl - 2)) ""
+                      end
+                      else syntax_error "6"
+                  | _ -> syntax_error "7" )
+              | 'c' ->
+                  begin
+                    match String.sub tl 0 2 with
+                    | "os" -> add_token (Function Cos)
+                    | "sc" -> add_token (Function Csc)
+                    | _ -> syntax_error "8"
+                  end;
                   lex (String.sub tl 2 (String.length tl - 2)) ""
-                end
-                else syntax_error "6"
-            | _ -> syntax_error "7")
-        | 'c' ->
-            begin
-              match String.sub tl 0 2 with
-              | "os" -> add_token (Function Cos)
-              | "sc" -> add_token (Function Csc)
-              | _ -> syntax_error "8"
-            end;
-            lex (String.sub tl 2 (String.length tl - 2)) ""
-        | 't' ->
-            if String.sub tl 0 2 = "an" then begin
-              add_token (Function Tan);
-              lex (String.sub tl 2 (String.length tl - 2)) ""
-            end
-            else syntax_error "9"
-        | _ -> ()
-      else syntax_error "10"
+              | 't' ->
+                  if String.sub tl 0 2 = "an" then begin
+                    add_token (Function Tan);
+                    lex (String.sub tl 2 (String.length tl - 2)) ""
+                  end
+                  else syntax_error "9"
+              | _ -> ()
+            else syntax_error "10"
     else if String.length acc <> 0 then
       add_token (Constant (Number (Float.of_string acc)))
   in
