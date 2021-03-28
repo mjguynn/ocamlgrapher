@@ -26,6 +26,7 @@ type m_function =
   | Arccsc
 
 type token =
+  | Equals
   | Plus
   | Minus
   | Times
@@ -36,6 +37,8 @@ type token =
   | Constant of constant
   | Variable of variable
   | Function of m_function
+
+val syntax_error : string -> 'a
 
 val is_unit_token : char -> bool
 

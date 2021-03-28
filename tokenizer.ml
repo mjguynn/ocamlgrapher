@@ -28,6 +28,7 @@ type m_function =
   | Arccsc
 
 type token =
+  | Equals
   | Plus
   | Minus
   | Times
@@ -40,7 +41,7 @@ type token =
   | Function of m_function
 
 let is_unit_token ch =
-  List.mem ch [ '+'; '-'; '*'; '/'; '^'; '('; ')'; 'x'; 'y'; 'e' ]
+  List.mem ch [ '='; '+'; '-'; '*'; '/'; '^'; '('; ')'; 'x'; 'y'; 'e' ]
 
 let is_numerical_subtoken ch =
   let code = Char.code ch in
@@ -65,6 +66,7 @@ let tokenize str =
       else if is_unit_token hd || hd = ' ' then begin
         begin
           match hd with
+          | '=' -> add_token Equals
           | '+' -> add_token Plus
           | '-' -> add_token Minus
           | '*' -> add_token Times

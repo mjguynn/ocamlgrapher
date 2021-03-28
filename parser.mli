@@ -1,3 +1,1 @@
-open Tokenizer
-
-val parse : token list -> unit
+val parse : string -> unit
