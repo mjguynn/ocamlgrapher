@@ -1,2 +1,6 @@
+S src
+S tests
 B _build
+B _build/src
+B _build/tests
 PKG ounit2
