@@ -4,6 +4,8 @@ type t = (float * float) list
 
 exception InvalidRange of string
 
+exception EmptyList of string
+
 let get_t (lst : (float * float) list) : t = lst
 
 (* Requires that the range is valid. Valid Range is a float tuple of
@@ -19,10 +21,7 @@ let rec range_lim_help (ymin, ymax) acc fun_output =
 (* AF: [(x1, y1); (x2,y2); ... (xn, yn)] is the list of the outputs of
    an explicit, continuous function f given by user.
 
-   RI: list of outputs is always in order: x1 < xn.
-
-   Time Complexity: helper function is O(n), list reverser is O(n), so
-   the total time complexity is O(n^2) *)
+   RI: list of outputs is always in order: x1 < xn. *)
 let range_limiter fun_output range : t =
   match range with
   | ymin, ymax ->
@@ -57,3 +56,27 @@ let root_estimator (output_list : t) : float list =
   match output_list with
   | [] -> []
   | (x, y) :: t -> t |> root_est_help (x, y) [] |> List.rev
+
+(* helper method to obtain the maximum point of a function output *)
+let rec max_help (lst : t) (max_x, max_y) : float * float =
+  match lst with
+  | [] -> (max_x, max_y)
+  | (x, y) :: t ->
+      if y >= max_y then max_help t (x, y) else max_help t (max_x, max_y)
+
+let max_output (lst : t) : float * float =
+  match lst with
+  | [] -> raise (EmptyList "List is empty")
+  | (x, y) :: t -> max_help lst (0., Float.neg_infinity)
+
+(* helper method to obtain the minimum point of a function output *)
+let rec min_help (lst : t) (min_x, min_y) : float * float =
+  match lst with
+  | [] -> (min_x, min_y)
+  | (x, y) :: t ->
+      if y <= min_y then max_help t (x, y) else max_help t (min_x, min_y)
+
+let min_output (lst : t) : float * float =
+  match lst with
+  | [] -> raise (EmptyList "List is empty")
+  | (x, y) :: t -> min_help lst (0., Float.infinity)
