@@ -12,6 +12,4 @@ val is_numerical_subtoken : char -> bool
 
 (* val is_alpha_subtoken : char -> bool *)
 
-val explode : string -> char list
-
 val tokenize : string -> token list
