@@ -153,6 +153,10 @@ let suite =
       [| "y=x"; "--domain-min=7"; "--domain-max=6" |];
     test_config_error "Invalid Domain Min (string)"
       [| "y=x"; "--domain-min=THE" |];
+    test_config_error "Invalid Domain Min (-inf)"
+      [| "y=x"; "--domain-min=-inf" |];
+    test_config_error "Invalid Domain Min (NaN)"
+      [| "y=x"; "--domain-min=NaN" |];
     test_config_error "Invalid Domain Max (string)"
       [| "y=x"; "--domain-max=BUSTA" |];
     test_config_error "Multiply Defined Domain Bounds"
