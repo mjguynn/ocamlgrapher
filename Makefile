@@ -1,9 +1,8 @@
-MODULES=ocamlgrapher config cmdline numericalmethods tokenizer parser
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
-TESTS=test_config.byte test_numerical_methods.byte test_parser.byte 
-MAIN=ocamlgrapher.byte
+TESTS=$(shell find ./tests -name "*.ml" | sed s/ml/byte/g | sed s/.\\/tests\\///g )
+MAIN=src/ocamlgrapher.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
 
 define \n
@@ -18,7 +17,7 @@ build:
 	$(OCAMLBUILD) -tag 'debug' $(MAIN)
 
 test:
-	$(foreach TEST,$(TESTS),$(OCAMLBUILD) -tag 'debug' $(TEST) && echo RUNNING $(TEST) && ./$(TEST) -runner sequential ${\n})
+	$(foreach TEST,$(TESTS),$(OCAMLBUILD) -I src -I tests -tag 'debug' tests/$(TEST) && echo RUNNING $(TEST) && ./$(TEST) -runner sequential ${\n})
 
 docs: docs-public docs-private
 	
