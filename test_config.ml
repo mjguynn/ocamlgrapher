@@ -4,13 +4,23 @@ let default_domain = (-5.0, 5.0)
 
 let default_range = (-5.0, 5.0)
 
+let default_steps = 100
+
 let dummy_stdin contents cxt =
   let name, out = bracket_tmpfile cxt in
   output_string out contents;
   close_out out;
   open_in name
 
-let test_config_base domain range input_override name argv func expect =
+let test_config_base
+    domain
+    range
+    steps
+    input_override
+    name
+    argv
+    func
+    expect =
   name >:: fun ctxt ->
   let chan =
     match input_override with
@@ -19,28 +29,30 @@ let test_config_base domain range input_override name argv func expect =
   in
   assert_equal expect
     ( Array.append [| "./ocamlgrapher" |] argv
-    |> Config.from_cmdline domain range chan
+    |> Config.from_cmdline domain range steps chan
     |> func )
 
 let test_config
     ?domain:(d = default_domain)
     ?range:(r = default_range)
+    ?steps:(s = default_steps)
     ?input_override:(o = None)
     name
     argv
     func
     expect =
-  test_config_base d r o name argv
+  test_config_base d r s o name argv
     (fun x -> Result.get_ok x |> func)
     expect
 
 let test_config_error
     ?domain:(d = default_domain)
     ?range:(r = default_range)
+    ?steps:(s = default_steps)
     ?input_override:(o = None)
     name
     argv =
-  test_config_base d r o name argv
+  test_config_base d r s o name argv
     (function Ok _ -> true | Error _ -> false)
     false
 
@@ -93,6 +105,11 @@ let suite =
       |]
       cfg_dr
       ((7., 12.), (-6.72, 12.));
+    test_config "Config w/ Changed Default Steps (program)" [| "y=x" |]
+      ~steps:200 steps 200;
+    test_config "Config w/ Changed Steps (cmdline)"
+      [| "y=x"; "--steps=420" |]
+      steps 420;
     test_mode "graph" "-g" Graph;
     test_mode "points" "-p" Points;
     test_mode "roots" "-r" Roots;
@@ -130,8 +147,14 @@ let suite =
     test_config_error "Short Option w/ no param" [| "y=x"; "-o" |];
     test_config_error "Long Option w/ no param"
       [| "y=x"; "--default-min" |];
+    test_config_error "Long Option w/ no param but an equals"
+      [| "y=x"; "--default-min=" |];
     test_config_error "Invalid Domain"
       [| "y=x"; "--domain-min=7"; "--domain-max=6" |];
+    test_config_error "Invalid Domain Min (string)"
+      [| "y=x"; "--domain-min=THE" |];
+    test_config_error "Invalid Domain Max (string)"
+      [| "y=x"; "--domain-max=BUSTA" |];
     test_config_error "Multiply Defined Domain Bounds"
       [| "y=x"; "--domain-min=7"; "--domain-max=8"; "--domain-min=6" |];
     test_config_error "Multiply Defined Range Bounds"
@@ -146,6 +169,11 @@ let suite =
         "--range-min=2";
         "--range-max=1";
       |];
+    test_config_error "Invalid Steps (string)"
+      [| "y=x"; "--steps=gme" |];
+    test_config_error "Invalid Steps (0)" [| "y=x"; "--steps=0" |];
+    test_config_error "Invalid Steps (negative)"
+      [| "y=x"; "--steps=-12" |];
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];

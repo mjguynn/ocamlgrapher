@@ -19,12 +19,16 @@ type parse_rule_t =
     The list [opts] contains a key for every longform option in the
     rules the [t] was built with, with the values for each option being
     a list of all the parameters assigned to that option in the reverse
-    order they appeared on the command line. *)
+    order they appeared on the command line.
+
+    The list [rules] is the full list of rules used to build this [t].
+    It's meant for internal use.*)
 type t = {
   name : string;
   args : string list;
   flags : string list;
   opts : (string * string list) list;
+  rules : parse_rule_t list;
 }
 
 (** [starts_with str sub] returns whether [str] starts with [sub].*)
@@ -36,6 +40,9 @@ let rec starts_with str sub =
     [str] is shorter than [n] characters, the empty string is returned.*)
 let drop str n =
   try String.sub str n (String.length str - n) with _ -> ""
+
+(** [concat_with join a b] returns a ^ join ^ b*)
+let concat_with j a b = a ^ j ^ b
 
 (** [prepend_assoc key x] takes an association list where keys are
     mapped to a list. Then, for all keys = [key], [x] is cons-ed onto
@@ -53,99 +60,85 @@ let rec read_lines (ch : in_channel) : string list =
   in
   step []
 
-let rec parse_short_arg rules token args acc =
+let rec parse_short_arg token args acc =
+  let is_short_rule c =
+    acc.rules
+    |> List.find_opt (function
+         | Flag (_, Some s) -> s = c
+         | Opt (_, Some s) -> s = c
+         | _ -> false)
+  in
   if token = "" then Ok (args, acc)
   else
     let cur, rest = (token.[0], drop token 1) in
-    match
-      rules
-      |> List.find_opt (function
-           | Flag (_, Some s) -> s = cur
-           | Opt (_, Some s) -> s = cur
-           | _ -> false)
-    with
+    match is_short_rule cur with
     | None -> Error ("Unrecognized short option -" ^ String.make 1 cur)
     | Some (Flag (arg, _)) ->
-        parse_short_arg rules rest args
-          { acc with flags = arg :: acc.flags }
+        parse_short_arg rest args { acc with flags = arg :: acc.flags }
     | Some (Opt (arg, _)) -> (
-        let return_with param remaining_args =
-          Ok
-            ( remaining_args,
-              { acc with opts = prepend_assoc arg param acc.opts } )
+        let return_with param t =
+          Ok (t, { acc with opts = prepend_assoc arg param acc.opts })
         in
         match args with
         | _ when rest <> "" -> return_with rest args
         | h :: t -> return_with h t
         | [] -> Error ("Short option -" ^ arg ^ " requires parameter") )
 
-let parse_long_arg rules token args acc =
-  let has_rule f = List.exists f rules in
+let parse_long_arg token args acc =
+  let is_long_rule s =
+    acc.rules
+    |> List.find_opt (function
+         | Flag (f, _) -> f = s
+         | Opt (o, _) -> o = s)
+  in
   match String.split_on_char '=' token with
   | [] -> raise (Invalid_argument "Impossible state")
-  | [ arg ] ->
-      if
-        has_rule (function
-          | Flag (f, _) when f = arg -> true
-          | _ -> false)
-      then Ok (args, { acc with flags = arg :: acc.flags })
-      else Error ("Unrecognized long flag --" ^ arg)
-  | arg :: h :: t ->
-      if
-        has_rule (function
-          | Opt (f, _) when f = arg -> true
-          | _ -> false)
-      then
-        let param = List.fold_left (fun a b -> a ^ "=" ^ b) h t in
-        Ok (args, { acc with opts = prepend_assoc arg param acc.opts })
-      else Error ("Unrecognized long option --" ^ arg)
+  | arg :: t -> (
+      match (is_long_rule arg, t) with
+      | Some (Flag (f, _)), _ ->
+          Ok (args, { acc with flags = f :: acc.flags })
+      | Some (Opt (o, _)), h :: t ->
+          let param = List.fold_left (concat_with "=") h t in
+          Ok (args, { acc with opts = prepend_assoc arg param acc.opts })
+      | None, _ -> Error ("Unrecognized long flag --" ^ arg)
+      | _ -> Error ("Unrecognized long option --" ^ arg) )
 
-(** [parse_worker rules args acc] is the entry point for command line
-    parsing. If successful, it will return an [Ok v], where [v] is a
-    proper value of [t]. If unsuccessful, it will return an [Error e],
-    where [e] is a descriptive error message.
+(** [parse_worker args acc] is the entry point for command line parsing.
+    If successful, it will return an [Ok v], where [v] is a proper value
+    of [t]. If unsuccessful, it will return an [Error e], where [e] is a
+    descriptive error message.
 
     Requires: [acc] complies with the invariant, that is, [acc.opts] has
-    a key for every parametrized option in [rules].*)
-let rec parse_worker
-    (rules : parse_rule_t list)
-    (ic : in_channel)
-    (args : string list)
-    (acc : t) =
+    a key for every parametrized option in [acc.rules].*)
+let rec parse_worker (ic : in_channel) (args : string list) (acc : t) =
   match args with
+  | [] -> Ok acc
   | "--" :: t -> Ok { acc with args = List.rev_append t acc.args }
   | "-" :: t ->
-      let new_acc =
+      parse_worker ic t
         { acc with args = List.append (read_lines ic) acc.args }
-      in
-      parse_worker rules ic t new_acc
   | h :: t ->
-      let continue_with = function
-        | Ok (rest, res) -> parse_worker rules ic rest res
+      let continue = function
+        | Ok (t, acc) -> parse_worker ic t acc
         | Error e -> Error e
       in
       if starts_with h "--" then
-        continue_with (parse_long_arg rules (drop h 2) t acc)
+        parse_long_arg (drop h 2) t acc |> continue
       else if starts_with h "-" then
-        continue_with (parse_short_arg rules (drop h 1) t acc)
-      else parse_worker rules ic t { acc with args = h :: acc.args }
-  | [] -> Ok acc
+        parse_short_arg (drop h 1) t acc |> continue
+      else parse_worker ic t { acc with args = h :: acc.args }
 
-let parse_cmdline
-    (rules : parse_rule_t list)
-    (ic : in_channel)
-    (argv : string array) =
+let parse_cmdline rules ic argv =
   match Array.to_list argv with
   | [] -> raise (Invalid_argument "argv must have at least one entry")
   | name :: args ->
       (* invariant: [opts] contains a key for each opt rule *)
       let opts =
-        rules
-        |> List.filter_map (function
-             | Opt (key, _) -> Some (key, [])
-             | _ -> None)
+        List.filter_map
+          (function Opt (k, _) -> Some (k, []) | _ -> None)
+          rules
       in
-      parse_worker rules ic args { name; args = []; flags = []; opts }
+      parse_worker ic args { name; args = []; flags = []; opts; rules }
 
 let name t = t.name
 
