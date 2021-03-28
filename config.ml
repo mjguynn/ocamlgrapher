@@ -9,12 +9,14 @@ type command_t =
   | Extrema
 
 (** RI: Let [domain=(a,b)]. Then [cfg] is only meaningful if [x<=y]. Let
-    [range=(c,d)]. Then [cfg] is only meaningful if [c<=d].*)
+    [range=(c,d)]. Then [cfg] is only meaningful if [c<=d]. Also, [cfg]
+    is only meaningful if [steps>=1].*)
 type t = {
   command : command_t;
   equations : string list;
   domain : float * float;
   range : float * float;
+  steps : int;
   output_file : string option;
 }
 
@@ -62,6 +64,17 @@ let extract_output cmdline =
   | [ filename ] -> Ok (Some filename)
   | _ -> Error "Multiple output files specified"
 
+let extract_steps cmdline default_steps =
+  match List.assoc "steps" (options cmdline) with
+  | [] ->
+      assert (default_steps >= 1);
+      Ok default_steps
+  | [ s ] -> (
+      match int_of_string_opt s with
+      | Some i when i >= 1 -> Ok i
+      | _ -> Error "Number of steps must be an integer >= 1" )
+  | _ -> Error "Multiple step sizes specified"
+
 (** [extract_bounds cmdline (min, max) dim var]: returns an [Ok] result
     containing the pair (a, b) bounding [dim] as specified on [cmdline].
     [dim] is the name of of the dimension (ex. "domain", "range") and
@@ -102,7 +115,7 @@ let extract_command cmdline =
   | [ "graph" ] | [] -> Ok Graph
   | _ -> Error "Only specify one mode (graph, roots, points, extrema)"
 
-let from_cmdline d r ic argv =
+let from_cmdline d r s ic argv =
   match
     parse_cmdline
       [
@@ -116,6 +129,7 @@ let from_cmdline d r ic argv =
         Opt ("domain-max", None);
         Opt ("range-min", None);
         Opt ("range-max", None);
+        Opt ("steps", None);
       ]
       ic argv
   with
@@ -129,6 +143,7 @@ let from_cmdline d r ic argv =
             equations = extract_equations res |> assume_ok;
             domain = extract_bounds res d "domain" |> assume_ok;
             range = extract_bounds res r "range" |> assume_ok;
+            steps = extract_steps res s |> assume_ok;
             output_file = extract_output res |> assume_ok;
           }
       with Bad_assume s -> Error s )
@@ -138,6 +153,8 @@ let equations cfg = cfg.equations
 let domain cfg = cfg.domain
 
 let range cfg = cfg.range
+
+let steps cfg = cfg.steps
 
 let command cfg = cfg.command
 

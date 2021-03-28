@@ -16,8 +16,8 @@ type command_t =
   | Roots
   | Extrema
 
-(** [from_cmdline argv ic default_domain default_range] takes an
-    argv-style list of args [argv] and uses it to construct a
+(** [from_cmdline default_domain default_range default_steps ic argv]
+    takes an argv-style list of args [argv] and uses it to construct a
     [Config.t]. It follows the
     {{:https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html}
     GNU Program Argument Syntax Conventions}. It recognizes the
@@ -39,6 +39,8 @@ type command_t =
 
     "--range-max=[num]": Set maximum value on range
 
+    "--steps=[num]": The number of "steps" in the graph. num > 0
+
     "-o[file]", "--output=[file]": Write output to [file].
 
     If "-h" or "--help" is present on the command line, program help
@@ -52,6 +54,9 @@ type command_t =
     If one or both components of the domain or range are unspecified on
     the command line, the returned representation shall inherit their
     values from the [default_domain] and [default_range] parameters.
+    Similarly, if the number of steps is unspecified on the command
+    line, the returned representation shall use [default_steps] steps.
+    Requires: [default_steps] >= 1
 
     If no command option is provided on the command line, the returned
     representation will have [Graph] as the command.
@@ -70,6 +75,7 @@ type command_t =
 val from_cmdline :
   float * float ->
   float * float ->
+  int ->
   in_channel ->
   string array ->
   (t, string) result
@@ -88,6 +94,12 @@ val domain : t -> float * float
     [cfg] should respect. All points [(x,y)] where [y < c] or [y > d]
     should be ignored by the program. It is guaranteed that [d >= c].*)
 val range : t -> float * float
+
+(** [steps cfg] returns the number of "steps" or "slices" that the user
+    wants the program to use in computing the graph. A higher number of
+    slices means more precise output. This value is guaranteed to be at
+    least one.*)
+val steps : t -> int
 
 (** [command cfg] returns the [command_t] that the user wanted to
     perform. *)
