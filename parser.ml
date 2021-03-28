@@ -1,5 +1,7 @@
 open Tokenizer
 
+let compute_f_of_x equation x = 0
+
 let parse str =
   let tokens = Array.of_list (tokenize str) in
 
