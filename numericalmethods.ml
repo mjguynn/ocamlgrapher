@@ -4,13 +4,15 @@ type t = (float * float) list
 
 exception InvalidRange of string
 
+let get_t (lst : (float * float) list) : t = lst
+
 (* Requires that the range is valid. Valid Range is a float tuple of
    format (ymin, ymax), and ymin <= ymax *)
 let rec range_lim_help (ymin, ymax) acc fun_output =
   match fun_output with
   | [] -> acc
   | (x, y) :: t ->
-      if y < ymax && y > ymin then
+      if y <= ymax && y >= ymin then
         range_lim_help (ymin, ymax) ((x, y) :: acc) t
       else range_lim_help (ymin, ymax) acc t
 
@@ -21,9 +23,7 @@ let rec range_lim_help (ymin, ymax) acc fun_output =
 
    Time Complexity: helper function is O(n), list reverser is O(n), so
    the total time complexity is O(n^2) *)
-let range_limiter
-    (fun_output : (float * float) list)
-    (range : float * float) : t =
+let range_limiter fun_output range : t =
   match range with
   | ymin, ymax ->
       if ymin <= ymax then
@@ -38,19 +38,22 @@ let diff_signs (a : float) (b : float) : bool =
 
 (* helper to estimate the roots *)
 let rec root_est_help
-    (output_list : (float * float) list)
     (xcur, ycur)
-    acc =
+    acc
+    (output_list : (float * float) list) =
   match output_list with
   | [] -> acc
   | (x, y) :: t ->
       if diff_signs ycur y then
-        root_est_help t (x, y) ((0.5 *. (x +. xcur)) :: acc)
-      else root_est_help t (x, y) acc
+        root_est_help (x, y) ((0.5 *. (x +. xcur)) :: acc) t
+      else root_est_help (x, y) acc t
 
 (* AF: the float list [x1; x2; x3 ... xk] represents the set of
-   estimated roots from the output list of the given fuction *)
-let root_estimator (output_list : (float * float) list) : float list =
+   estimated roots {x1, x2, ... , xk} from the output list of the given
+   fuction.
+
+   RI: The set of lists is either empty or non-empty. *)
+let root_estimator (output_list : t) : float list =
   match output_list with
   | [] -> []
-  | (x, y) :: t -> root_est_help t (x, y) []
+  | (x, y) :: t -> t |> root_est_help (x, y) [] |> List.rev
