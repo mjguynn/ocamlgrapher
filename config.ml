@@ -176,8 +176,9 @@ let to_string cfg =
     | [ e1 ] -> e1
     | e1 :: t -> List.fold_left (fun a b -> a ^ ", " ^ b) e1 t
   in
-  Printf.sprintf "%s %s with x in [%f, %f] and y in [%f, %f]" verb
-    equation_str a b c d
+  Printf.sprintf
+    "%s %s with x in [%f, %f] and y in [%f, %f], using %i steps" verb
+    equation_str a b c d cfg.steps
   ^
   match cfg.output_file with
   | None -> ""
