@@ -62,7 +62,7 @@ let tokenize str =
         add_token (Constant (Number (Float.of_string acc)));
         lex (Char.escaped hd ^ tl) ""
       end
-      else if is_unit_token hd then begin
+      else if is_unit_token hd || hd = ' ' then begin
         begin
           match hd with
           | '+' -> add_token Plus
@@ -147,7 +147,6 @@ let tokenize str =
             end
             else syntax_error "9"
         | _ -> ()
-      else if hd == ' ' then lex tl ""
       else syntax_error "10"
     else if String.length acc <> 0 then
       add_token (Constant (Number (Float.of_string acc)))
