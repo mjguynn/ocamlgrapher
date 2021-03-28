@@ -35,9 +35,9 @@ type command_t =
 
     "--domain-max=[num]": Set maximum value on domain
 
-    "--range-min=[num]": Set minimum value on domain
+    "--range-min=[num]": Set minimum value on range
 
-    "--range-max=[num]": Set maximum value on domain
+    "--range-max=[num]": Set maximum value on range
 
     "-o[file]", "--output=[file]": Write output to [file].
 
@@ -45,9 +45,9 @@ type command_t =
     will be printed to stderr, and then the program will instantly
     terminate with an error code of 0.
 
-    If the number of arguments not paired to an option is exactly one,
-    that argument will be the equation. Otherwise, this function shall
-    return an error message.
+    There must be at least one argument unpaired to an option; all such
+    arguments are treated as equations. If no equations are supplied, an
+    error message is returned.
 
     If one or both components of the domain or range are unspecified on
     the command line, the returned representation shall inherit their
@@ -56,26 +56,28 @@ type command_t =
     If no command option is provided on the command line, the returned
     representation will have [Graph] as the command.
 
+    Duplicate options are disallowed, and will cause an error message to
+    be returned. Conflicting options (-g, -p, -r, -e) will also cause an
+    error message to be returned.
+
     If the commands are invalid in another way (unknown command, etc) an
     error message will be returned.
-
-    Duplicate options are disallowed, and will cause an error message to
-    be returned.
 
     [istream] represents an input stream to read from. Outside of test
     suites, it should probably be stdin.
 
     [argv] must have at least one entry.*)
 val from_cmdline :
-  string array ->
+  float * float ->
+  float * float ->
   in_channel ->
-  float * float ->
-  float * float ->
+  string array ->
   (t, string) result
 
-(** [equation cfg] returns the unaltered equation string which the user
-    supplied to [ocamlgrapher].*)
-val equation : t -> string
+(** [equations cfg] returns the unaltered equation strings that the user
+    supplied to [ocamlgrapher], in the order they were originally
+    supplied. This list is guaranteed to be non-empty.*)
+val equations : t -> string list
 
 (** [domain cfg] returns the domain [(a, b)] which constrains all
     commands on this [cfg]. All points [(x,y)] where [x < a] or [x > b]

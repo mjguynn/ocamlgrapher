@@ -12,7 +12,7 @@ type command_t =
     [range=(c,d)]. Then [cfg] is only meaningful if [c<=d].*)
 type t = {
   command : command_t;
-  equation : string;
+  equations : string list;
   domain : float * float;
   range : float * float;
   output_file : string option;
@@ -22,14 +22,14 @@ type t = {
     incorrect, because that result was actually an [Error s].*)
 exception Bad_assume of string
 
-(** [assume_res result] assumes that [result] is [Ok] and returns the
+(** [assume_ok result] assumes that [result] is [Ok] and returns the
     contained value. If [result] is [Error s], throws [Bad_assume s].*)
-let assume_res x =
+let assume_ok x =
   match x with Ok x -> x | Error s -> raise (Bad_assume s)
 
 let help errc =
   Printf.eprintf
-    "Usage: ocamlgrapher <options> <equation>\n\
+    "Usage: ocamlgrapher <options> <equations>\n\
      Example: ocamlgrapher -g -o my_graph.png \"y=2x^2-4ln(x)\"\n\
      Options:\n\
      \t\"-g\", \"--graph\": Generate a visual graph of the provided \
@@ -44,14 +44,13 @@ let help errc =
      any actual work. \n";
   exit errc
 
-(** [extract_equation cmdline]: if there is exactly one free argument
-    (an equation) on [cmdline], returns that with an [Ok] result;
-    otherwise, returns an [Error] result with an error message.*)
-let extract_equation cmdline =
+(** [extract_equations cmdline]: If >= 1 equations on [cmdline], returns
+    those equations in the order they appeared on the command line.
+    Otherwise, returns an [Error] result with an error message.*)
+let extract_equations cmdline =
   match arguments cmdline with
-  | [ eq ] -> Ok eq
   | [] -> Error "No equation provided (provide exactly one)"
-  | _ -> Error "Multiple equations provided (provide exactly one)"
+  | eqs -> Ok (List.rev eqs)
 
 (** [extract_output cmdline]: if one output file [f] was specified on
     [cmdline], it returns [Some f] with an [Ok] result; if none were
@@ -83,8 +82,8 @@ let extract_bounds cmdline (default_min, default_max) dimension =
   in
   try
     let min, max =
-      ( float_opt "-min" default_min |> assume_res,
-        float_opt "-max" default_max |> assume_res )
+      ( float_opt "-min" default_min |> assume_ok,
+        float_opt "-max" default_max |> assume_ok )
     in
     if min <= max then Ok (min, max)
     else Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
@@ -97,12 +96,13 @@ let extract_bounds cmdline (default_min, default_max) dimension =
     "points", and "extrema". *)
 let extract_command cmdline =
   match flags cmdline with
-  | "roots" :: _ -> Roots
-  | "points" :: _ -> Points
-  | "extrema" :: _ -> Extrema
-  | _ -> Graph
+  | [ "roots" ] -> Ok Roots
+  | [ "points" ] -> Ok Points
+  | [ "extrema" ] -> Ok Extrema
+  | [ "graph" ] | [] -> Ok Graph
+  | _ -> Error "Only specify one mode (graph, roots, points, extrema)"
 
-let from_cmdline argv ic d r =
+let from_cmdline d r ic argv =
   match
     parse_cmdline
       [
@@ -125,15 +125,15 @@ let from_cmdline argv ic d r =
       try
         Ok
           {
-            command = extract_command res;
-            equation = assume_res (extract_equation res);
-            domain = assume_res (extract_bounds res d "domain");
-            range = assume_res (extract_bounds res r "range");
-            output_file = assume_res (extract_output res);
+            command = extract_command res |> assume_ok;
+            equations = extract_equations res |> assume_ok;
+            domain = extract_bounds res d "domain" |> assume_ok;
+            range = extract_bounds res r "range" |> assume_ok;
+            output_file = extract_output res |> assume_ok;
           }
       with Bad_assume s -> Error s )
 
-let equation cfg = cfg.equation
+let equations cfg = cfg.equations
 
 let domain cfg = cfg.domain
 
@@ -153,8 +153,14 @@ let to_string cfg =
   in
   let a, b = cfg.domain in
   let c, d = cfg.range in
+  let equation_str =
+    match cfg.equations with
+    | [] -> failwith "Impossible - RI violated"
+    | [ e1 ] -> e1
+    | e1 :: t -> List.fold_left (fun a b -> a ^ ", " ^ b) e1 t
+  in
   Printf.sprintf "%s %s with x in [%f, %f] and y in [%f, %f]" verb
-    cfg.equation a b c d
+    equation_str a b c d
   ^
   match cfg.output_file with
   | None -> ""
