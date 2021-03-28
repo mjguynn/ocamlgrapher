@@ -2,11 +2,12 @@
    root and finding the local maximun / minimum within the given domain *)
 type t = (float * float) list
 
+exception InvalidRange of string
+
 (* Requires that the range is valid. Valid Range is a float tuple of
    format (ymin, ymax), and ymin <= ymax *)
-
-let rec range_lim_help (ymin, ymax) acc output_list =
-  match output_list with
+let rec range_lim_help (ymin, ymax) acc fun_output =
+  match fun_output with
   | [] -> acc
   | (x, y) :: t ->
       if y < ymax && y > ymin then
@@ -20,12 +21,14 @@ let rec range_lim_help (ymin, ymax) acc output_list =
 
    Time Complexity: helper function is O(n), list reverser is O(n), so
    the total time complexity is O(n^2) *)
-let range_limiter (output_list : t) range : t =
+let range_limiter
+    (fun_output : (float * float) list)
+    (range : float * float) : t =
   match range with
   | ymin, ymax ->
       if ymin <= ymax then
-        output_list |> range_lim_help (ymin, ymax) [] |> List.rev
-      else failwith "Invalid Range: ymin > ymax"
+        fun_output |> range_lim_help (ymin, ymax) [] |> List.rev
+      else raise (InvalidRange "Invalid Range: ymin > ymax")
 
 (* checks if the signs flipped going from a to b *)
 let diff_signs (a : float) (b : float) : bool =
@@ -34,7 +37,10 @@ let diff_signs (a : float) (b : float) : bool =
   if pos_to_neg || neg_to_pos then true else false
 
 (* helper to estimate the roots *)
-let rec root_est_help output_list (xcur, ycur) acc =
+let rec root_est_help
+    (output_list : (float * float) list)
+    (xcur, ycur)
+    acc =
   match output_list with
   | [] -> acc
   | (x, y) :: t ->
@@ -44,7 +50,7 @@ let rec root_est_help output_list (xcur, ycur) acc =
 
 (* AF: the float list [x1; x2; x3 ... xk] represents the set of
    estimated roots from the output list of the given fuction *)
-let root_estimator (output_list : t) : float list =
+let root_estimator (output_list : (float * float) list) : float list =
   match output_list with
   | [] -> []
   | (x, y) :: t -> root_est_help t (x, y) []
