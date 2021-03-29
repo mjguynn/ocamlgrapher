@@ -34,7 +34,7 @@ let rec multi_fun_outputs eqts domain_list range acc =
       multi_fun_outputs t domain_list range
         (fun_output h domain_list range [] :: acc)
 
-let tuple_print (x, y) = Printf.printf "(%g, %g)\n" x y
+let tuple_print (x, y) = Printf.printf "(%10g, %-10g)\n" x y
 
 let rec tuple_list_print lst =
   match lst with
