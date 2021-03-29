@@ -34,9 +34,16 @@ let rec multi_fun_outputs eqts domain_list range acc =
       multi_fun_outputs t domain_list range
         (fun_output h domain_list range [] :: acc)
 
+(* Truncator *)
+let floor x = if abs_float x < 1.e-13 then 0. else x
+
 let tuple_print (x, y) =
   print_string
-    ("[" ^ Float.to_string x ^ ", " ^ Float.to_string y ^ "]" ^ "\n")
+    ("["
+    ^ Float.to_string (floor x)
+    ^ ", "
+    ^ Float.to_string (floor y)
+    ^ "]" ^ "\n")
 
 let rec tuple_list_print lst =
   match lst with
