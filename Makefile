@@ -1,3 +1,4 @@
+MODULES=src/ocamlgrapher src/config src/cmdline src/numericalmethods src/tokenizer src/parser
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
