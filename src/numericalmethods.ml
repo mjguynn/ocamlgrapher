@@ -74,7 +74,7 @@ let rec min_help (lst : t) (min_x, min_y) : float * float =
   match lst with
   | [] -> (min_x, min_y)
   | (x, y) :: t ->
-      if y <= min_y then max_help t (x, y) else max_help t (min_x, min_y)
+      if y <= min_y then min_help t (x, y) else min_help t (min_x, min_y)
 
 let min_output (lst : t) : float * float =
   match lst with

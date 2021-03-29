@@ -118,6 +118,16 @@ let suite =
                 (1.0, 1.7);
               ])
            (-1.0, 2.3);
+         max_test "Maximum: right-most point"
+           (get_t
+              [
+                (-1.0, 2.3);
+                (-0.5, 2.3);
+                (0.0, 2.3);
+                (0.5, 2.3);
+                (1.0, 2.3);
+              ])
+           (1.0, 2.3);
          min_test "Minimum"
            (get_t
               [
@@ -128,6 +138,16 @@ let suite =
                 (1.0, 1.7);
               ])
            (0.0, -0.5);
+         min_test "Minimum: right-most point"
+           (get_t
+              [
+                (-1.0, 2.3);
+                (-0.5, 2.3);
+                (0.0, 2.3);
+                (0.5, 2.3);
+                (1.0, 2.3);
+              ])
+           (1.0, 2.3);
        ]
 
 let _ = run_test_tt_main suite
