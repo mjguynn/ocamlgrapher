@@ -42,6 +42,8 @@ let help errc =
      \t\"--domain-max=<float>\": Set the high end of the domain.\n\
      \t\"--range-min=<float>\": Set the low end of the range.\n\
      \t\"--range-max=<float>\": Set the high end of the range.\n\
+     \t\"-q\", \"--quality\": The number of \"steps\" used to create \
+     the graph. Higher is better.\n\
      \t\"-h\", \"--help\": Print this help dialog and don't perform \
      any actual work. \n";
   exit errc
@@ -65,15 +67,15 @@ let extract_output cmdline =
   | _ -> Error "Multiple output files specified"
 
 let extract_steps cmdline default_steps =
-  match List.assoc "steps" (options cmdline) with
+  match List.assoc "quality" (options cmdline) with
   | [] ->
       assert (default_steps >= 1);
       Ok default_steps
   | [ s ] -> (
       match int_of_string_opt s with
       | Some i when i >= 1 -> Ok i
-      | _ -> Error "Number of steps must be an integer >= 1" )
-  | _ -> Error "Multiple step sizes specified"
+      | _ -> Error "Quality must be an integer >= 1" )
+  | _ -> Error "Multiple qualities specified"
 
 (** [extract_bounds cmdline (min, max) dim var]: returns an [Ok] result
     containing the pair (a, b) bounding [dim] as specified on [cmdline].
@@ -136,7 +138,7 @@ let from_cmdline d r s ic argv =
         Opt ("domain-max", None);
         Opt ("range-min", None);
         Opt ("range-max", None);
-        Opt ("steps", None);
+        Opt ("quality", Some 'q');
       ]
       ic argv
   with

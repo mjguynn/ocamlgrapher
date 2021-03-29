@@ -108,7 +108,7 @@ let suite =
     test_config "Config w/ Changed Default Steps (program)" [| "y=x" |]
       ~steps:200 steps 200;
     test_config "Config w/ Changed Steps (cmdline)"
-      [| "y=x"; "--steps=420" |]
+      [| "y=x"; "--quality=420" |]
       steps 420;
     test_mode "graph" "-g" Graph;
     test_mode "points" "-p" Points;
@@ -174,10 +174,10 @@ let suite =
         "--range-max=1";
       |];
     test_config_error "Invalid Steps (string)"
-      [| "y=x"; "--steps=gme" |];
-    test_config_error "Invalid Steps (0)" [| "y=x"; "--steps=0" |];
+      [| "y=x"; "--quality=gme" |];
+    test_config_error "Invalid Steps (0)" [| "y=x"; "--quality=0" |];
     test_config_error "Invalid Steps (negative)"
-      [| "y=x"; "--steps=-12" |];
+      [| "y=x"; "--quality=-12" |];
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];

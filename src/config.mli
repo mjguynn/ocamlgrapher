@@ -39,9 +39,10 @@ type command_t =
 
     "--range-max=[num]": Set maximum value on range
 
-    "--steps=[num]": The number of "steps" in the graph. num > 0
+    "-q [num]", "--quality=[num]": The number of "steps" in the graph.
+    num > 0
 
-    "-o[file]", "--output=[file]": Write output to [file].
+    "-o [file]", "--output=[file]": Write output to [file].
 
     If "-h" or "--help" is present on the command line, program help
     will be printed to stderr, and then the program will instantly
