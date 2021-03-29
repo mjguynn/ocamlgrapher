@@ -34,9 +34,7 @@ let rec multi_fun_outputs eqts domain_list range acc =
       multi_fun_outputs t domain_list range
         (fun_output h domain_list range [] :: acc)
 
-let tuple_print (x, y) =
-  print_string
-    ("[" ^ Float.to_string x ^ ", " ^ Float.to_string y ^ "]" ^ "\n")
+let tuple_print (x, y) = Printf.printf "(%g, %g)\n" x y
 
 let rec tuple_list_print lst =
   match lst with
@@ -65,7 +63,7 @@ let main_grapher (config : Config.t) =
 
 let main () =
   match
-    Config.from_cmdline (-10., 10.) (-10., 10.) 100 stdin Sys.argv
+    Config.from_cmdline (-10., 10.) (-10., 10.) 128 stdin Sys.argv
   with
   | Error e -> Printf.eprintf "%s\n" e
   | Ok cfg ->
