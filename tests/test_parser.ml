@@ -2,45 +2,56 @@ open OUnit2
 open Tokenizer
 open Parser
 
-let tokenizer_test name input exp_output =
+let tokenize_test name input exp_output =
   name >:: fun _ -> assert_equal (tokenize input) exp_output
 
-let generalize_exception input =
-  try parse input
+let generalize_exception tokens x =
+  try compute_f_of_x tokens x
   with Invalid_argument _ -> raise (Invalid_argument "syntax error")
 
-let parser_test name input success =
+let compute_f_of_x_test
+    name
+    input_equation
+    input_x
+    expected_output
+    success =
   name >:: fun _ ->
-  if success then assert_equal () (parse input)
+  if success then
+    assert_equal expected_output
+      (compute_f_of_x (tokenize input_equation) input_x)
   else
     assert_raises (Invalid_argument "syntax error") (fun () ->
-        generalize_exception input)
+        generalize_exception (tokenize input_equation) input_x)
 
 let parser_tests =
   [
-    parser_test "parse y=3+x*3+" "y=3+x*3+" false;
-    parser_test "parse x^2=y" "x^2=y" true;
-    parser_test "parse y=x+3+pi" "y=x+3+pi" true;
-    parser_test "parse x^2-3x=y" "x^2-3x=y" true;
-    parser_test "parse y=2x" "y=2x" true;
-    parser_test "parse y=x+3" "y=(x+3)" true;
-    parser_test "parse y=sin(x^2-3x+4-6*7)-ln(x)^45+x/3"
-      "y=sin(x^2-3x+4-6*7)-ln(x)^45+x/3" true;
-    parser_test "parse y=x^^2" "y=x^^2" false;
-    parser_test "parse y=^3+x^2" "y=^3+x^2" false;
-    parser_test "parse y=-3x" "y=-3x" true;
-    parser_test "parse y=-(3x^2*-(4x+2*-sin(x^789)))"
-      "y=-(3x^2*-(4x+2*-sin(x^789)))" true;
-    parser_test "parse y=x+y^2" "y=x+y^2" false;
+    compute_f_of_x_test "parse fail for y=3+x*3+" "y=3+x*3+" 0. 0. false;
+    compute_f_of_x_test "x=3 for x^2=y" "x^2=y" 3. 9. true;
+    compute_f_of_x_test "x=9 for y=x+3+pi" "y=x+3+pi" 9.
+      (12. +. Float.pi) true;
+    compute_f_of_x_test "x=-11 for x^2-3x=y" "x^2-3x=y" (-11.) 154. true;
+    compute_f_of_x_test "x=-1 for y=2x" "y=2x" (-1.) (-2.) true;
+    compute_f_of_x_test "x=-3 for y=x+3" "y=(x+3)" (-3.) 0. true;
+    compute_f_of_x_test "x=0.369 for y=sin(x^2-3x+4-6*7)-ln(x)^45+x/3"
+      "y=sin(x^2-3x+4-6*7)-ln(x)^45+x/3" 0.369 0.0392980592563951792
+      true;
+    compute_f_of_x_test "parse fail for y=x^^2" "y=x^^2" 0. 0. false;
+    compute_f_of_x_test "parse fail for y=^3+x^2" "y=^3+x^2" 0. 0. false;
+    compute_f_of_x_test "x=3110 for y=-2x" "y=-2x" 3110. (-6220.) true;
+    compute_f_of_x_test "x=0.532 for y=-(3x^2*-(4x+2*-sin(x^789)))"
+      "y=-(3x^2*-(4x+2*-sin(x^789)))" 0.532 1.80682521600000046 true;
+    compute_f_of_x_test "x=0 for y=-(3x^2*-(4x+2*-sin(x^789)))"
+      "y=-(3x^2*-(4x+2*-sin(x^789)))" 0.0 0.0 true;
+    compute_f_of_x_test "parse fail for y=x+y^2" "y=x+y^2" 0. 0. false;
   ]
 
 let tokenizer_tests =
   [
-    tokenizer_test "Two variables" "x+y"
+    tokenize_test "Two variables" "x+y"
       [ Variable X; Operator Plus; Variable Y ];
-    tokenizer_test "Variable times number" "y*23425"
+    tokenize_test "Variable times number" "y*23425"
       [ Variable Y; Operator Times; Constant (Number 23425.) ];
-    tokenizer_test "Exponential function" "e^x+x^2+4"
+    tokenize_test "Exponential function" "e^x+x^2+4"
       [
         Constant E;
         Operator Exponent;
@@ -52,7 +63,7 @@ let tokenizer_tests =
         Operator Plus;
         Constant (Number 4.);
       ];
-    tokenizer_test "Transcendental function"
+    tokenize_test "Transcendental function"
       "sin(x)+cos(x)-arccot(y^2-ln(4/y))"
       [
         Function Sin;
@@ -79,7 +90,7 @@ let tokenizer_tests =
         Operator RParen;
         Operator RParen;
       ];
-    tokenizer_test "Implicit multiplication with spaces"
+    tokenize_test "Implicit multiplication with spaces"
       "24xsin(x^2) + 25.22 *  -6 y-3"
       [
         Constant (Number 24.);
