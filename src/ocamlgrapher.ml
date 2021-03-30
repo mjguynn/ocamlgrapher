@@ -21,11 +21,16 @@ let domain_maker domain steps =
       let step_size = (d_high -. d_low) /. float_of_int steps in
       domain_maker_help d_low d_high step_size [ d_low ]
 
+(* Truncator *)
+let trunc x = if abs_float x < 1e-13 then 0. else x
+
 (* get outputs from equation *)
 let rec fun_output (eqt : token list) domain_list range acc =
   match domain_list with
   | [] -> acc |> List.rev |> get_t |> fun x -> range_limiter x range
-  | h :: t -> fun_output eqt t range ((h, compute_f_of_x eqt h) :: acc)
+  | h :: t ->
+      fun_output eqt t range
+        ((h, h |> compute_f_of_x eqt |> trunc) :: acc)
 
 (* Go through list of equations *)
 let rec multi_fun_outputs eqts domain_list range acc =
@@ -34,9 +39,6 @@ let rec multi_fun_outputs eqts domain_list range acc =
   | h :: t ->
       multi_fun_outputs t domain_list range
         (fun_output (tokenize h) domain_list range [] :: acc)
-
-(* Truncator *)
-let trunc x = if abs_float x < 1e-13 then 0. else x
 
 let tuple_print (x, y) =
   Printf.printf "(%10g, %-10g)\n" (trunc x) (trunc y)
