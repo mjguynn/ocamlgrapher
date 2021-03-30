@@ -1,6 +1,8 @@
+(** Implementation of module [Parser]. *)
+
 open Tokenizer
 
-let compute_f_of_x (equation : token list) (x : float) =
+let compute_f_of_x equation x =
   let tokens = Array.of_list equation in
 
   let index = ref 0 in

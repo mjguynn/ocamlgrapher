@@ -1,12 +1,16 @@
+(** [variable] represents a variable, as specified in the grammar. *)
 type variable =
   | X
   | Y
 
+(** [constant] represents a constant value, as specified in the grammar. *)
 type constant =
   | E
   | Pi
   | Number of float
 
+(** [m_function] represents a mathematical function, as specified in the
+    grammar. *)
 type m_function =
   | Sqrt
   | Abs
@@ -25,6 +29,8 @@ type m_function =
   | Arcsec
   | Arccsc
 
+(** [operator] represents a mathematical operator token, as specified in
+    the grammar. *)
 type operator =
   | Equals
   | Plus
@@ -35,6 +41,8 @@ type operator =
   | LParen
   | RParen
 
+(** [token] represents a token, or terminal symbol of a grammatically
+    valid mathematical function. *)
 type token =
   | Operator of operator
   | Constant of constant
@@ -42,13 +50,12 @@ type token =
   | Function of m_function
   | EOF
 
-val syntax_error : string -> 'a
-
-val is_numerical_subtoken : char -> bool
-
-val is_alpha_subtoken : char -> bool
-
-(** [tokenize equation_str ] is a tokenized list of the function
+(** [tokenize equation_str] is a tokenized list of the function
     [equation_str] passed into the function of [equation]. Raises:
-    [Invalid_argument] if [equation] is not a valid function. *)
+    [Invalid_argument] if [equation] is not a grammatically valid
+    mathematical function. *)
 val tokenize : string -> token list
+
+(** [syntax_error error] raises an [Invalid_argument] exception
+    representing a syntax error, and prints the [error] message. *)
+val syntax_error : string -> 'a

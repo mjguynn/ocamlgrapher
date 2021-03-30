@@ -1,4 +1,4 @@
-(** Implementation of module [Tokenizer].*)
+(** Implementation of module [Tokenizer]. *)
 
 type variable =
   | X
@@ -59,15 +59,37 @@ let unit_token_map =
     ('e', Constant E);
   ]
 
+let alpha_token_map =
+  [
+    ("sqrt", Function Sqrt);
+    ("abs", Function Abs);
+    ("ln", Function Ln);
+    ("log", Function Log);
+    ("pi", Constant Pi);
+    ("sin", Operator Equals);
+    ("cos", Operator Plus);
+    ("tan", Operator Minus);
+    ("sec", Operator Times);
+    ("csc", Operator Divide);
+    ("cot", Operator Exponent);
+    ("arcsin", Operator LParen);
+    ("arccos", Operator RParen);
+    ("arctan", Variable X);
+    ("arcsec", Variable Y);
+    ("arccsc", Constant E);
+    ("arccot", Function Arccot);
+  ]
+
 let is_numerical_subtoken ch =
   let code = Char.code ch in
   code = 46 || (code < 58 && code > 47)
 
 let is_alpha_subtoken ch = List.mem ch [ 'p'; 's'; 'a'; 'l'; 'c'; 't' ]
 
-let syntax_error tst = raise (Invalid_argument ("Syntax error: " ^ tst))
+let syntax_error error =
+  raise (Invalid_argument ("Syntax error: " ^ error))
 
-let tokenize str =
+let tokenize equation_str =
   let tokens = ref [] in
   let add_token token = tokens := token :: !tokens in
   let rec lex tokens_str acc =
@@ -158,5 +180,5 @@ let tokenize str =
     else if String.length acc <> 0 then
       add_token (Constant (Number (Float.of_string acc)))
   in
-  lex str "";
+  lex equation_str "";
   List.rev !tokens
