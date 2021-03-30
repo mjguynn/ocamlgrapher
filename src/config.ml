@@ -29,23 +29,56 @@ exception Bad_assume of string
 let assume_ok x =
   match x with Ok x -> x | Error s -> raise (Bad_assume s)
 
+let cmdline_info =
+  [
+    ( Flag ("help", Some 'h'),
+      "Print this help dialog and don't perform any actual work." );
+    ( Flag ("roots", Some 'r'),
+      "List the roots of the equation(s) within the given bounds." );
+    ( Flag ("graph", Some 'g'),
+      "Create a visual graph of the equation(s), and print the \
+       filename of the resulting file." );
+    (Flag ("points", Some 'p'), "List some points on the equation(s).");
+    ( Flag ("extrema", Some 'e'),
+      "List the extrema of the equation(s) within the given bounds." );
+    (Opt ("output", Some 'o'), "The name of the graph output file.");
+    (Opt ("domain-min", None), "Set the minimum bound on the domain.");
+    (Opt ("domain-max", None), "Set the maximum bound on the domain.");
+    (Opt ("range-min", None), "Set the minimum bound on the range.");
+    (Opt ("range-max", None), "Set the maxmimum bound on the range.");
+    ( Opt ("quality", Some 'q'),
+      "Set the number of \"steps\" used to analyze the function and/or \
+       draw its graph. Higher is better." );
+  ]
+
 let help errc =
-  Printf.eprintf
-    "Usage: ocamlgrapher <options> <equations>\n\
-     Example: ocamlgrapher -g -o my_graph.png \"y=2x^2-4ln(x)\"\n\
-     Options:\n\
-     \t\"-g\", \"--graph\": Generate a visual graph of the provided \
-     equation and save it to the specified output file, or \
-     \"graph.svg\" if none was specified. Default mode. \n\
-     \t\"-o\", \"--output\": Filename to save output to.\n\
-     \"--domain-min=<float>\": Set the low end of the domain.\n\
-     \t\"--domain-max=<float>\": Set the high end of the domain.\n\
-     \t\"--range-min=<float>\": Set the low end of the range.\n\
-     \t\"--range-max=<float>\": Set the high end of the range.\n\
-     \t\"-q\", \"--quality\": The number of \"steps\" used to create \
-     the graph. Higher is better.\n\
-     \t\"-h\", \"--help\": Print this help dialog and don't perform \
-     any actual work. \n";
+  let style s = "\x1b[" ^ s ^ "m" in
+  let reset = style "0" in
+  let rgb (r, g, b) = style (Printf.sprintf "38;2;%i;%i;%i" r g b) in
+  let header s = reset ^ style "96" ^ s ^ reset in
+  let grey = rgb (140, 140, 140) in
+  Printf.eprintf "%s"
+    ( header "Usage: " ^ "ocamlgrapher " ^ grey
+    ^ "<options> <equations>\n" );
+  Printf.eprintf "%s"
+    ( header "Example: " ^ reset
+    ^ "ocamlgrapher --graph -o my_graph.png \"y=2x^2-4ln(x)\"\n" );
+  Printf.eprintf "%s" (header "Options: \n" ^ reset);
+  let build_name long short append_long append_short =
+    "--" ^ long ^ append_long
+    ^
+    match short with
+    | None -> ""
+    | Some c -> ", -" ^ String.make 1 c ^ append_short
+  in
+  cmdline_info
+  |> List.iter (fun (rule, desc) ->
+         let name =
+           match rule with
+           | Flag (f, s) -> build_name f s "" ""
+           | Opt (o, s) -> build_name o s "=<...>" " <...>"
+         in
+         Printf.eprintf "\t%-28s: %s%s%s\n" name grey desc reset);
   exit errc
 
 (** [extract_equations cmdline]: If >= 1 equations on [cmdline], returns
@@ -126,21 +159,7 @@ let extract_command cmdline =
 
 let from_cmdline d r s ic argv =
   match
-    parse_cmdline
-      [
-        Flag ("help", Some 'h');
-        Flag ("roots", Some 'r');
-        Flag ("graph", Some 'g');
-        Flag ("points", Some 'p');
-        Flag ("extrema", Some 'e');
-        Opt ("output", Some 'o');
-        Opt ("domain-min", None);
-        Opt ("domain-max", None);
-        Opt ("range-min", None);
-        Opt ("range-max", None);
-        Opt ("quality", Some 'q');
-      ]
-      ic argv
+    parse_cmdline (List.map (fun (a, _) -> a) cmdline_info) ic argv
   with
   | Error e -> Error e
   | Ok res -> (
