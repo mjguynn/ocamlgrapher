@@ -9,11 +9,11 @@ Here is a list of discontinuities that we should check for within the AST.
 ### CLI Interface Examples
 
 Attempt to follow GNU Option Parsing Syntax.
-`./ocamlgrapher.byte -g"y=x+4"`
+`./ocamlgrapher.byte -g "y=x+4"`
 `./ocamlgrapher.byte --graph "x=2y + x^2"`
 `./ocamlgrapher.byte -g "y+2x = ln(x)*sin(e^y)"`
 `./ocamlgrapher.byte --points "y=x+4"`
 `./ocamlgrapher.byte --roots "y=x+4"`
 `./ocamlgrapher.byte --extrema "y=(x-1)^2"`
-`./ocamlgrapher.byte -g "y=7x" -x2 -X5 -y0 -Y 10"` (graphs on x in [2,5], y in [0, 10])
+`./ocamlgrapher.byte -g "y=7x" --domain-min=2 --domain-max=5 --range-min=0 --range-max=10"` (graphs on domain in [2,5], range in [0, 10])
 
