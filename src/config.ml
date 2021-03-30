@@ -29,6 +29,8 @@ exception Bad_assume of string
 let assume_ok x =
   match x with Ok x -> x | Error s -> raise (Bad_assume s)
 
+(** [cmdline_info] is the authoritative list of command-line options and
+    their help text.*)
 let cmdline_info =
   [
     ( Flag ("help", Some 'h'),
@@ -99,6 +101,10 @@ let extract_output cmdline =
   | [ filename ] -> Ok (Some filename)
   | _ -> Error "Multiple output files specified"
 
+(** [extract_steps cmdline default]: returns the user specified number
+    of steps on the command line, if it exists; otherwise, returns the
+    default value. If the user typed something but it wasn't an integer
+    OR it was < 1, return an error message instead.*)
 let extract_steps cmdline default_steps =
   match List.assoc "quality" (options cmdline) with
   | [] ->
@@ -110,15 +116,14 @@ let extract_steps cmdline default_steps =
       | _ -> Error "Quality must be an integer >= 1" )
   | _ -> Error "Multiple qualities specified"
 
-(** [extract_bounds cmdline (min, max) dim var]: returns an [Ok] result
+(** [extract_bounds cmdline (min, max) dim]: returns an [Ok] result
     containing the pair (a, b) bounding [dim] as specified on [cmdline].
-    [dim] is the name of of the dimension (ex. "domain", "range") and
-    [var] is the name of is the variable on that dimension (ex. "x",
-    "y"). If a minimum bound was not specified on the command line, it
-    defaults to [min]; if a maximum bound was not specified on the
-    command line, it defaults to [max]. If the minimum bound ends up
-    being less than the maximum bound, or one or both bounds are inf or
-    nan, an [Error] with an error message is returned instead.*)
+    [dim] is the name of of the dimension (ex. "domain", "range"). If a
+    minimum bound was not specified on the command line, it defaults to
+    [min]; if a maximum bound was not specified on the command line, it
+    defaults to [max]. If the minimum bound ends up being less than the
+    maximum bound, or one or both bounds are inf or nan, an [Error] with
+    an error message is returned instead.*)
 let extract_bounds cmdline (default_min, default_max) dimension =
   let valid_float flt =
     let c = classify_float flt in
@@ -145,7 +150,9 @@ let extract_bounds cmdline (default_min, default_max) dimension =
   with Bad_assume s -> Error s
 
 (** [extract_command cmdline] identitifies and returns the command from
-    command line [cmdline]. If none is found, returns [Graph].
+    command line [cmdline]. If none is found, returns [Ok Graph]. If
+    multiple are found, returns [Error s] where s is a descriptive error
+    message.
 
     Requires: the only flags in [cmdline] are "graph", "roots",
     "points", and "extrema". *)
@@ -158,9 +165,7 @@ let extract_command cmdline =
   | _ -> Error "Only specify one mode (graph, roots, points, extrema)"
 
 let from_cmdline d r s ic argv =
-  match
-    parse_cmdline (List.map (fun (a, _) -> a) cmdline_info) ic argv
-  with
+  match parse_cmdline (List.map fst cmdline_info) ic argv with
   | Error e -> Error e
   | Ok res -> (
       if List.mem "help" (flags res) then help 0;
