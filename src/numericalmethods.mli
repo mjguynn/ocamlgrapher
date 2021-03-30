@@ -12,11 +12,10 @@ val get_t : (float * float) list -> t
 
 (** [range_limiter fun_output range] cuts off any values of y within
     range. The type of range is (float * float), and the lower limit
-    must come first. If the range or the fun_output is invalid, then
-    range_limiter returns an empty list, typecast as t. Raises exception
-    InvalidRange if the lower limit is strictly greater than upper
-    limit. A function output is validly within range if the value is
-    greater than/less than or equal to the lower/upper limit. *)
+    must come first. Raises exception InvalidRange if the lower limit is
+    strictly greater than upper limit. A function output is validly
+    within range if the value is greater than/less than or equal to the
+    lower/upper limit. *)
 val range_limiter : t -> float * float -> t
 
 (** [root_estimator fun_output] estimates the roots of the function from
