@@ -11,14 +11,15 @@ let parse str =
     if !index < Array.length tokens then tokens.(!index) else EOF
   in
 
-  (* change next to use peek *)
+  let peek_check token = token = peek () in
+
   let next () =
-    index := !index + 1;
-    if !index - 1 < Array.length tokens then tokens.(!index - 1)
+    if Bool.not (peek_check EOF) then begin
+      index := !index + 1;
+      tokens.(!index - 1)
+    end
     else EOF
   in
-
-  let peek_check token = token = peek () in
 
   let consume token =
     if peek_check token then next ()
@@ -36,7 +37,7 @@ let parse str =
         ignore (consume (Operator LParen));
         parse_expr ();
         ignore (consume (Operator RParen))
-    | Variable _ -> ignore (next ())
+    | Variable X -> ignore (next ())
     | Constant _ -> ignore (next ())
     | _ ->
         syntax_error

@@ -28,9 +28,10 @@ let parser_tests =
       "y=sin(x^2-3x+4-6*7)-ln(x)^45+x/3" true;
     parser_test "parse y=x^^2" "y=x^^2" false;
     parser_test "parse y=^3+x^2" "y=^3+x^2" false;
-    parser_test "y=-3x" "y=-3x" true;
-    parser_test "y=-(3x^2*-(4x+2*-sin(x^789)))"
+    parser_test "parse y=-3x" "y=-3x" true;
+    parser_test "parse y=-(3x^2*-(4x+2*-sin(x^789)))"
       "y=-(3x^2*-(4x+2*-sin(x^789)))" true;
+    parser_test "parse y=x+y^2" "y=x+y^2" false;
   ]
 
 let tokenizer_tests =

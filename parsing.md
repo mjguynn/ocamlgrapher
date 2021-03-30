@@ -16,10 +16,9 @@ expr -> expr + term | expr - term | term
 term -> term * factor | term / factor | factor
 factor -> - factor | group
 group -> elem group | elem ^ elem | elem
-elem -> const | var | func | ( expr )
+elem -> const | x | func | ( expr )
 func -> sqrt ( expr ) | abs ( expr ) | ln ( expr ) | log ( expr ) | sin ( expr ) | cos ( expr ) | tan ( expr ) | cot ( expr ) | sec ( expr ) | csc ( expr ) | arcsin ( expr ) | arccos ( expr ) | arctan ( expr ) | arccot ( expr ) | arcsec ( expr ) | arccsc ( expr )
 const -> e | pi | num
-var -> x | y
 ```
 Note that the current grammar only supports explicit functions in terms of a `var` token `x`.
 
@@ -31,9 +30,8 @@ expr -> term { + term }* | expr { - term }*
 term -> factor { * factor }* | factor { / factor }*
 factor -> - factor | group
 group -> elem group | elem ^ elem | elem
-elem -> const | var | func | ( expr )
+elem -> const | x | func | ( expr )
 func -> sqrt ( expr ) | abs ( expr ) | ln ( expr ) | log ( expr ) | sin ( expr ) | cos ( expr ) | tan ( expr ) | cot ( expr ) | sec ( expr ) | csc ( expr ) | arcsin ( expr ) | arccos ( expr ) | arctan ( expr ) | arccot ( expr ) | arcsec ( expr ) | arccsc ( expr )
 const -> e | pi | num
-var -> x | y
 ```
 Note that the brackets `{ ... }` are metasyntax and the asterisk `*` represents a Kleene star.
