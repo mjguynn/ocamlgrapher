@@ -3,6 +3,7 @@
 open Config
 open Parser
 open Numericalmethods
+open Tokenizer
 
 let rec domain_maker_help current_dom_low domain_high step_size acc =
   match current_dom_low < domain_high -. step_size with
@@ -21,7 +22,7 @@ let domain_maker domain steps =
       domain_maker_help d_low d_high step_size [ d_low ]
 
 (* get outputs from equation *)
-let rec fun_output eqt domain_list range acc =
+let rec fun_output (eqt : token list) domain_list range acc =
   match domain_list with
   | [] -> acc |> List.rev |> get_t |> fun x -> range_limiter x range
   | h :: t -> fun_output eqt t range ((h, compute_f_of_x eqt h) :: acc)
@@ -32,7 +33,7 @@ let rec multi_fun_outputs eqts domain_list range acc =
   | [] -> List.rev acc
   | h :: t ->
       multi_fun_outputs t domain_list range
-        (fun_output h domain_list range [] :: acc)
+        (fun_output (tokenize h) domain_list range [] :: acc)
 
 (* Truncator *)
 let trunc x = if abs_float x < 1e-13 then 0. else x
