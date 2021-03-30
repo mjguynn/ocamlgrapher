@@ -48,12 +48,24 @@ let rec tuple_list_print lst =
       tuple_print (x, y);
       tuple_list_print t
 
+let rec float_list_print lst =
+  match lst with
+  | [] -> print_string "\n"
+  | h :: t ->
+      Printf.printf "%10g" (trunc h);
+      float_list_print t
+
+let roots_print lst =
+  print_string "Approximate roots (x-coords): \n";
+  lst |> get_t |> root_estimator |> float_list_print
+
 (* Pretty Print the input-output stuff *)
 let rec pp_list_of_lists lst =
   match lst with
   | [] -> print_string "\n"
   | h :: t ->
       tuple_list_print h;
+      roots_print h;
       pp_list_of_lists t
 
 (* Graphs the given function given command line inputs. Requires that
