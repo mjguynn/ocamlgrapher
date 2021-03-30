@@ -59,6 +59,27 @@ let unit_token_map =
     ('e', Constant E);
   ]
 
+let alpha_token_map =
+  [
+    ("sqrt", Function Sqrt);
+    ("abs", Function Abs);
+    ("ln", Function Ln);
+    ("log", Function Log);
+    ("pi", Constant Pi);
+    ("sin", Operator Equals);
+    ("cos", Operator Plus);
+    ("tan", Operator Minus);
+    ("sec", Operator Times);
+    ("csc", Operator Divide);
+    ("cot", Operator Exponent);
+    ("arcsin", Operator LParen);
+    ("arccos", Operator RParen);
+    ("arctan", Variable X);
+    ("arcsec", Variable Y);
+    ("arccsc", Constant E);
+    ("arccot", Function Arccot);
+  ]
+
 let is_numerical_subtoken ch =
   let code = Char.code ch in
   code = 46 || (code < 58 && code > 47)
