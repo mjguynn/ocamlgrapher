@@ -26,9 +26,11 @@ val range_limiter : t -> float * float -> t
 val root_estimator : t -> float list
 
 (** [max_output fun_output] estimates the RIGHT-MOST maximum of the
-    function output from the given list. Returns the output *)
+    function output from the given list. Returns the output. RI: cannot
+    pass an empty type t *)
 val max_output : t -> float * float
 
 (** [min_output fun_output] estimates the RIGHT-MOST minimum of the
-    function output from the given list. Returns the output *)
+    function output from the given list. Returns the output. RI: cannot
+    pass an empty type t *)
 val min_output : t -> float * float
