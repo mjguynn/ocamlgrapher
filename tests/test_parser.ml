@@ -9,6 +9,10 @@ let generalize_exception tokens x =
   try compute_f_of_x tokens x
   with Invalid_argument _ -> raise (Invalid_argument "syntax error")
 
+(** [compute_f_of_x_test name input_equation input_x expected_output success]
+    checks if the function of input_equation equals expected_output at
+    input_x if success is true. If success if false, it checks that
+    input_equation is an invalid equation. *)
 let compute_f_of_x_test
     name
     input_equation
@@ -27,6 +31,8 @@ let parser_tests =
   [
     compute_f_of_x_test "parse fail for y=3+x*3+" "y=3+x*3+" 0. 0. false;
     compute_f_of_x_test "x=3 for x^2=y" "x^2=y" 3. 9. true;
+    compute_f_of_x_test "x=0 for 3^x=y" "3^x=y" 0. 1. true;
+    compute_f_of_x_test "x=2 for y=-3^x" "y=-3^x" 2. (-9.) true;
     compute_f_of_x_test "x=9 for y=x+3+pi" "y=x+3+pi" 9.
       (12. +. Float.pi) true;
     compute_f_of_x_test "x=-11 for x^2-3x=y" "x^2-3x=y" (-11.) 154. true;
@@ -43,6 +49,8 @@ let parser_tests =
     compute_f_of_x_test "x=0 for y=-(3x^2*-(4x+2*-sin(x^789)))"
       "y=-(3x^2*-(4x+2*-sin(x^789)))" 0.0 0.0 true;
     compute_f_of_x_test "parse fail for y=x+y^2" "y=x+y^2" 0. 0. false;
+    compute_f_of_x_test "x=1 for y=e^x" "y=e^x" 1. 2.71828182845904523
+      true;
   ]
 
 let tokenizer_tests =
