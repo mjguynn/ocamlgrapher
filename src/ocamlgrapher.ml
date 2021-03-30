@@ -59,6 +59,12 @@ let roots_print lst =
   print_string "Approximate roots (x-coords): \n";
   lst |> get_t |> root_estimator |> float_list_print
 
+let max_and_min_printer lst =
+  print_string "Approximate maximum (x, y): \n";
+  lst |> get_t |> max_output |> tuple_print;
+  print_string "Approximate minimum (x, y): \n";
+  lst |> get_t |> min_output |> tuple_print
+
 (* Pretty Print the input-output stuff *)
 let rec pp_list_of_lists lst =
   match lst with
@@ -66,6 +72,7 @@ let rec pp_list_of_lists lst =
   | h :: t ->
       tuple_list_print h;
       roots_print h;
+      max_and_min_printer h;
       pp_list_of_lists t
 
 (* Graphs the given function given command line inputs. Requires that
