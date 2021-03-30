@@ -85,7 +85,13 @@ let main_grapher (config : Config.t) =
   let input_output =
     multi_fun_outputs eqts domain_list (range config) []
   in
-  pp_list_of_lists input_output
+  input_output
+  |> List.iter (fun lst ->
+         match command config with
+         | Graph -> Printf.eprintf "%s" "Graphing UNIMPLEMENTED\n"
+         | Points -> tuple_list_print lst
+         | Extrema -> max_and_min_printer lst
+         | Roots -> roots_print lst)
 
 let main () =
   match
