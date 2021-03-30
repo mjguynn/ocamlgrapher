@@ -11,6 +11,7 @@ let parse str =
     if !index < Array.length tokens then tokens.(!index) else EOF
   in
 
+  (* change next to use peek *)
   let next () =
     index := !index + 1;
     if !index - 1 < Array.length tokens then tokens.(!index - 1)
@@ -20,38 +21,45 @@ let parse str =
   let peek_check token = token = peek () in
 
   let consume token =
-    if peek_check token then next () else syntax_error " (parser)"
+    if peek_check token then next ()
+    else syntax_error "expected character not found. [consume failure]"
   in
 
   let rec parse_elem () =
     match peek () with
-    | LParen ->
+    | Operator LParen ->
         ignore (next ());
         parse_expr ();
-        ignore (consume RParen)
+        ignore (consume (Operator RParen))
     | Function _ ->
         ignore (next ());
-        ignore (consume LParen);
+        ignore (consume (Operator LParen));
         parse_expr ();
-        ignore (consume RParen)
+        ignore (consume (Operator RParen))
     | Variable _ -> ignore (next ())
     | Constant _ -> ignore (next ())
-    | EOF -> ()
-    | _ -> syntax_error "couldnt peek match elem"
+    | _ ->
+        syntax_error
+          "expected character not found. [parse elem failure]"
   and parse_expr () =
     parse_term ();
-    if peek_check (Operator Plus) || peek_check (Operator Minus) then begin
+    while peek_check (Operator Plus) || peek_check (Operator Minus) do
       ignore (next ());
       parse_term ()
-    end
+    done
   and parse_term () =
     parse_factor ();
-    if peek_check (Operator Times) || peek_check (Operator Divide) then begin
+    while peek_check (Operator Times) || peek_check (Operator Divide) do
+      ignore (next ());
+      parse_factor ()
+    done
+  and parse_factor () =
+    if peek_check (Operator Minus) then begin
       ignore (next ());
       parse_factor ()
     end
-  (* Implicit multiplication may not work *)
-  and parse_factor () =
+    else parse_group ()
+  and parse_group () =
     parse_elem ();
     match peek () with
     | Operator Exponent ->
@@ -59,16 +67,21 @@ let parse str =
         parse_elem ()
     | Operator _ -> ()
     | EOF -> ()
-    | _ -> parse_factor ()
+    | _ -> parse_group ()
   in
 
-  (* Chained addition, multiplication, subtraction, and division does
-     not yet work *)
   let parse_equation () =
-    parse_expr ();
-    ignore (consume (Operator Equals));
-    ignore (next ());
-    parse_expr ()
+    if peek_check (Variable Y) then begin
+      ignore (next ());
+      ignore (consume (Operator Equals));
+      parse_expr ()
+    end
+    else begin
+      parse_expr ();
+      ignore (consume (Operator Equals));
+      ignore (consume (Variable Y))
+    end;
+    ignore (consume EOF)
   in
 
   parse_equation ()

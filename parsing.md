@@ -13,8 +13,9 @@ The left-recursive grammar is defined according to the following productions.
 ```
 E -> y = expr | expr = y
 expr -> expr + term | expr - term | term
-term -> term * factor | term / factor | factor | - factor
-factor -> elem factor | elem ^ elem | elem
+term -> term * factor | term / factor | factor
+factor -> - factor | group
+group -> elem group | elem ^ elem | elem
 elem -> const | var | func | ( expr )
 func -> sqrt ( expr ) | abs ( expr ) | ln ( expr ) | log ( expr ) | sin ( expr ) | cos ( expr ) | tan ( expr ) | cot ( expr ) | sec ( expr ) | csc ( expr ) | arcsin ( expr ) | arccos ( expr ) | arctan ( expr ) | arccot ( expr ) | arcsec ( expr ) | arccsc ( expr )
 const -> e | pi | num
@@ -27,8 +28,9 @@ The reassociated right-recursive grammar is defined according to the following p
 ```
 E -> y = expr | expr = y
 expr -> term { + term }* | expr { - term }*
-term -> factor { * factor }* | factor { / factor }* | - factor
-factor -> elem factor | elem ^ elem | elem
+term -> factor { * factor }* | factor { / factor }*
+factor -> - factor | group
+group -> elem group | elem ^ elem | elem
 elem -> const | var | func | ( expr )
 func -> sqrt ( expr ) | abs ( expr ) | ln ( expr ) | log ( expr ) | sin ( expr ) | cos ( expr ) | tan ( expr ) | cot ( expr ) | sec ( expr ) | csc ( expr ) | arcsin ( expr ) | arccos ( expr ) | arctan ( expr ) | arccot ( expr ) | arcsec ( expr ) | arccsc ( expr )
 const -> e | pi | num

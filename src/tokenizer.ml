@@ -34,11 +34,11 @@ type operator =
   | Times
   | Divide
   | Exponent
+  | LParen
+  | RParen
 
 type token =
   | Operator of operator
-  | LParen
-  | RParen
   | Constant of constant
   | Variable of variable
   | Function of m_function
@@ -52,8 +52,8 @@ let unit_token_map =
     ('*', Operator Times);
     ('/', Operator Divide);
     ('^', Operator Exponent);
-    ('(', LParen);
-    (')', RParen);
+    ('(', Operator LParen);
+    (')', Operator RParen);
     ('x', Variable X);
     ('y', Variable Y);
     ('e', Constant E);
@@ -65,7 +65,7 @@ let is_numerical_subtoken ch =
 
 let is_alpha_subtoken ch = List.mem ch [ 'p'; 's'; 'a'; 'l'; 'c'; 't' ]
 
-let syntax_error tst = raise (Invalid_argument ("Syntax error" ^ tst))
+let syntax_error tst = raise (Invalid_argument ("Syntax error: " ^ tst))
 
 let tokenize str =
   let tokens = ref [] in
@@ -108,7 +108,7 @@ let tokenize str =
                         lex (String.sub tl 3 (String.length tl - 3)) ""
                       end
                       else syntax_error "2"
-                  | _ -> syntax_error "3" )
+                  | _ -> syntax_error "3")
               | 'a' -> (
                   match String.sub tl 0 2 with
                   | "bs" ->
@@ -126,7 +126,7 @@ let tokenize str =
                         | _ -> syntax_error "4"
                       end;
                       lex (String.sub tl 5 (String.length tl - 5)) ""
-                  | _ -> syntax_error "5" )
+                  | _ -> syntax_error "5")
               | 'l' -> (
                   match String.sub tl 0 1 with
                   | "n" ->
@@ -138,7 +138,7 @@ let tokenize str =
                         lex (String.sub tl 2 (String.length tl - 2)) ""
                       end
                       else syntax_error "6"
-                  | _ -> syntax_error "7" )
+                  | _ -> syntax_error "7")
               | 'c' ->
                   begin
                     match String.sub tl 0 2 with

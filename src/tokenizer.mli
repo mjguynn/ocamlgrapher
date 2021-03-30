@@ -32,11 +32,11 @@ type operator =
   | Times
   | Divide
   | Exponent
+  | LParen
+  | RParen
 
 type token =
   | Operator of operator
-  | LParen
-  | RParen
   | Constant of constant
   | Variable of variable
   | Function of m_function
