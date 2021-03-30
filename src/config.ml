@@ -58,11 +58,11 @@ let help errc =
   let header s = reset ^ style "96" ^ s ^ reset in
   let grey = rgb (140, 140, 140) in
   Printf.eprintf "%s"
-    ( header "Usage: " ^ "ocamlgrapher " ^ grey
+    ( header "Usage: " ^ "./ocamlgrapher.byte " ^ grey
     ^ "<options> <equations>\n" );
   Printf.eprintf "%s"
     ( header "Example: " ^ reset
-    ^ "ocamlgrapher --graph -o my_graph.png \"y=2x^2-4ln(x)\"\n" );
+    ^ "./ocamlgrapher.byte -g -o my_graph.png \"y=2x^2-4ln(x)\"\n" );
   Printf.eprintf "%s" (header "Options: \n" ^ reset);
   let build_name long short append_long append_short =
     "--" ^ long ^ append_long
