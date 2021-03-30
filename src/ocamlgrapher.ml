@@ -94,7 +94,6 @@ let main () =
   | Error e -> Printf.eprintf "%s\n" e
   | Ok cfg ->
       print_endline (Config.to_string cfg);
-      let temp = main_grapher cfg in
-      ()
+      main_grapher cfg
 
 let () = main ()
