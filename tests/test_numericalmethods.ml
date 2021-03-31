@@ -12,7 +12,7 @@ let root_test name input exp_output =
 let max_test name input exp_output =
   name >:: fun _ -> assert_equal exp_output (max_output input)
 
-let min_test name (input : t) (exp_output : float * float) =
+let min_test name input exp_output =
   name >:: fun _ -> assert_equal exp_output (min_output input)
 
 let suite =
@@ -117,8 +117,8 @@ let suite =
                 (0.5, 0.7);
                 (1.0, 1.7);
               ])
-           (-1.0, 2.3);
-         max_test "Maximum: right-most point"
+           [ (-1.0, 2.3) ];
+         max_test "Maximum: list"
            (get_t
               [
                 (-1.0, 2.3);
@@ -127,7 +127,9 @@ let suite =
                 (0.5, 2.3);
                 (1.0, 2.3);
               ])
-           (1.0, 2.3);
+           [
+             (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
+           ];
          min_test "Minimum"
            (get_t
               [
@@ -137,8 +139,8 @@ let suite =
                 (0.5, 0.7);
                 (1.0, 1.7);
               ])
-           (0.0, -0.5);
-         min_test "Minimum: right-most point"
+           [ (0.0, -0.5) ];
+         min_test "Minimum: list"
            (get_t
               [
                 (-1.0, 2.3);
@@ -147,7 +149,9 @@ let suite =
                 (0.5, 2.3);
                 (1.0, 2.3);
               ])
-           (1.0, 2.3);
+           [
+             (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
+           ];
        ]
 
 let _ = run_test_tt_main suite

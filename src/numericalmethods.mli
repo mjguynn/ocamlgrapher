@@ -24,12 +24,12 @@ val range_limiter : t -> float * float -> t
     approximate x-coordinates of the roots.*)
 val root_estimator : t -> float list
 
-(** [max_output fun_output] estimates the RIGHT-MOST maximum of the
-    function output from the given list. Returns the output. RI: cannot
-    pass an empty type t *)
-val max_output : t -> float * float
+(** [max_output fun_output] estimates the maximum(s) of the function
+    output from the given list. Returns the output. RI: cannot pass an
+    empty type t *)
+val max_output : t -> (float * float) list
 
-(** [min_output fun_output] estimates the RIGHT-MOST minimum of the
-    function output from the given list. Returns the output. RI: cannot
-    pass an empty type t *)
-val min_output : t -> float * float
+(** [min_output fun_output] estimates the minimum(s) of the function
+    output from the given list. Returns the output. RI: cannot pass an
+    empty type t *)
+val min_output : t -> (float * float) list

@@ -43,7 +43,12 @@ let rec root_est_help
   match output_list with
   | [] -> acc
   | (x, y) :: t ->
-      if diff_signs ycur y then
+      if y = 0. then
+        match t with
+        | [] -> root_est_help (x, y) (x :: acc) t
+        | (x_next, y_next) :: tt ->
+            root_est_help (x_next, y_next) (x :: acc) tt
+      else if diff_signs ycur y then
         root_est_help (x, y) ((0.5 *. (x +. xcur)) :: acc) t
       else root_est_help (x, y) acc t
 
@@ -58,25 +63,29 @@ let root_estimator (output_list : t) : float list =
   | (x, y) :: t -> t |> root_est_help (x, y) [] |> List.rev
 
 (* helper method to obtain the maximum point of a function output *)
-let rec max_help (lst : t) (max_x, max_y) : float * float =
+let rec max_help (lst : t) (max_x, max_y) (acc : (float * float) list) =
   match lst with
-  | [] -> (max_x, max_y)
-  | (x, y) :: t ->
-      if y >= max_y then max_help t (x, y) else max_help t (max_x, max_y)
+  | [] -> List.rev acc
+  | (x, y) :: tail ->
+      if y > max_y then max_help tail (x, y) [ (x, y) ]
+      else if y = max_y then max_help tail (x, y) ((x, y) :: acc)
+      else max_help tail (max_x, max_y) acc
 
-let max_output (lst : t) : float * float =
+let max_output (lst : t) =
   match lst with
   | [] -> raise (EmptyList "List is empty")
-  | (x, y) :: t -> max_help lst (0., Float.neg_infinity)
+  | (x, y) :: tail -> max_help lst (0., Float.neg_infinity) []
 
 (* helper method to obtain the minimum point of a function output *)
-let rec min_help (lst : t) (min_x, min_y) : float * float =
+let rec min_help (lst : t) (min_x, min_y) acc =
   match lst with
-  | [] -> (min_x, min_y)
-  | (x, y) :: t ->
-      if y <= min_y then min_help t (x, y) else min_help t (min_x, min_y)
+  | [] -> List.rev acc
+  | (x, y) :: tail ->
+      if y < min_y then min_help tail (x, y) [ (x, y) ]
+      else if y = min_y then min_help tail (x, y) ((x, y) :: acc)
+      else min_help tail (min_x, min_y) acc
 
-let min_output (lst : t) : float * float =
+let min_output (lst : t) =
   match lst with
   | [] -> raise (EmptyList "List is empty")
-  | (x, y) :: t -> min_help lst (0., Float.infinity)
+  | (x, y) :: tail -> min_help lst (0., Float.infinity) []
