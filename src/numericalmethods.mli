@@ -2,7 +2,7 @@ type t = (float * float) list
 
 exception InvalidRange of string
 
-exception EmptyList of string
+exception Empty_type of string
 
 (** converts prototype list to type t. Requires: the list MUST be of
     (float*float) list *)
