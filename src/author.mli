@@ -8,7 +8,7 @@
 
    Academic Integrity Statement
 
-   Us, the people named in the @author comment above, have fully reviewed the
+   We, the people named in the @author comment above, have fully reviewed the
    course academic integrity policies.  We have adhered to those policies in
    solving the assignment.
 
