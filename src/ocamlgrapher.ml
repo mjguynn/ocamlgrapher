@@ -62,9 +62,9 @@ let roots_print lst =
   lst |> get_t |> root_estimator |> float_list_print
 
 let max_and_min_printer lst =
-  print_string "Approximate maximums (x, y): \n";
+  print_string "Approximate maximum(s) (x, y): \n";
   lst |> get_t |> max_output |> tuple_list_print;
-  print_string "Approximate minimums (x, y): \n";
+  print_string "Approximate minimum(s) (x, y): \n";
   lst |> get_t |> min_output |> tuple_list_print
 
 (* Pretty Print the input-output stuff *)
