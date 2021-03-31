@@ -4,7 +4,7 @@ type t = (float * float) list
 
 exception InvalidRange of string
 
-exception EmptyList of string
+exception Empty_type of string
 
 let get_t (lst : (float * float) list) : t = lst
 
@@ -73,7 +73,7 @@ let rec max_help (lst : t) (max_x, max_y) (acc : (float * float) list) =
 
 let max_output (lst : t) =
   match lst with
-  | [] -> raise (EmptyList "List is empty")
+  | [] -> raise (Empty_type "Type is empty")
   | (x, y) :: tail -> max_help lst (0., Float.neg_infinity) []
 
 (* helper method to obtain the minimum point of a function output *)
@@ -87,5 +87,5 @@ let rec min_help (lst : t) (min_x, min_y) acc =
 
 let min_output (lst : t) =
   match lst with
-  | [] -> raise (EmptyList "List is empty")
+  | [] -> raise (Empty_type "Type is empty")
   | (x, y) :: tail -> min_help lst (0., Float.infinity) []
