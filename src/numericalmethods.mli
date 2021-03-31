@@ -1,5 +1,3 @@
-(* Testing GitHub Desktop *)
-
 type t = (float * float) list
 
 exception InvalidRange of string
