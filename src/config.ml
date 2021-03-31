@@ -54,7 +54,11 @@ let cmdline_info =
   ]
 
 let help errc =
-  let style s = "\x1b[" ^ s ^ "m" in
+  let style s =
+    if Unix.isatty (Unix.descr_of_out_channel stderr) then
+      "\x1b[" ^ s ^ "m"
+    else ""
+  in
   let header s = style "96" ^ s ^ style "0" in
   let grey s = style "38;2;140;140;140" ^ s ^ style "0" in
   Printf.eprintf "%s"
