@@ -55,23 +55,20 @@ let cmdline_info =
 
 let help errc =
   let style s = "\x1b[" ^ s ^ "m" in
-  let reset = style "0" in
-  let rgb (r, g, b) = style (Printf.sprintf "38;2;%i;%i;%i" r g b) in
-  let header s = reset ^ style "96" ^ s ^ reset in
-  let grey = rgb (140, 140, 140) in
+  let header s = style "96" ^ s ^ style "0" in
+  let grey s = style "38;2;140;140;140" ^ s ^ style "0" in
   Printf.eprintf "%s"
-    ( header "Usage: " ^ "./ocamlgrapher.byte " ^ grey
-    ^ "<options> <equations>\n" );
+    ( header "Usage: " ^ "./ocamlgrapher.byte "
+    ^ grey "<options> <equations>\n" );
   Printf.eprintf "%s"
-    ( header "Example: " ^ reset
+    ( header "Example: "
     ^ "./ocamlgrapher.byte -g -o my_graph.png \"y=2x^2-4ln(x)\"\n" );
-  Printf.eprintf "%s" (header "Options: \n" ^ reset);
+  Printf.eprintf "%s" (header "Options: \n");
   let build_name long short append_long append_short =
-    "--" ^ long ^ append_long
-    ^
-    match short with
-    | None -> ""
-    | Some c -> ", -" ^ String.make 1 c ^ append_short
+    Printf.sprintf "--%s%s%s" long append_long
+      ( match short with
+      | None -> ""
+      | Some c -> Printf.sprintf ", -%c%s" c append_short )
   in
   cmdline_info
   |> List.iter (fun (rule, desc) ->
@@ -80,7 +77,7 @@ let help errc =
            | Flag (f, s) -> build_name f s "" ""
            | Opt (o, s) -> build_name o s "=<...>" " <...>"
          in
-         Printf.eprintf "\t%-28s: %s%s%s\n" name grey desc reset);
+         Printf.eprintf "\t%-28s: %s\n" name (grey desc));
   exit errc
 
 (** [extract_equations cmdline]: If >= 1 equations on [cmdline], returns
