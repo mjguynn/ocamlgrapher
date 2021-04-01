@@ -10,9 +10,9 @@ let generalize_exception tokens x =
   with Invalid_argument _ -> raise (Invalid_argument "syntax error")
 
 (** [compute_f_of_x_test name input_equation input_x expected_output success]
-    checks if the function of input_equation equals expected_output at
-    input_x if success is true. If success if false, it checks that
-    input_equation is an invalid equation. *)
+    checks if the function of [input_equation] equals [expected_output]
+    at [input_x] if [success] is true. If [success] is false, it checks
+    that [input_equation] is an invalid equation. *)
 let compute_f_of_x_test
     name
     input_equation
