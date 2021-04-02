@@ -59,6 +59,15 @@ let tokenizer_tests =
       [ Variable X; Operator Plus; Variable Y ];
     tokenize_test "Variable times number" "y*23425"
       [ Variable Y; Operator Times; Constant (Number 23425.) ];
+    tokenize_test
+      "Implicit multiplication with constants and variables 1" "pix"
+      [ Constant Pi; Variable X ];
+    tokenize_test
+      "Implicit multiplication with constants and variables 1" "xpi"
+      [ Variable X; Constant Pi ];
+    tokenize_test "Implicit multiplication with constants and functions"
+      "pisin"
+      [ Constant Pi; Function Sin ];
     tokenize_test "Exponential function" "e^x+x^2+4"
       [
         Constant E;
