@@ -104,10 +104,6 @@ let extract_alpha_token (str : string) : token =
       syntax_error
         "unknown character or symbol found. [alpha token assoc failure]"
 
-(* if acc is num and cur is num add cur to acc if acc is num and cur is
-   alpha add token, re-lex cur if acc is alpha and cur is alpha add cur
-   to acc if acc is alpha and cur is num add token, re-lex cur *)
-
 let tokenize equation_str =
   let tokens = ref [] in
   let add_token token = tokens := token :: !tokens in
@@ -117,31 +113,24 @@ let tokenize equation_str =
       let tl = String.sub tokens_str 1 (String.length tokens_str - 1) in
       if String.length acc <> 0 then
         let starting_acc = acc.[0] in
-        if is_numerical_subtoken hd then begin
+        if
+          is_numerical_subtoken hd
+          && is_numerical_subtoken starting_acc
+          || is_alpha_subtoken hd
+             && is_starting_alpha_subtoken starting_acc
+        then lex tl (acc ^ Char.escaped hd)
+        else if
+          is_numerical_subtoken hd
+          && is_starting_alpha_subtoken starting_acc
+          || (is_alpha_subtoken hd && is_numerical_subtoken starting_acc)
+          || is_unit_token hd
+             && (is_numerical_subtoken starting_acc
+                || is_starting_alpha_subtoken starting_acc)
+        then begin
           if is_numerical_subtoken starting_acc then
-            lex tl (acc ^ Char.escaped hd)
-          else if is_starting_alpha_subtoken starting_acc then begin
-            add_token (extract_alpha_token acc);
-            lex (Char.escaped hd ^ tl) ""
-          end
-        end
-        else if is_alpha_subtoken hd then begin
-          if is_numerical_subtoken starting_acc then begin
-            add_token (Constant (Number (Float.of_string acc)));
-            lex (Char.escaped hd ^ tl) ""
-          end
-          else if is_starting_alpha_subtoken starting_acc then
-            lex tl (acc ^ Char.escaped hd)
-        end
-        else if is_unit_token hd then begin
-          if is_numerical_subtoken starting_acc then begin
-            add_token (Constant (Number (Float.of_string acc)));
-            lex (Char.escaped hd ^ tl) ""
-          end
-          else if is_starting_alpha_subtoken starting_acc then begin
-            add_token (extract_alpha_token acc);
-            lex (Char.escaped hd ^ tl) ""
-          end
+            add_token (Constant (Number (Float.of_string acc)))
+          else add_token (extract_alpha_token acc);
+          lex (Char.escaped hd ^ tl) ""
         end
         else if hd = ' ' then lex tl acc
         else
