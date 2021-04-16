@@ -85,6 +85,8 @@ let main_grapher (config : Config.t) =
   let input_output =
     multi_fun_outputs eqts domain_list (range config) []
   in
+  let g = Grapher.create (domain config) (range config) in
+  Grapher.to_svg "test_out.svg" g;
   input_output
   |> List.iter (fun lst ->
          match command config with

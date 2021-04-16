@@ -20,6 +20,5 @@ val add_plot : string -> (float * float) list -> t -> t
 (** [to_svg filename graph] outputs an SVG representing [graph] to
     [filename]. [filename] represents the name of the output SVG file,
     *including extension*. If any errors occur (for example, write
-    access denied) a Failure exception will be thrown with a descriptive
-    error message.*)
+    access denied) an unspecified exception will be thrown.*)
 val to_svg : string -> t -> unit
