@@ -21,7 +21,9 @@ type dom =
   | DOMContainer of string * domopts * dom list
 
 let domopts_to_string =
-  List.fold_left (fun acc (k, v) -> acc ^ " " ^ k ^ "=\"" ^ v ^ "\"") ""
+  List.fold_left
+    (fun acc (k, v) -> Printf.sprintf "%s %s=\"%s\"" acc k v)
+    ""
 
 let rec write_dom f ?tab_level:(tl = 0) =
   let tabs = String.make tl '\t' in
