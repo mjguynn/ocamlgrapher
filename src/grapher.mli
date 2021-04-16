@@ -5,7 +5,9 @@ type t
 
 (** [create (domain_min, domain_max) (range_min, range_max)] creates a
     new, empty graph that viewing the area [domain_min, domain_max] X
-    [range_min, range_max]. *)
+    [range_min, range_max].
+
+    Requires: [domain_min <= domain_max] and [range_min <= range_max].*)
 val create : float * float -> float * float -> t
 
 (** [add_plot label points graph] adds [points] to [graph], where each
