@@ -18,4 +18,5 @@ _build
 \#*\#
 .DS_Store
 
-src/demo1.svg
+# grapher output
+**/*.svg
