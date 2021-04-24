@@ -14,9 +14,6 @@ let make_samples (low, high) steps =
   in
   do_step high []
 
-(** [trunc x] rounds [x] to 0 if it's really close to 0.*)
-let trunc x = if abs_float x < 1e-13 then 0. else x
-
 (** [eval_equation eq samples x_bounds y_bounds] tokenizes [eq] and
     evaluates it at every point in [samples], returning a list of points
     (with all points outside of [x_bounds] and [y_bounds] discarded).

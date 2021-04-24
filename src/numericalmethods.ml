@@ -45,11 +45,11 @@ let rec max_help lst (max_x, max_y) (acc : (float * float) list) =
   match lst with
   | [] -> List.rev acc
   | (x, y) :: tail ->
-      if y > max_y then
-        let lst = [ (x, y) ] in
-        max_help tail (x, y) lst
-      else if y = max_y then
+      if Common.fpeq y max_y then
         let lst = (x, y) :: acc in
+        max_help tail (x, y) lst
+      else if y > max_y then
+        let lst = [ (x, y) ] in
         max_help tail (x, y) lst
       else max_help tail (max_x, max_y) acc
 
@@ -63,8 +63,8 @@ let rec min_help lst (min_x, min_y) acc =
   match lst with
   | [] -> List.rev acc
   | (x, y) :: tail ->
-      if y < min_y then min_help tail (x, y) [ (x, y) ]
-      else if y = min_y then min_help tail (x, y) ((x, y) :: acc)
+      if Common.fpeq y min_y then min_help tail (x, y) ((x, y) :: acc)
+      else if y < min_y then min_help tail (x, y) [ (x, y) ]
       else min_help tail (min_x, min_y) acc
 
 let min_output lst =

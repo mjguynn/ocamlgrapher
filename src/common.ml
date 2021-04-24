@@ -55,3 +55,17 @@ let valid_bounds (a, b) =
   let a_valid = a_class = FP_normal || a_class = FP_zero in
   let b_valid = a_class = FP_normal || a_class = FP_zero in
   a_valid && b_valid && a <= b
+
+(** [fpeq ~tolerance:t a b] returns whether [a] and [b] are roughly
+    equal (within some tolerance for floating-point precision loss). The
+    higher the value of [t], the less precise the comparison. By
+    default, [t] is [1e3]. (This value was empircally chosen for best
+    results.)*)
+let fpeq ?tolerance:(t = 1e3) a b =
+  let epsilon_scale =
+    Float.max 1. (Float.max (Float.abs a) (Float.abs b))
+  in
+  Float.abs (b -. a) <= Float.epsilon *. epsilon_scale *. t
+
+(** [trunc x] rounds [x] to 0 if it's really close to 0.*)
+let trunc x = if fpeq x 1e-13 then 0. else x
