@@ -123,14 +123,10 @@ let extract_steps cmdline default_steps =
     [dim] is the name of of the dimension (ex. "x", "y"). If a minimum
     bound was not specified on the command line, it defaults to [min];
     if a maximum bound was not specified on the command line, it
-    defaults to [max]. If the minimum bound ends up being less than the
-    maximum bound, or one or both bounds are inf or nan, an [Error] with
-    an error message is returned instead.*)
+    defaults to [max]. If the minimum bound ends up being greater than
+    the maximum bound, or one or both bounds are inf or nan, an [Error]
+    with an error message is returned instead.*)
 let extract_bounds cmdline (default_min, default_max) dimension =
-  let valid_float flt =
-    let c = classify_float flt in
-    c <> FP_infinite && c <> FP_nan
-  in
   let float_opt suffix default =
     match List.assoc (dimension ^ suffix) (options cmdline) with
     | [] -> Ok default
@@ -144,10 +140,10 @@ let extract_bounds cmdline (default_min, default_max) dimension =
       ( float_opt "-min" default_min |> assume_ok,
         float_opt "-max" default_max |> assume_ok )
     in
-    if Bool.not (valid_float min && valid_float max) then
-      Error ("Bounds on " ^ dimension ^ " are NaN or infinite.")
-    else if min > max then
-      Error ("Minimum bound on " ^ dimension ^ " > maximum bound.")
+    if not (Common.valid_bounds (min, max)) then
+      Error
+        ( "Invalid bounds on " ^ dimension
+        ^ ". (Make sure min <= max and min,max are finite.)" )
     else Ok (min, max)
   with Bad_assume s -> Error s
 

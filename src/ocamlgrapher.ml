@@ -4,7 +4,6 @@ open Config
 open Common
 open Parser
 open Numericalmethods
-open Tokenizer
 
 (** [make_samples (low, high) steps] generates a list of [steps] values
     evenly distributed between [low] and [high].*)
@@ -15,82 +14,72 @@ let make_samples (low, high) steps =
   in
   do_step high []
 
-(* Truncator *)
+(** [trunc x] rounds [x] to 0 if it's really close to 0.*)
 let trunc x = if abs_float x < 1e-13 then 0. else x
 
-(* get outputs from equation *)
-let rec fun_output (eqt : token list) domain_list range acc =
-  match domain_list with
-  | [] -> acc |> List.rev |> get_t |> fun x -> range_limiter x range
-  | h :: t ->
-      fun_output eqt t range
-        ((h, h |> compute_f_of_x eqt |> trunc) :: acc)
+(** [eval_equation eq samples x_bounds y_bounds] tokenizes [eq] and
+    evaluates it at every point in [samples], returning a list of points
+    (with all points outside of [x_bounds] and [y_bounds] discarded).
+    Requires: [x_bounds] an [y_bounds] are valid bounds.*)
+let eval_equation eq samples x_bounds y_bounds =
+  let eq_tokenized = Tokenizer.tokenize eq in
+  samples
+  |> List.map (fun v -> (v, compute_f_of_x eq_tokenized v))
+  |> limiter x_bounds y_bounds
 
-(* Go through list of equations *)
-let rec multi_fun_outputs eqts domain_list range acc =
-  match eqts with
-  | [] -> List.rev acc
-  | h :: t ->
-      multi_fun_outputs t domain_list range
-        (fun_output (tokenize h) domain_list range [] :: acc)
+(** [print_point_list] prints a list of points to stdout, with each
+    point on a new line.*)
+let rec print_point_list =
+  List.iter (fun (x, y) ->
+      Printf.printf "(%10g, %-10g)\n" (trunc x) (trunc y))
 
-let tuple_print (x, y) =
-  Printf.printf "(%10g, %-10g)\n" (trunc x) (trunc y)
+(** [print_float_list] prints a list of floats to stdout, with each
+    float on a new line.*)
+let print_float_list =
+  List.iter (fun x -> Printf.printf "%10g\n" (trunc x))
 
-let rec tuple_list_print lst =
-  match lst with
-  | [] -> print_string "\n"
-  | (x, y) :: t ->
-      tuple_print (x, y);
-      tuple_list_print t
+(** [print_stylized s] prints a stylized version of [s] to stdout.*)
+let print_stylized s =
+  print_string
+    (style stdout "96" ^ style stdout "1" ^ s ^ style stdout "0")
 
-let rec float_list_print lst =
-  match lst with
-  | [] -> print_string "\n"
-  | h :: t ->
-      Printf.printf "%10g" (trunc h);
-      float_list_print t
+(** [print_roots (eq, points)] estimates and prints the roots of [eq]
+    given [points], a list of points satisfying [eq].*)
+let print_roots (eq, points) =
+  print_stylized ("Approximate roots (X-axis) for " ^ eq ^ ": \n");
+  points |> root_estimator |> print_float_list
 
-let roots_print lst =
-  print_string "Approximate roots (x-coords): \n";
-  lst |> get_t |> root_estimator |> float_list_print
+(** [print_points (eq, points)] prints the points [points] satisfying
+    [eq].*)
+let print_points (eq, points) =
+  print_stylized ("Points satisfying " ^ eq ^ ": \n");
+  points |> print_point_list
 
-let max_and_min_printer lst =
-  print_string "Approximate maximum(s) (x, y): \n";
-  lst |> get_t |> max_output |> tuple_list_print;
-  print_string "Approximate minimum(s) (x, y): \n";
-  lst |> get_t |> min_output |> tuple_list_print
-
-(* Pretty Print the input-output stuff *)
-let rec pp_list_of_lists lst =
-  match lst with
-  | [] -> print_string "\n"
-  | h :: t ->
-      tuple_list_print h;
-      roots_print h;
-      max_and_min_printer h;
-      pp_list_of_lists t
+let extrema_printer (eq, points) =
+  print_stylized ("Approximate maximums for " ^ eq ^ ": \n");
+  points |> max_output |> print_point_list;
+  print_stylized ("Approximate minimums " ^ eq ^ ": \n");
+  points |> min_output |> print_point_list
 
 (** Executes OCamlgrapher using [config]. *)
 let main_grapher (config : Config.t) =
-  let x_samples = make_samples (x_bounds config) (steps config) in
-  let eqts = equations config in
-  let input_output =
-    multi_fun_outputs eqts x_samples (y_bounds config) []
+  let x_b, y_b = (x_bounds config, y_bounds config) in
+  let x_samples = make_samples x_b (steps config) in
+  (* (equation string, list of points satisfying the equation )*)
+  let processed =
+    equations config
+    |> List.map (fun eq -> (eq, eval_equation eq x_samples x_b y_b))
   in
-  let g =
-    List.fold_left
-      (fun g eq -> Grapher.add_plot eq [] g)
-      (Grapher.create (x_bounds config) (y_bounds config))
-      eqts
-  in
-  input_output
-  |> List.iter (fun lst ->
-         match command config with
-         | Graph -> Grapher.to_svg (output_file config) g
-         | Points -> tuple_list_print lst
-         | Extrema -> max_and_min_printer lst
-         | Roots -> roots_print lst)
+  match command config with
+  | Graph ->
+      List.fold_left
+        (fun g (eq, points) -> Grapher.add_plot eq [ points ] g)
+        (Grapher.create (x_bounds config) (y_bounds config))
+        processed
+      |> Grapher.to_svg (output_file config)
+  | Points -> List.iter print_points processed
+  | Extrema -> List.iter extrema_printer processed
+  | Roots -> List.iter print_roots processed
 
 (** [main ()] is the entry point for ocamlgrapher. *)
 let main () =

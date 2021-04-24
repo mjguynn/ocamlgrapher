@@ -1,6 +1,13 @@
 (** [Common] contains helper functions which are potentially useful to
     multiple modules. *)
 
+(** A [point] is an (x,y) point on the Cartesian XY plane, where x and y
+    are finite floats.*)
+type point = float * float
+
+(** [points] represents a list of points. *)
+type points = point list
+
 (** [starts_with str sub] returns whether [str] starts with [sub].*)
 let rec starts_with str sub =
   try String.sub str 0 (String.length sub) = sub
@@ -39,3 +46,12 @@ let span (min, max) = max -. min
 let style o s =
   if Unix.isatty (Unix.descr_of_out_channel o) then "\x1b[" ^ s ^ "m"
   else ""
+
+(** [valid bounds (a, b)] returns whether the bounds [a..b] are valid,
+    where valid bounds are those bounds where [a] and [b] are *finite*
+    and [a<=b]. *)
+let valid_bounds (a, b) =
+  let a_class, b_class = (classify_float a, classify_float b) in
+  let a_valid = a_class = FP_normal || a_class = FP_zero in
+  let b_valid = a_class = FP_normal || a_class = FP_zero in
+  a_valid && b_valid && a <= b

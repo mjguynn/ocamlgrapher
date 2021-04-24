@@ -33,17 +33,13 @@ let hsv_step (h, s, v) =
     if s' < 0. then (h'', 1., v /. 2.) else (h'', s', v)
   else (h', s, v)
 
-(** A [plot_segment] is a list of points which should be displayed by
-    drawing a line from one point to the next.*)
-type plot_segment = (float * float) list
-
 (** A [plot] contains information about a plot of one or more continous
     line segments. [label] is a human-readable identifier for the plot,
     such as its formula. [segments] is a list of plot segments for the
     plot. [color] is the HSV color assigned to this plot on the graph. *)
 type plot = {
   label : string;
-  segments : plot_segment list;
+  segments : points list;
   color : hsv;
 }
 
@@ -51,14 +47,16 @@ type plot = {
     instance of type [t] represents a graph of the plots [plots] on a
     window spanning [x1..x2] on the X-axis and [y1..y2] on the Y-axis.
 
-    RI: [x2 > x1] and [y2 > y1]. *)
+    RI: [x2 >= x1] and [y2 >= y1]. *)
 type t = {
   plots : plot list;
   x_bounds : float * float;
   y_bounds : float * float;
 }
 
-let create x_bounds y_bounds = { plots = []; x_bounds; y_bounds }
+let create x_bounds y_bounds =
+  assert (valid_bounds x_bounds && valid_bounds y_bounds);
+  { plots = []; x_bounds; y_bounds }
 
 let add_plot label segments g =
   let color =

@@ -1,36 +1,35 @@
-type t = (float * float) list
+(** Methods which analyze and transform lists of points. *)
+open Common
 
-exception InvalidRange of string
+(** [Invalid_bounds] means that the bounds passed to a function are
+    invalid, such as if you passed (a1, a2) and a1 >= a2.*)
+exception Invalid_bounds
 
-exception Empty_type of string
+(** [No_points] means that a function requiring a list of one or more
+    points was provided with an empty list.*)
+exception No_points
 
-(** converts prototype list to type t. Requires: the list MUST be of
-    (float*float) list *)
-val get_t : (float * float) list -> t
-
-(** [range_limiter fun_output range] cuts off any values of y outside
-    range. The type of range is (float * float), and the lower limit
-    must come first. Raises exception InvalidRange if the lower limit is
-    strictly greater than upper limit. A function output is validly
-    within range if the value is greater than/less than or equal to the
-    lower/upper limit. *)
-val range_limiter : t -> float * float -> t
+(** [limiter (x1, x2) (y1, y2) points] returns [points] but without any
+    point (x,y) where (x < x1), (x > x2), (y < y1), or (y > y2). Raises
+    [Invalid_bounds] if the lower limit is strictly greater than upper
+    limit. *)
+val limiter : float * float -> float * float -> points -> points
 
 (** [root_estimator fun_output] estimates the roots of the function from
     the list of outputs given by the function. If there are no roots,
     the function returns an empty list. If there are roots, returns the
     approximate x-coordinates of the roots. Order of roots is
     left-to-right.*)
-val root_estimator : t -> float list
+val root_estimator : points -> float list
 
 (** [max_output fun_output] estimates the maximum point(s) of the
-    function output from the given list. Returns the output in order
-    from left-most to right-most. Requires: cannot pass an empty type t.
-    Raises [Empty_type] if type t is empty *)
-val max_output : t -> (float * float) list
+    function output from the given list. Output is in left-to-right
+    order. Raises [No_points] if there are no input points ([fun_output]
+    is the empty list)*)
+val max_output : points -> (float * float) list
 
 (** [min_output fun_output] estimates the minimum point(s) of the
-    function output from the given list. Returns the output in order
-    from left-most to right-most. Requires: cannot pass an empty type t.
-    Raises [Empty_type] if type t is empty *)
-val min_output : t -> (float * float) list
+    function output from the given list. Output is in left-to-right
+    order. Raises [No_points] if there are no input points ([fun_output]
+    is the empty list)*)
+val min_output : points -> (float * float) list
