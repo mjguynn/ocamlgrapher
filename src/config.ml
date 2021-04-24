@@ -14,8 +14,8 @@ type command_t =
 type t = {
   command : command_t;
   equations : string list;
-  domain : float * float;
-  range : float * float;
+  x_bounds : float * float;
+  y_bounds : float * float;
   steps : int;
   output_file : string option;
 }
@@ -44,10 +44,10 @@ let cmdline_info =
     ( Flag ("extrema", Some 'e'),
       "List the extrema of the equation(s) within the given bounds." );
     (Opt ("output", Some 'o'), "The name of the graph output file.");
-    (Opt ("domain-min", None), "Set the minimum bound on the domain.");
-    (Opt ("domain-max", None), "Set the maximum bound on the domain.");
-    (Opt ("range-min", None), "Set the minimum bound on the range.");
-    (Opt ("range-max", None), "Set the maxmimum bound on the range.");
+    (Opt ("x-min", None), "Set the minimum bound on the X axis.");
+    (Opt ("x-max", None), "Set the maximum bound on the X axis.");
+    (Opt ("y-min", None), "Set the minimum bound on the Y axis.");
+    (Opt ("y-max", None), "Set the maxmimum bound on the Y axis.");
     ( Opt ("quality", Some 'q'),
       "Set the number of \"steps\" used to analyze the function and/or \
        draw its graph. Higher is better." );
@@ -119,9 +119,9 @@ let extract_steps cmdline default_steps =
 
 (** [extract_bounds cmdline (min, max) dim]: returns an [Ok] result
     containing the pair (a, b) bounding [dim] as specified on [cmdline].
-    [dim] is the name of of the dimension (ex. "domain", "range"). If a
-    minimum bound was not specified on the command line, it defaults to
-    [min]; if a maximum bound was not specified on the command line, it
+    [dim] is the name of of the dimension (ex. "x", "y"). If a minimum
+    bound was not specified on the command line, it defaults to [min];
+    if a maximum bound was not specified on the command line, it
     defaults to [max]. If the minimum bound ends up being less than the
     maximum bound, or one or both bounds are inf or nan, an [Error] with
     an error message is returned instead.*)
@@ -165,7 +165,7 @@ let extract_command cmdline =
   | [ "graph" ] | [] -> Ok Graph
   | _ -> Error "Only specify one mode (graph, roots, points, extrema)"
 
-let from_cmdline d r s ic argv =
+let from_cmdline xs ys s ic argv =
   match parse_cmdline (List.map fst cmdline_info) ic argv with
   | Error e -> Error e
   | Ok res -> (
@@ -175,8 +175,8 @@ let from_cmdline d r s ic argv =
           {
             command = extract_command res |> assume_ok;
             equations = extract_equations res |> assume_ok;
-            domain = extract_bounds res d "domain" |> assume_ok;
-            range = extract_bounds res r "range" |> assume_ok;
+            x_bounds = extract_bounds res xs "x" |> assume_ok;
+            y_bounds = extract_bounds res ys "y" |> assume_ok;
             steps = extract_steps res s |> assume_ok;
             output_file = extract_output res |> assume_ok;
           }
@@ -184,9 +184,9 @@ let from_cmdline d r s ic argv =
 
 let equations cfg = cfg.equations
 
-let domain cfg = cfg.domain
+let x_bounds cfg = cfg.x_bounds
 
-let range cfg = cfg.range
+let y_bounds cfg = cfg.y_bounds
 
 let steps cfg = cfg.steps
 
@@ -202,8 +202,8 @@ let to_string cfg =
     | Roots -> "List the roots of"
     | Extrema -> "List the extrema of"
   in
-  let a, b = cfg.domain in
-  let c, d = cfg.range in
+  let a, b = cfg.x_bounds in
+  let c, d = cfg.y_bounds in
   let equation_str =
     match cfg.equations with
     | [] -> failwith "Impossible - RI violated"

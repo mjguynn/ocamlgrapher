@@ -1,8 +1,6 @@
 open OUnit2
 
-let default_domain = (-5.0, 5.0)
-
-let default_range = (-5.0, 5.0)
+let default_bounds = (-5.0, 5.0)
 
 let default_steps = 100
 
@@ -13,8 +11,8 @@ let dummy_stdin contents cxt =
   open_in name
 
 let test_config_base
-    domain
-    range
+    x_bounds
+    y_bounds
     steps
     input_override
     name
@@ -29,30 +27,30 @@ let test_config_base
   in
   assert_equal expect
     ( Array.append [| "./ocamlgrapher" |] argv
-    |> Config.from_cmdline domain range steps chan
+    |> Config.from_cmdline x_bounds y_bounds steps chan
     |> func )
 
 let test_config
-    ?domain:(d = default_domain)
-    ?range:(r = default_range)
+    ?x_bounds:(xs = default_bounds)
+    ?y_bounds:(ys = default_bounds)
     ?steps:(s = default_steps)
     ?input_override:(o = None)
     name
     argv
     func
     expect =
-  test_config_base d r s o name argv
+  test_config_base xs ys s o name argv
     (fun x -> Result.get_ok x |> func)
     expect
 
 let test_config_error
-    ?domain:(d = default_domain)
-    ?range:(r = default_range)
+    ?x_bounds:(xs = default_bounds)
+    ?y_bounds:(ys = default_bounds)
     ?steps:(s = default_steps)
     ?input_override:(o = None)
     name
     argv =
-  test_config_base d r s o name argv
+  test_config_base xs ys s o name argv
     (function Ok _ -> true | Error _ -> false)
     false
 
@@ -62,7 +60,7 @@ let test_simple name =
 (* I would write a helper function to transform a string into an argv
    array, but the logic for doing that is *really* complicated...*)
 
-let cfg_dr cfg = (Config.domain cfg, Config.range cfg)
+let cfg_xy cfg = (Config.x_bounds cfg, Config.y_bounds cfg)
 
 let test_mode name flag =
   test_config
@@ -77,8 +75,8 @@ let suite =
     (* Valid Cases *)
     test_simple "Equation" equations [ "y=12x+4" ];
     test_simple "Command" command Graph;
-    test_simple "Default Domain" domain default_domain;
-    test_simple "Default Range" range default_range;
+    test_simple "Default X Bounds" x_bounds default_bounds;
+    test_simple "Default Y Bounds" y_bounds default_bounds;
     test_simple "Output File" output_file None;
     test_config "Config w/ Output File 1"
       [| "-o"; "test.txt"; "y=x" |]
@@ -93,17 +91,13 @@ let suite =
       [| "y=x"; "-o"; "test.txt" |]
       output_file (Some "test.txt");
     test_config "Config w/ Changed Default Bounds (program)" [| "y=x" |]
-      ~domain:(2.0, 2.5) ~range:(-12.0, 2.0) cfg_dr
+      ~x_bounds:(2.0, 2.5) ~y_bounds:(-12.0, 2.0) cfg_xy
       ((2.0, 2.5), (-12.0, 2.0));
     test_config "Config w/ Changed Bounds (cmdline)"
       [|
-        "y=x";
-        "--domain-min=7";
-        "--domain-max=12";
-        "--range-min=-6.72";
-        "--range-max=12";
+        "y=x"; "--x-min=7"; "--x-max=12"; "--y-min=-6.72"; "--y-max=12";
       |]
-      cfg_dr
+      cfg_xy
       ((7., 12.), (-6.72, 12.));
     test_config "Config w/ Changed Default Steps (program)" [| "y=x" |]
       ~steps:200 steps 200;
@@ -120,7 +114,7 @@ let suite =
       (Points, Some "test.txt");
     (* Advanced Valid Cases *)
     test_config "Config w/ --"
-      [| "--domain-max=7"; "--range-max=12"; "--"; "-x-4=y" |]
+      [| "--x-max=7"; "--y-max=12"; "--"; "-x-4=y" |]
       equations [ "-x-4=y" ];
     test_config "Multiple Equations (with --)"
       [| "--"; "y=x"; "y=2x" |]
@@ -128,13 +122,11 @@ let suite =
     test_config "Multiple Equations" [| "y=x"; "y=2x" |] equations
       [ "y=x"; "y=2x" ];
     test_config "Config w/ equation (read from input channel)"
-      ~input_override:(Some "y=12x^2\n")
-      [| "--domain-min=2"; "-" |]
+      ~input_override:(Some "y=12x^2\n") [| "--x-min=2"; "-" |]
       equations [ "y=12x^2" ];
     test_config "Config w/ multiple equations (read from input channel)"
       ~input_override:(Some "y=12x^2\ny=2x+4ln(x)\n")
-      [| "--domain-min=2"; "-" |]
-      equations
+      [| "--x-min=2"; "-" |] equations
       [ "y=12x^2"; "y=2x+4ln(x)" ];
     (*Intentionally Failing Cases*)
     test_config_error "Unknown Short Flag" [| "-t"; "y=x" |];
@@ -145,34 +137,25 @@ let suite =
       [| "-totest.txt"; "y=x" |];
     test_config_error "Unknown Long Option" [| "--test=2"; "y=x" |];
     test_config_error "Short Option w/ no param" [| "y=x"; "-o" |];
-    test_config_error "Long Option w/ no param"
-      [| "y=x"; "--default-min" |];
+    test_config_error "Long Option w/ no param" [| "y=x"; "--x-min" |];
     test_config_error "Long Option w/ no param but an equals"
-      [| "y=x"; "--default-min=" |];
-    test_config_error "Invalid Domain"
-      [| "y=x"; "--domain-min=7"; "--domain-max=6" |];
-    test_config_error "Invalid Domain Min (string)"
-      [| "y=x"; "--domain-min=THE" |];
-    test_config_error "Invalid Domain Min (-inf)"
-      [| "y=x"; "--domain-min=-inf" |];
-    test_config_error "Invalid Domain Min (NaN)"
-      [| "y=x"; "--domain-min=NaN" |];
-    test_config_error "Invalid Domain Max (string)"
-      [| "y=x"; "--domain-max=BUSTA" |];
-    test_config_error "Multiply Defined Domain Bounds"
-      [| "y=x"; "--domain-min=7"; "--domain-max=8"; "--domain-min=6" |];
-    test_config_error "Multiply Defined Range Bounds"
-      [| "y=x"; "--range-min=7"; "--range-max=8"; "--range-min=6" |];
-    test_config_error "Invalid Range"
-      [| "y=x"; "--range-min=7"; "--range-max=6" |];
-    test_config_error "Invalid Domain & Range"
-      [|
-        "y=x";
-        "--domain-min7";
-        "--domain-max=6";
-        "--range-min=2";
-        "--range-max=1";
-      |];
+      [| "y=x"; "--x-min=" |];
+    test_config_error "Invalid x Bounds"
+      [| "y=x"; "--x-min=7"; "--x-max=6" |];
+    test_config_error "Invalid x Min (string)"
+      [| "y=x"; "--x-min=THE" |];
+    test_config_error "Invalid x Min (-inf)" [| "y=x"; "--x-min=-inf" |];
+    test_config_error "Invalid x Min (NaN)" [| "y=x"; "--x-min=NaN" |];
+    test_config_error "Invalid x Max (string)"
+      [| "y=x"; "--x-max=BUSTA" |];
+    test_config_error "Multiply Defined X Bounds"
+      [| "y=x"; "--x-min=7"; "--x-max=8"; "--x-min=6" |];
+    test_config_error "Multiply Defined Y Bounds"
+      [| "y=x"; "--y-min=7"; "--y-max=8"; "--y-min=6" |];
+    test_config_error "Invalid Y Bounds"
+      [| "y=x"; "--y-min=7"; "--y-max=6" |];
+    test_config_error "Invalid X & Y Bounds"
+      [| "y=x"; "--x-min=7"; "--x-max=6"; "--y-min=2"; "--y-max=1" |];
     test_config_error "Invalid Steps (string)"
       [| "y=x"; "--quality=gme" |];
     test_config_error "Invalid Steps (0)" [| "y=x"; "--quality=0" |];

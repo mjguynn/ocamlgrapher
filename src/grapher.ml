@@ -52,13 +52,28 @@ let add_plot label points g =
 
 let span (min, max) = max -. min
 
-let text_of txt styles = Container ("text", styles, [ Text txt ])
+let text_of ?fill:(f = "black") c x y txt =
+  Container
+    ( "text",
+      [ ("fill", f); ("class", c); ("x", x); ("y", y) ],
+      [ Text txt ] )
 
-let line_of s x1 x2 y1 y2 =
+let line_of ?fill:(f = "black") c x1 x2 y1 y2 =
   Item
     ( "line",
-      [ ("class", s); ("x1", x1); ("x2", x2); ("y1", y1); ("y2", y2) ]
-    )
+      [
+        ("fill", f);
+        ("class", c);
+        ("x1", x1);
+        ("x2", x2);
+        ("y1", y1);
+        ("y2", y2);
+      ] )
+
+let circle_of ?fill:(f = "black") c x y r =
+  Item
+    ( "circle",
+      [ ("fill", f); ("class", c); ("cx", x); ("cy", y); ("r", r) ] )
 
 let equation_view_stylesheet =
   {|
@@ -89,28 +104,17 @@ let equation_view_stylesheet =
   |}
 
 let eqs_label num eq =
-  let cstr = hsl_string_of_hsv eq.color in
+  let col = hsl_string_of_hsv eq.color in
   let h = (num * 30) + 90 in
   Container
     ( "g",
       [],
       [
-        Item
-          ( "circle",
-            [
-              ("fill", cstr);
-              ("cx", "40px");
-              ("cy", string_of_int h);
-              ("r", "10px");
-              ("class", "equation_view_disc");
-            ] );
-        text_of eq.label
-          [
-            ("x", "60px");
-            ("y", string_of_int (h + 5));
-            ("fill", cstr);
-            ("class", "equation_view_equation");
-          ];
+        circle_of "equation_view_disc" ~fill:col "40" (string_of_int h)
+          "10";
+        text_of "equation_view_equation" ~fill:col "60px"
+          (string_of_int (h + 5))
+          eq.label;
       ] )
 
 let eqs_view g =
@@ -122,10 +126,7 @@ let eqs_view g =
     Item ("rect", [ ("class", "equation_view_background") ])
   in
   let border = line_of "equation_view_line" "100%" "100%" "0" "100%" in
-  let header =
-    text_of "Equations"
-      [ ("class", "equation_view_text"); ("x", "15px"); ("y", "40px") ]
-  in
+  let header = text_of "equation_view_text" "15px" "40px" "Equations" in
   let divider =
     line_of "equation_view_line" "0%" "100%" "60px" "60px"
   in

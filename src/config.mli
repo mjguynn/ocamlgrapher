@@ -16,7 +16,7 @@ type command_t =
   | Roots
   | Extrema
 
-(** [from_cmdline default_domain default_range default_steps ic argv]
+(** [from_cmdline default_domain default_x_span default_y_span ic argv]
     takes an argv-style list of args [argv] and uses it to construct a
     [Config.t]. It follows the
     {{:https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html}
@@ -31,13 +31,13 @@ type command_t =
 
     "-e", "--extrema": Make [Extrema] the command to be executed.
 
-    "--domain-min=[num]": Set minimum value on domain
+    "--x-min=[num]": Set minimum value on X axis
 
-    "--domain-max=[num]": Set maximum value on domain
+    "--x-max=[num]": Set maximum value on X axis
 
-    "--range-min=[num]": Set minimum value on range
+    "--y-min=[num]": Set minimum value on Y axis
 
-    "--range-max=[num]": Set maximum value on range
+    "--y-max=[num]": Set maximum value on Y axis
 
     "-q [num]", "--quality=[num]": The number of "steps" in the graph.
     num > 0
@@ -52,12 +52,12 @@ type command_t =
     arguments are treated as equations. If no equations are supplied, an
     error message is returned.
 
-    If one or both components of the domain or range are unspecified on
+    If one or both components of the X or Y bounds are unspecified on
     the command line, the returned representation shall inherit their
-    values from the [default_domain] and [default_range] parameters.
-    Similarly, if the number of steps is unspecified on the command
-    line, the returned representation shall use [default_steps] steps.
-    Requires: [default_steps] >= 1
+    values from the [default_x_bounds] and [default_y_bounds]
+    parameters. Similarly, if the number of steps is unspecified on the
+    command line, the returned representation shall use [default_steps]
+    steps. Requires: [default_steps] >= 1
 
     If no command option is provided on the command line, the returned
     representation will have [Graph] as the command.
@@ -70,7 +70,7 @@ type command_t =
     error message will be returned.
 
     [istream] represents an input stream to read from. Outside of test
-    suites, it should probably be stdin.
+    suites, it should probably be [stdin].
 
     [argv] must have at least one entry.*)
 val from_cmdline :
@@ -86,15 +86,17 @@ val from_cmdline :
     supplied. This list is guaranteed to be non-empty.*)
 val equations : t -> string list
 
-(** [domain cfg] returns the domain [(a, b)] which constrains all
-    commands on this [cfg]. All points [(x,y)] where [x < a] or [x > b]
-    should be ignored by the program. It is guaranteed that [b >= a].*)
-val domain : t -> float * float
+(** [x_bounds cfg] returns the bounds on the X axis [(a, b)] which
+    constrains all commands on this [cfg]. All points [(x,y)] where
+    [x < a] or [x > b] should be ignored by the program. It is
+    guaranteed that [b >= a].*)
+val x_bounds : t -> float * float
 
-(** [range cfg] returns the range [(c, d)] which all commands on this
-    [cfg] should respect. All points [(x,y)] where [y < c] or [y > d]
-    should be ignored by the program. It is guaranteed that [d >= c].*)
-val range : t -> float * float
+(** [y_bounds cfg] returns the bounds on the Y axis [(c, d)] which all
+    commands on this [cfg] should respect. All points [(x,y)] where
+    [y < c] or [y > d] should be ignored by the program. It is
+    guaranteed that [d >= c].*)
+val y_bounds : t -> float * float
 
 (** [steps cfg] returns the number of "steps" or "slices" that the user
     wants the program to use in computing the graph. A higher number of

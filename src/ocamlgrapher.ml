@@ -80,15 +80,15 @@ let rec pp_list_of_lists lst =
 (* Graphs the given function given command line inputs. Requires that
    the command line is [Ok]. *)
 let main_grapher (config : Config.t) =
-  let domain_list = domain_maker (domain config) (steps config) in
+  let domain_list = domain_maker (x_bounds config) (steps config) in
   let eqts = equations config in
   let input_output =
-    multi_fun_outputs eqts domain_list (range config) []
+    multi_fun_outputs eqts domain_list (y_bounds config) []
   in
   let g =
     List.fold_left
       (fun g eq -> Grapher.add_plot eq [] g)
-      (Grapher.create (domain config) (range config))
+      (Grapher.create (x_bounds config) (y_bounds config))
       eqts
   in
   Grapher.to_svg "test_out.svg" g;
