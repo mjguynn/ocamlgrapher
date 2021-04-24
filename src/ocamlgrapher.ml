@@ -91,20 +91,18 @@ let main_grapher (config : Config.t) =
       (Grapher.create (x_bounds config) (y_bounds config))
       eqts
   in
-  let out_file =
-    match output_file config with Some s -> s | None -> "out.svg"
-  in
   input_output
   |> List.iter (fun lst ->
          match command config with
-         | Graph -> Grapher.to_svg out_file g
+         | Graph -> Grapher.to_svg (output_file config) g
          | Points -> tuple_list_print lst
          | Extrema -> max_and_min_printer lst
          | Roots -> roots_print lst)
 
 let main () =
   match
-    Config.from_cmdline (-10., 10.) (-10., 10.) 100 stdin Sys.argv
+    Config.from_cmdline (-10., 10.) (-10., 10.) 100 "out.svg" stdin
+      Sys.argv
   with
   | Error e -> Printf.eprintf "%s\n" e
   | Ok cfg ->

@@ -8,16 +8,21 @@ type command_t =
   | Roots
   | Extrema
 
-(** RI: Let [domain=(a,b)]. Then [cfg] is only meaningful if [x<=y]. Let
-    [range=(c,d)]. Then [cfg] is only meaningful if [c<=d]. Also, [cfg]
-    is only meaningful if [steps>=1].*)
+(** AF: Let [(x1, x2)=x_bounds] and [(y1, y2)=y_bounds]. Then an
+    instance of [t] represents a user's desires to execute [command] on
+    the equations in [equations] (in ASCII math notation) within a
+    region spanning [x1..x2] on the X-axis and [y1..y2] on the Y-axis,
+    with a precision of [steps]. [output_file] represents the file which
+    shall recieve relevant program output.
+
+    RI: [cfg] is only meaningful if [x1<x2], [y1<y2], and [steps>=1].*)
 type t = {
   command : command_t;
   equations : string list;
   x_bounds : float * float;
   y_bounds : float * float;
   steps : int;
-  output_file : string option;
+  output_file : string;
 }
 
 (** [Bad_assume s] represents that assuming a [Result] was [Ok] was
@@ -96,10 +101,10 @@ let extract_equations cmdline =
     [cmdline], it returns [Some f] with an [Ok] result; if none were
     specified, it returns [None] with an [Ok] result; otherwise, returns
     an [Error] result with an error message.*)
-let extract_output cmdline =
+let extract_output cmdline default_out =
   match List.assoc "output" (options cmdline) with
-  | [] -> Ok None
-  | [ filename ] -> Ok (Some filename)
+  | [] -> Ok default_out
+  | [ filename ] -> Ok filename
   | _ -> Error "Multiple output files specified"
 
 (** [extract_steps cmdline default]: returns the user specified number
@@ -165,7 +170,7 @@ let extract_command cmdline =
   | [ "graph" ] | [] -> Ok Graph
   | _ -> Error "Only specify one mode (graph, roots, points, extrema)"
 
-let from_cmdline xs ys s ic argv =
+let from_cmdline xs ys s o ic argv =
   match parse_cmdline (List.map fst cmdline_info) ic argv with
   | Error e -> Error e
   | Ok res -> (
@@ -178,7 +183,7 @@ let from_cmdline xs ys s ic argv =
             x_bounds = extract_bounds res xs "x" |> assume_ok;
             y_bounds = extract_bounds res ys "y" |> assume_ok;
             steps = extract_steps res s |> assume_ok;
-            output_file = extract_output res |> assume_ok;
+            output_file = extract_output res o |> assume_ok;
           }
       with Bad_assume s -> Error s )
 
@@ -214,6 +219,5 @@ let to_string cfg =
     "%s %s with x in [%f, %f] and y in [%f, %f], using %i steps" verb
     equation_str a b c d cfg.steps
   ^
-  match cfg.output_file with
-  | None -> ""
-  | Some f -> ", outputting to " ^ f
+  if cfg.command = Graph then ", outputting to " ^ cfg.output_file
+  else ""

@@ -29,3 +29,6 @@ let rec read_lines (ch : in_channel) : string list =
     try step (input_line ch :: acc) with End_of_file -> acc
   in
   step []
+
+(** [span (min, max)] is syntactic sugar for [max -. min]. *)
+let span (min, max) = max -. min

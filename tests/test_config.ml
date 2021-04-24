@@ -4,6 +4,8 @@ let default_bounds = (-5.0, 5.0)
 
 let default_steps = 100
 
+let default_out = "out.svg"
+
 let dummy_stdin contents cxt =
   let name, out = bracket_tmpfile cxt in
   output_string out contents;
@@ -14,6 +16,7 @@ let test_config_base
     x_bounds
     y_bounds
     steps
+    output_file
     input_override
     name
     argv
@@ -27,30 +30,32 @@ let test_config_base
   in
   assert_equal expect
     ( Array.append [| "./ocamlgrapher" |] argv
-    |> Config.from_cmdline x_bounds y_bounds steps chan
+    |> Config.from_cmdline x_bounds y_bounds steps output_file chan
     |> func )
 
 let test_config
     ?x_bounds:(xs = default_bounds)
     ?y_bounds:(ys = default_bounds)
+    ?output_file:(o = default_out)
     ?steps:(s = default_steps)
-    ?input_override:(o = None)
+    ?input_override:(io = None)
     name
     argv
     func
     expect =
-  test_config_base xs ys s o name argv
+  test_config_base xs ys s o io name argv
     (fun x -> Result.get_ok x |> func)
     expect
 
 let test_config_error
     ?x_bounds:(xs = default_bounds)
     ?y_bounds:(ys = default_bounds)
+    ?output_file:(o = default_out)
     ?steps:(s = default_steps)
-    ?input_override:(o = None)
+    ?input_override:(io = None)
     name
     argv =
-  test_config_base xs ys s o name argv
+  test_config_base xs ys s o io name argv
     (function Ok _ -> true | Error _ -> false)
     false
 
@@ -77,19 +82,21 @@ let suite =
     test_simple "Command" command Graph;
     test_simple "Default X Bounds" x_bounds default_bounds;
     test_simple "Default Y Bounds" y_bounds default_bounds;
-    test_simple "Output File" output_file None;
+    test_simple "Output File" output_file default_out;
+    test_config "Config w/ Changed Default Output File"
+      ~output_file:"test.txt" [| "y=12x" |] output_file "test.txt";
     test_config "Config w/ Output File 1"
       [| "-o"; "test.txt"; "y=x" |]
-      output_file (Some "test.txt");
+      output_file "test.txt";
     test_config "Config w/ Output File 2"
       [| "-otest.txt"; "y=x" |]
-      output_file (Some "test.txt");
+      output_file "test.txt";
     test_config "Config w/ Output File 3"
       [| "y=x"; "--output=test.txt" |]
-      output_file (Some "test.txt");
+      output_file "test.txt";
     test_config "Config w/ Output File 4"
       [| "y=x"; "-o"; "test.txt" |]
-      output_file (Some "test.txt");
+      output_file "test.txt";
     test_config "Config w/ Changed Default Bounds (program)" [| "y=x" |]
       ~x_bounds:(2.0, 2.5) ~y_bounds:(-12.0, 2.0) cfg_xy
       ((2.0, 2.5), (-12.0, 2.0));
@@ -111,7 +118,7 @@ let suite =
     test_config "Config w/ short option chaining"
       [| "-potest.txt"; "y=x" |]
       (fun cfg -> (command cfg, output_file cfg))
-      (Points, Some "test.txt");
+      (Points, "test.txt");
     (* Advanced Valid Cases *)
     test_config "Config w/ --"
       [| "--x-max=7"; "--y-max=12"; "--"; "-x-4=y" |]

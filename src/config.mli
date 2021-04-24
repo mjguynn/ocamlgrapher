@@ -16,9 +16,9 @@ type command_t =
   | Roots
   | Extrema
 
-(** [from_cmdline default_domain default_x_span default_y_span ic argv]
-    takes an argv-style list of args [argv] and uses it to construct a
-    [Config.t]. It follows the
+(** [from_cmdline default_x_span default_y_span default_quality
+    default_output_file ic argv] takes an argv-style list of args [argv]
+    and uses it to construct a [Config.t]. It follows the
     {{:https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html}
     GNU Program Argument Syntax Conventions}. It recognizes the
     following options:
@@ -57,7 +57,9 @@ type command_t =
     values from the [default_x_bounds] and [default_y_bounds]
     parameters. Similarly, if the number of steps is unspecified on the
     command line, the returned representation shall use [default_steps]
-    steps. Requires: [default_steps] >= 1
+    steps, and if no output file is specified on the command line, the
+    returned representation shall use [default_output_file]. Requires:
+    [default_steps] >= 1
 
     If no command option is provided on the command line, the returned
     representation will have [Graph] as the command.
@@ -77,6 +79,7 @@ val from_cmdline :
   float * float ->
   float * float ->
   int ->
+  string ->
   in_channel ->
   string array ->
   (t, string) result
@@ -108,9 +111,8 @@ val steps : t -> int
     perform. *)
 val command : t -> command_t
 
-(** [output_file cfg] returns [Some filepath] if the user specified a
-    file [filepath] to write output to. Otherwise, returns [None].*)
-val output_file : t -> string option
+(** [output_file cfg] returns the desired output filename for graphs.*)
+val output_file : t -> string
 
 (** [to_string cfg] returns the human-readable string representation of
     [cfg]. *)
