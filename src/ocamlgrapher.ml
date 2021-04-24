@@ -1,25 +1,19 @@
-(** [main ()] is the entry point for ocamlgrapher. *)
+(** Entry point for ocamlgrapher. *)
 
 open Config
+open Common
 open Parser
 open Numericalmethods
 open Tokenizer
 
-let rec domain_maker_help current_dom_low domain_high step_size acc =
-  match current_dom_low < domain_high -. step_size with
-  | true ->
-      domain_maker_help
-        (current_dom_low +. step_size)
-        domain_high step_size
-        ((current_dom_low +. step_size) :: acc)
-  | false -> List.rev acc
-
-(* Outputs list of domain sample points *)
-let domain_maker domain steps =
-  match domain with
-  | d_low, d_high ->
-      let step_size = (d_high -. d_low) /. float_of_int steps in
-      domain_maker_help d_low d_high step_size [ d_low ]
+(** [make_samples (low, high) steps] generates a list of [steps] values
+    evenly distributed between [low] and [high].*)
+let make_samples (low, high) steps =
+  let step_size = span (low, high) /. float_of_int steps in
+  let rec do_step cur acc =
+    if cur < low then acc else do_step (cur -. step_size) (cur :: acc)
+  in
+  do_step high []
 
 (* Truncator *)
 let trunc x = if abs_float x < 1e-13 then 0. else x
@@ -77,13 +71,12 @@ let rec pp_list_of_lists lst =
       max_and_min_printer h;
       pp_list_of_lists t
 
-(* Graphs the given function given command line inputs. Requires that
-   the command line is [Ok]. *)
+(** Executes OCamlgrapher using [config]. *)
 let main_grapher (config : Config.t) =
-  let domain_list = domain_maker (x_bounds config) (steps config) in
+  let x_samples = make_samples (x_bounds config) (steps config) in
   let eqts = equations config in
   let input_output =
-    multi_fun_outputs eqts domain_list (y_bounds config) []
+    multi_fun_outputs eqts x_samples (y_bounds config) []
   in
   let g =
     List.fold_left
@@ -99,14 +92,14 @@ let main_grapher (config : Config.t) =
          | Extrema -> max_and_min_printer lst
          | Roots -> roots_print lst)
 
+(** [main ()] is the entry point for ocamlgrapher. *)
 let main () =
   match
-    Config.from_cmdline (-10., 10.) (-10., 10.) 100 "out.svg" stdin
-      Sys.argv
+    from_cmdline (-10., 10.) (-10., 10.) 100 "out.svg" stdin Sys.argv
   with
   | Error e -> Printf.eprintf "%s\n" e
   | Ok cfg ->
-      print_endline (Config.to_string cfg);
+      print_endline (to_string cfg);
       main_grapher cfg
 
 let () = main ()
