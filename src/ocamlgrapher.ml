@@ -2,7 +2,6 @@
 
 open Config
 open Common
-open Parser
 open Numericalmethods
 
 (** [make_samples (low, high) steps] generates a list of [steps] values
@@ -21,7 +20,7 @@ let make_samples (low, high) steps =
 let eval_equation eq samples x_bounds y_bounds =
   let eq_tokenized = Tokenizer.tokenize eq in
   samples
-  |> List.map (fun v -> (v, compute_f_of_x eq_tokenized v))
+  |> List.map (fun v -> (v, Parser.compute_f_of_x eq_tokenized v))
   |> limiter x_bounds y_bounds
 
 (** [print_point_list] prints a list of points to stdout, with each
@@ -81,7 +80,7 @@ let main_grapher (config : Config.t) =
 (** [main ()] is the entry point for ocamlgrapher. *)
 let main () =
   match
-    from_cmdline (-10., 10.) (-10., 10.) 100 "out.svg" stdin Sys.argv
+    from_cmdline (-10., 10.) (-10., 10.) 500 "out.svg" stdin Sys.argv
   with
   | Error e -> Printf.eprintf "%s\n" e
   | Ok cfg ->
