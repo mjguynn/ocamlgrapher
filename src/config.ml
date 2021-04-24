@@ -59,13 +59,9 @@ let cmdline_info =
   ]
 
 let help errc =
-  let style s =
-    if Unix.isatty (Unix.descr_of_out_channel stderr) then
-      "\x1b[" ^ s ^ "m"
-    else ""
-  in
-  let header s = style "96" ^ s ^ style "0" in
-  let grey s = style "38;2;140;140;140" ^ s ^ style "0" in
+  let open Common in
+  let header s = style stderr "96" ^ s ^ style stderr "0" in
+  let grey s = style stderr "38;2;140;140;140" ^ s ^ style stderr "0" in
   Printf.eprintf "%s"
     ( header "Usage: " ^ "./ocamlgrapher.byte "
     ^ grey "<options> <equations>\n" );
