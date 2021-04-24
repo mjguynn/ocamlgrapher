@@ -23,6 +23,7 @@ let compute_f_of_x_test
   if success then
     assert_equal expected_output
       (compute_f_of_x (tokenize input_equation) input_x)
+      ~printer:string_of_float
   else
     assert_raises (Invalid_argument "syntax error") (fun () ->
         generalize_exception (tokenize input_equation) input_x)
@@ -51,6 +52,9 @@ let parser_tests =
     compute_f_of_x_test "parse fail for y=x+y^2" "y=x+y^2" 0. 0. false;
     compute_f_of_x_test "x=1 for y=e^x" "y=e^x" 1. 2.71828182845904523
       true;
+    compute_f_of_x_test "x=1 for y=(x)" "y=(x)" 1. 1. true;
+    compute_f_of_x_test "x=1 for y=(3)(x)" "y=(3)(x)" 1. 3. true;
+    compute_f_of_x_test "x=4 for y=(2)(x-5)^2" "y=(2)(x-5)^2" 4. 2. true;
   ]
 
 let tokenizer_tests =
@@ -84,28 +88,28 @@ let tokenizer_tests =
       "sin(x)+cos(x)-arccot(y^2-ln(4/y))"
       [
         Function Sin;
-        Operator LParen;
+        Parentheses LParen;
         Variable X;
-        Operator RParen;
+        Parentheses RParen;
         Operator Plus;
         Function Cos;
-        Operator LParen;
+        Parentheses LParen;
         Variable X;
-        Operator RParen;
+        Parentheses RParen;
         Operator Minus;
         Function Arccot;
-        Operator LParen;
+        Parentheses LParen;
         Variable Y;
         Operator Exponent;
         Constant (Number 2.);
         Operator Minus;
         Function Ln;
-        Operator LParen;
+        Parentheses LParen;
         Constant (Number 4.);
         Operator Divide;
         Variable Y;
-        Operator RParen;
-        Operator RParen;
+        Parentheses RParen;
+        Parentheses RParen;
       ];
     tokenize_test "Implicit multiplication with spaces"
       "24xsin(x^2) + 25.22 *  -6 y-3"
@@ -113,11 +117,11 @@ let tokenizer_tests =
         Constant (Number 24.);
         Variable X;
         Function Sin;
-        Operator LParen;
+        Parentheses LParen;
         Variable X;
         Operator Exponent;
         Constant (Number 2.);
-        Operator RParen;
+        Parentheses RParen;
         Operator Plus;
         Constant (Number 25.22);
         Operator Times;

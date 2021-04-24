@@ -38,6 +38,10 @@ type operator =
   | Times
   | Divide
   | Exponent
+
+(** [parentheses] represents a a left or right parentheses, as specified
+    in the grammar. *)
+type parentheses =
   | LParen
   | RParen
 
@@ -45,6 +49,7 @@ type operator =
     valid mathematical function. *)
 type token =
   | Operator of operator
+  | Parentheses of parentheses
   | Constant of constant
   | Variable of variable
   | Function of m_function

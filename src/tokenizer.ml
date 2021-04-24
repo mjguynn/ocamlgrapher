@@ -34,11 +34,14 @@ type operator =
   | Times
   | Divide
   | Exponent
+
+type parentheses =
   | LParen
   | RParen
 
 type token =
   | Operator of operator
+  | Parentheses of parentheses
   | Constant of constant
   | Variable of variable
   | Function of m_function
@@ -52,8 +55,8 @@ let unit_token_map =
     ('*', Operator Times);
     ('/', Operator Divide);
     ('^', Operator Exponent);
-    ('(', Operator LParen);
-    (')', Operator RParen);
+    ('(', Parentheses LParen);
+    (')', Parentheses RParen);
     ('x', Variable X);
     ('y', Variable Y);
     ('e', Constant E);

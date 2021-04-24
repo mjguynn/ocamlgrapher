@@ -22,14 +22,14 @@ let compute_f_of_x equation x =
 
   let rec parse_elem () =
     match peek () with
-    | Operator LParen ->
+    | Parentheses LParen ->
         next ();
         let expr = parse_expr () in
-        consume (Operator RParen);
+        consume (Parentheses RParen);
         expr
     | Function f ->
         next ();
-        consume (Operator LParen);
+        consume (Parentheses LParen);
         let expr = parse_expr () in
         let f_output =
           match f with
@@ -50,7 +50,7 @@ let compute_f_of_x equation x =
           | Arccsc -> asin (1. /. expr)
           | Arccot -> atan (1. /. expr)
         in
-        consume (Operator RParen);
+        consume (Parentheses RParen);
         f_output
     | Variable X ->
         next ();
@@ -103,6 +103,7 @@ let compute_f_of_x equation x =
         next ();
         elem ** parse_elem ()
     | Operator _ -> elem
+    | Parentheses RParen -> elem
     | EOF -> elem
     | _ -> elem *. parse_group ()
   in
