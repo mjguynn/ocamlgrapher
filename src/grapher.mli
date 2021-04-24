@@ -16,7 +16,7 @@ val create : float * float -> float * float -> t
     a straight line. [label] is the label of the relation on the
     resulting graph. Example usage:
     [add_equation "y=x" \[(0,0); (1,1); (2,2)\] g] *)
-val add_plot : string -> (float * float) list -> t -> t
+val add_plot : string -> (float * float) list list -> t -> t
 
 (** [to_svg filename graph] outputs an SVG representing [graph] to
     [filename]. [filename] represents the name of the output SVG file,

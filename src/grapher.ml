@@ -60,13 +60,13 @@ type t = {
 
 let create x_bounds y_bounds = { plots = []; x_bounds; y_bounds }
 
-let add_plot label points g =
+let add_plot label segments g =
   let color =
     match g.plots with
     | [] -> (0., 1., 1.) (* initial color - bright red *)
     | h :: _ -> hsv_step h.color
   in
-  { g with plots = { label; segments = [ points ]; color } :: g.plots }
+  { g with plots = { label; segments; color } :: g.plots }
 
 let create_text ?fill:(f = "black") c x y txt =
   Container
