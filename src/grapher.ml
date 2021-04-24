@@ -1,3 +1,5 @@
+open Xmldom
+
 (** [hsv (h, s, v)] has hue [h], saturation [s], and value [v]. Each
     value is a normalized float [0..1] *)
 type hsv = float * float * float
@@ -47,50 +49,25 @@ let add_plot label points g =
   in
   { g with plots = { label; points; color } :: g.plots }
 
-type dom_tag = string
-
-type dom_attribute = string * string
-
-type dom_element =
-  | DOMText of string
-  | DOMSingle of dom_tag * dom_attribute list
-  | DOMContainer of dom_tag * dom_attribute list * dom_element list
-
-let dom_string_of_attributes =
-  List.fold_left
-    (fun acc (k, v) -> Printf.sprintf "%s %s=\"%s\"" acc k v)
-    ""
-
-let rec dom_output f ?tab_level:(tl = 0) =
-  let tabs = String.make tl '\t' in
-  function
-  | DOMText s -> Printf.fprintf f "%s" s
-  | DOMSingle (e, o) ->
-      Printf.fprintf f "%s<%s %s/>\n" tabs e
-        (dom_string_of_attributes o)
-  | DOMContainer (e, o, c) ->
-      Printf.fprintf f "%s<%s %s>\n" tabs e (dom_string_of_attributes o);
-      List.iter (dom_output ~tab_level:(tl + 1) f) c;
-      Printf.fprintf f "%s</%s>\n" tabs e
-
 let span (min, max) = max -. min
 
 let to_svg filename g =
   let f = open_out filename in
   let dom =
-    DOMContainer
+    Container
       ( "svg",
         [ ("xmlns", "http://www.w3.org/2000/svg") ],
         [
-          DOMSingle
+          Comment "what is updog";
+          Item
             ( "rect",
               [ ("width", "100%"); ("height", "100%"); ("fill", "red") ]
             );
-          DOMContainer
+          Container
             ( "text",
               [ ("x", "20"); ("y", "20") ],
-              [ DOMText "testing testing testing" ] );
+              [ Text "testing testing testing" ] );
         ] )
   in
-  dom_output f dom;
+  output_xml f dom;
   close_out f
