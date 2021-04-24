@@ -1,4 +1,5 @@
 open Xmldom
+open Common
 
 (** [hsv (h, s, v)] has hue [h], saturation [s], and value [v]. Each
     value is a normalized float [0..1] *)
@@ -75,34 +76,6 @@ let circle_of ?fill:(f = "black") c x y r =
     ( "circle",
       [ ("fill", f); ("class", c); ("cx", x); ("cy", y); ("r", r) ] )
 
-let global_stylesheet =
-  {|
-    .equation_view_background {
-      fill: #EFEFF4;
-      width: 100%;
-      height: 100%;
-    }
-    .equation_view_line {
-      stroke: #999;
-      stoke-width: 4px;
-    }
-    .equation_view_text {
-      font-family: verdana;
-      font-size: 30px;
-      fill: #444;
-    }
-    .equation_view_equation {
-      font-family: consolas;
-      font-size: 20px;
-      stroke: #777;
-      stroke-width: 1px;
-    }
-    .equation_view_disc {
-      stroke: #444;
-      stroke-width: 1px;
-    }
-  |}
-
 let eqs_label num eq =
   let col = hsl_string_of_hsv eq.color in
   let h = (num * 30) + 90 in
@@ -110,9 +83,9 @@ let eqs_label num eq =
     ( "g",
       [],
       [
-        circle_of "equation_view_disc" ~fill:col "40" (string_of_int h)
+        circle_of "relation_view_disc" ~fill:col "40" (string_of_int h)
           "10";
-        text_of "equation_view_equation" ~fill:col "60px"
+        text_of "relation_view_text" ~fill:col "60px"
           (string_of_int (h + 5))
           eq.label;
       ] )
@@ -120,12 +93,14 @@ let eqs_label num eq =
 let eqs_view g =
   let labels = List.mapi eqs_label (List.rev g.plots) in
   let background =
-    Item ("rect", [ ("class", "equation_view_background") ])
+    Item ("rect", [ ("class", "relation_view_background") ])
   in
-  let border = line_of "equation_view_line" "100%" "100%" "0" "100%" in
-  let header = text_of "equation_view_text" "15px" "40px" "Equations" in
+  let border = line_of "relation_view_line" "100%" "100%" "0" "100%" in
+  let header =
+    text_of "relation_view_header" "15px" "40px" "Relations"
+  in
   let divider =
-    line_of "equation_view_line" "0%" "100%" "60px" "60px"
+    line_of "relation_view_line" "0%" "100%" "60px" "60px"
   in
   let max_label_characters =
     List.fold_left
@@ -143,6 +118,18 @@ let plot_view g =
   Container ("svg", [ ("viewBox", "300 0 1000 1000") ], [])
 
 let to_svg filename g =
+  let styles = open_in "graph_styles.css" in
+  let style_obj =
+    Container
+      ( "style",
+        [],
+        [
+          Text
+            ( read_lines styles |> List.rev
+            |> List.fold_left (concat_with "\n") "" );
+        ] )
+  in
+  close_in styles;
   let f = open_out filename in
   let dom =
     Container
@@ -150,10 +137,7 @@ let to_svg filename g =
         [
           ("xmlns", "http://www.w3.org/2000/svg"); ("height", "1000px");
         ],
-        [
-          Container ("style", [], [ Text global_stylesheet ]);
-          eqs_view g;
-        ] )
+        [ style_obj; eqs_view g ] )
   in
   output_xml f dom;
   close_out f
