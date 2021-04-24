@@ -56,7 +56,7 @@ let valid_bounds (a, b) =
   let b_valid = a_class = FP_normal || a_class = FP_zero in
   a_valid && b_valid && a <= b
 
-(** [fpeq ~tolerance:t a b] returns whether [a] and [b] are roughly
+(** [fpeq ?tolerance:t a b] returns whether [a] and [b] are roughly
     equal (within some tolerance for floating-point precision loss). The
     higher the value of [t], the less precise the comparison. By
     default, [t] is [1e3]. (This value was empircally chosen for best

@@ -31,7 +31,7 @@ type element =
   | Item of tag * attribute list
   | Container of tag * attribute list * element list
 
-(** [output_xml f ~tab_level:tl dom] writes the abstract DOM tree [dom]
+(** [output_xml f ?tab_level:tl dom] writes the abstract DOM tree [dom]
     to the file [f] as XML with an indentation of [tl] tabs.*)
 let rec output_xml f ?tab_level:(tl = 0) =
   let string_of_attributes =
