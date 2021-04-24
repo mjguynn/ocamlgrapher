@@ -62,22 +62,41 @@ let root_estimator (output_list : t) : float list =
   | [] -> []
   | (x, y) :: t -> t |> root_est_help (x, y) [] |> List.rev
 
+let trunc x = if abs_float x < 1e-13 then 0. else x
+
+let tuple_print (x, y) =
+  Printf.printf "(%10g, %-10g)\n" (trunc x) (trunc y)
+
+let rec tuple_list_print lst =
+  match lst with
+  | [] -> print_string "\n"
+  | (x, y) :: t ->
+      tuple_print (x, y);
+      tuple_list_print t
+
 (* helper method to obtain the maximum point of a function output *)
-let rec max_help (lst : t) (max_x, max_y) (acc : (float * float) list) =
+let rec max_help lst (max_x, max_y) (acc : (float * float) list) =
   match lst with
   | [] -> List.rev acc
   | (x, y) :: tail ->
-      if y > max_y then max_help tail (x, y) [ (x, y) ]
-      else if y = max_y then max_help tail (x, y) ((x, y) :: acc)
+      (*tuple_print (max_x, max_y);*)
+      if y > max_y then
+        let lst = [ (x, y) ] in
+        (*tuple_list_print lst;*)
+        max_help tail (x, y) lst
+      else if y = max_y then
+        let lst = (x, y) :: acc in
+        (*tuple_list_print lst;*)
+        max_help tail (x, y) lst
       else max_help tail (max_x, max_y) acc
 
-let max_output (lst : t) =
+let max_output lst =
   match lst with
-  | [] -> raise (Empty_type "Type is empty")
+  | [] -> failwith "Type is empty"
   | (x, y) :: tail -> max_help lst (0., Float.neg_infinity) []
 
 (* helper method to obtain the minimum point of a function output *)
-let rec min_help (lst : t) (min_x, min_y) acc =
+let rec min_help lst (min_x, min_y) acc =
   match lst with
   | [] -> List.rev acc
   | (x, y) :: tail ->
@@ -85,7 +104,7 @@ let rec min_help (lst : t) (min_x, min_y) acc =
       else if y = min_y then min_help tail (x, y) ((x, y) :: acc)
       else min_help tail (min_x, min_y) acc
 
-let min_output (lst : t) =
+let min_output lst =
   match lst with
-  | [] -> raise (Empty_type "Type is empty")
+  | [] -> failwith "Type is empty"
   | (x, y) :: tail -> min_help lst (0., Float.infinity) []
