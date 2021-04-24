@@ -1,6 +1,6 @@
 /** This stylesheet is *copied* into all generated graphs.
-	Certain attributes, such as positioning and equation colors,
-	are handled by ocamlgrapher. */
+    Certain attributes, such as positioning and equation colors,
+    are handled by ocamlgrapher. */
 .plot_info_background {
   fill: #EFEFF4;
   width: 100%;
