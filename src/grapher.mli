@@ -10,10 +10,11 @@ type t
     Requires: [domain_min <= domain_max] and [range_min <= range_max].*)
 val create : float * float -> float * float -> t
 
-(** [add_plot label points graph] adds [points] to [graph], where each
-    point in [points] is connected to the next point via a straight
-    line. [label] is the label of the line on the resulting
-    graph.contents Example usage:
+(** [add_plot label segments graph] adds [segments] to [graph], where
+    each segment is a list of points, and each point within a segment is
+    connected to the next point within that segment (if one exists) via
+    a straight line. [label] is the label of the relation on the
+    resulting graph. Example usage:
     [add_equation "y=x" \[(0,0); (1,1); (2,2)\] g] *)
 val add_plot : string -> (float * float) list -> t -> t
 

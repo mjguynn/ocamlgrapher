@@ -33,39 +33,40 @@ let hsv_step (h, s, v) =
     if s' < 0. then (h'', 1., v /. 2.) else (h'', s', v)
   else (h', s, v)
 
-(** A [relation] contains information about a relation processed by
-    OCamlgrapher. [label] is a human-readable identifier for the
-    relation, such as its formula. [points] is a list of selected points
-    satisfying the relation, in an order such that drawing a line from
-    one point to the next is a reasonable approximation of the relation.
-    [color] is the HSV color assigned to this relation on the graph. *)
-type relation = {
+(** A [plot_segment] is a list of points which should be displayed by
+    drawing a line from one point to the next.*)
+type plot_segment = (float * float) list
+
+(** A [plot] contains information about a plot of one or more continous
+    line segments. [label] is a human-readable identifier for the plot,
+    such as its formula. [segments] is a list of plot segments for the
+    plot. [color] is the HSV color assigned to this plot on the graph. *)
+type plot = {
   label : string;
-  points : (float * float) list;
+  segments : plot_segment list;
   color : hsv;
 }
 
 (** AF: Let [(x1, x2) = x_bounds] and [(y1, y2) = y_bounds]. Then an
-    instance of type [t] represents a graph of the relations [relations]
-    on a window spanning [x1..x2] on the X-axis and [y1..y2] on the
-    Y-axis.
+    instance of type [t] represents a graph of the plots [plots] on a
+    window spanning [x1..x2] on the X-axis and [y1..y2] on the Y-axis.
 
     RI: [x2 > x1] and [y2 > y1]. *)
 type t = {
-  relations : relation list;
+  plots : plot list;
   x_bounds : float * float;
   y_bounds : float * float;
 }
 
-let create x_bounds y_bounds = { relations = []; x_bounds; y_bounds }
+let create x_bounds y_bounds = { plots = []; x_bounds; y_bounds }
 
 let add_plot label points g =
   let color =
-    match g.relations with
+    match g.plots with
     | [] -> (0., 1., 1.) (* initial color - bright red *)
     | h :: _ -> hsv_step h.color
   in
-  { g with relations = { label; points; color } :: g.relations }
+  { g with plots = { label; segments = [ points ]; color } :: g.plots }
 
 let create_text ?fill:(f = "black") c x y txt =
   Container
@@ -90,41 +91,39 @@ let create_circle ?fill:(f = "black") c x y r =
     ( "circle",
       [ ("fill", f); ("class", c); ("cx", x); ("cy", y); ("r", r) ] )
 
-let relation_label num eq =
+let plot_label num eq =
   let col = hsl_string_of_hsv eq.color in
   let h = (num * 30) + 90 in
   Container
     ( "g",
       [],
       [
-        create_circle "relation_view_disc" ~fill:col "40"
-          (string_of_int h) "10";
-        create_text "relation_view_text" ~fill:col "60px"
+        create_circle "plot_info_disc" ~fill:col "40" (string_of_int h)
+          "10";
+        create_text "plot_info_text" ~fill:col "60px"
           (string_of_int (h + 5))
           eq.label;
       ] )
 
-let relations_view g =
-  let labels = List.mapi relation_label (List.rev g.relations) in
+let plot_info g =
+  let labels = List.mapi plot_label (List.rev g.plots) in
   let background =
-    Item ("rect", [ ("class", "relation_view_background") ])
+    Item ("rect", [ ("class", "plot_info_background") ])
   in
-  let border =
-    create_line "relation_view_line" "100%" "100%" "0" "100%"
-  in
+  let border = create_line "plot_info_line" "100%" "100%" "0" "100%" in
   let header =
-    create_text "relation_view_header" "15px" "40px" "Relations"
+    create_text "plot_info_header" "15px" "40px" "Relations"
   in
   let divider =
-    create_line "relation_view_line" "0%" "100%" "60px" "60px"
+    create_line "plot_info_line" "0%" "100%" "60px" "60px"
   in
   let max_label_characters =
     List.fold_left
       (fun maxlen eq -> max maxlen (String.length eq.label))
-      0 g.relations
+      0 g.plots
   in
   let width = 60 + max 160 (12 * max_label_characters) in
-  let height = 90 + max 160 (30 * List.length g.relations) in
+  let height = 90 + max 160 (30 * List.length g.plots) in
   Container
     ( "svg",
       [ ("viewBox", Printf.sprintf "0 0 %i %i" width height) ],
@@ -147,7 +146,7 @@ let to_svg filename g =
     Container
       ( "svg",
         [ ("xmlns", "http://www.w3.org/2000/svg") ],
-        [ styles_elem; relations_view g ] )
+        [ styles_elem; plot_info g ] )
   in
   output_xml f dom;
   close_out f

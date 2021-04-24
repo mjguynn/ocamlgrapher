@@ -1,27 +1,27 @@
 /** This stylesheet is *copied* into all generated graphs.
 	Certain attributes, such as positioning and equation colors,
 	are handled by ocamlgrapher. */
-.relation_view_background {
+.plot_info_background {
   fill: #EFEFF4;
   width: 100%;
   height: 100%;
 }
-.relation_view_line {
+.plot_info_line {
   stroke: #999;
   stoke-width: 4px;
 }
-.relation_view_header {
+.plot_info_header {
   font-family: verdana;
   font-size: 30px;
   fill: #444;
 }
-.relation_view_text {
+.plot_info_text {
   font-family: consolas;
   font-size: 20px;
   stroke: #777;
   stroke-width: 1px;
 }
-.relation_view_disc {
+.plot_info_disc {
   stroke: #444;
   stroke-width: 1px;
 }
