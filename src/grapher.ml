@@ -75,7 +75,7 @@ let circle_of ?fill:(f = "black") c x y r =
     ( "circle",
       [ ("fill", f); ("class", c); ("cx", x); ("cy", y); ("r", r) ] )
 
-let equation_view_stylesheet =
+let global_stylesheet =
   {|
     .equation_view_background {
       fill: #EFEFF4;
@@ -94,7 +94,7 @@ let equation_view_stylesheet =
     .equation_view_equation {
       font-family: consolas;
       font-size: 20px;
-      stroke: #444;
+      stroke: #777;
       stroke-width: 1px;
     }
     .equation_view_disc {
@@ -118,9 +118,6 @@ let eqs_label num eq =
       ] )
 
 let eqs_view g =
-  let style =
-    Container ("style", [], [ Text equation_view_stylesheet ])
-  in
   let labels = List.mapi eqs_label (List.rev g.plots) in
   let background =
     Item ("rect", [ ("class", "equation_view_background") ])
@@ -130,10 +127,20 @@ let eqs_view g =
   let divider =
     line_of "equation_view_line" "0%" "100%" "60px" "60px"
   in
+  let max_label_characters =
+    List.fold_left
+      (fun maxlen eq -> max maxlen (String.length eq.label))
+      0 g.plots
+  in
+  let width = 60 + max 160 (12 * max_label_characters) in
+  let height = 90 + max 160 (30 * List.length g.plots) in
   Container
     ( "svg",
-      [ ("viewBox", "0 0 300 1000") ],
-      style :: background :: border :: header :: divider :: labels )
+      [ ("viewBox", Printf.sprintf "0 0 %i %i" width height) ],
+      background :: border :: header :: divider :: labels )
+
+let plot_view g =
+  Container ("svg", [ ("viewBox", "300 0 1000 1000") ], [])
 
 let to_svg filename g =
   let f = open_out filename in
@@ -143,7 +150,10 @@ let to_svg filename g =
         [
           ("xmlns", "http://www.w3.org/2000/svg"); ("height", "1000px");
         ],
-        [ eqs_view g ] )
+        [
+          Container ("style", [], [ Text global_stylesheet ]);
+          eqs_view g;
+        ] )
   in
   output_xml f dom;
   close_out f

@@ -91,11 +91,13 @@ let main_grapher (config : Config.t) =
       (Grapher.create (x_bounds config) (y_bounds config))
       eqts
   in
-  Grapher.to_svg "test_out.svg" g;
+  let out_file =
+    match output_file config with Some s -> s | None -> "out.svg"
+  in
   input_output
   |> List.iter (fun lst ->
          match command config with
-         | Graph -> Printf.eprintf "%s" "Graphing UNIMPLEMENTED\n"
+         | Graph -> Grapher.to_svg out_file g
          | Points -> tuple_list_print lst
          | Extrema -> max_and_min_printer lst
          | Roots -> roots_print lst)
