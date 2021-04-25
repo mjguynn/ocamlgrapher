@@ -24,7 +24,7 @@ let hsl_string_of_hsv (h, sv, v) =
     the output sequence, to the extent permitted by floating-point
     precision loss. *)
 let hsv_step (h, s, v) =
-  let step = 0.312 in
+  let step = 0.3 in
   (* PATTERN: hue changes first, then saturation, and finally value *)
   let h' = h +. step in
   if h' > 1. then
@@ -89,62 +89,167 @@ let create_circle ?fill:(f = "black") c x y r =
     ( "circle",
       [ ("fill", f); ("class", c); ("cx", x); ("cy", y); ("r", r) ] )
 
-let plot_label num eq =
-  let col = hsl_string_of_hsv eq.color in
-  let h = (num * 30) + 90 in
-  Container
-    ( "g",
-      [],
-      [
-        create_circle "plot_info_disc" ~fill:col "40" (string_of_int h)
-          "10";
-        create_text "plot_info_text" ~fill:col "60px"
-          (string_of_int (h + 5))
-          eq.label;
-      ] )
+type config = {
+  header_height : int;
+  body_min_width : int;
+  body_min_height : int;
+  label_vertical_spacing : int;
+  label_indent : int;
+  label_font_size : int;
+}
 
-let plot_info g =
-  let labels = List.mapi plot_label (List.rev g.plots) in
-  let background =
-    Item ("rect", [ ("class", "plot_info_background") ])
+let styles_from_stylesheet i =
+  let styles =
+    read_lines i |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
   in
-  let border = create_line "plot_info_line" "100%" "100%" "0" "100%" in
-  let header =
-    create_text "plot_info_header" "15px" "40px" "Relations"
+  seek_in i 0;
+  styles
+
+let plot_info_height c g =
+  c.header_height
+  + max c.body_min_height
+      ((List.length g.plots + 1) * c.label_vertical_spacing)
+
+let plot_info_width c g =
+  (* rough approximation *)
+  let char_width =
+    int_of_float (float_of_int c.label_font_size *. 0.6)
   in
-  let divider =
-    create_line "plot_info_line" "0%" "100%" "60px" "60px"
-  in
-  let max_label_characters =
+  let max_label_chars =
     List.fold_left
       (fun maxlen eq -> max maxlen (String.length eq.label))
       0 g.plots
   in
-  let width = 60 + max 160 (12 * max_label_characters) in
-  let height = 90 + max 160 (30 * List.length g.plots) in
-  Container
-    ( "svg",
-      [ ("viewBox", Printf.sprintf "0 0 %i %i" width height) ],
-      background :: border :: header :: divider :: labels )
+  max c.body_min_width (c.label_indent + (char_width * max_label_chars))
 
-let plot_view g =
-  Container ("svg", [ ("viewBox", "300 0 1000 1000") ], [])
+let make_plot_label c i eq =
+  let col = hsl_string_of_hsv eq.color in
+  let x = string_of_int c.label_indent in
+  let y =
+    ((i + 1) * c.label_vertical_spacing) + c.header_height
+    |> string_of_int
+  in
+  Container
+    ( "g",
+      [],
+      [
+        create_circle "plot_info_disc" ~fill:col x y "10";
+        create_text "plot_info_label" ~fill:col x y eq.label;
+      ] )
+
+let make_plot_info c g =
+  let labels = List.mapi (make_plot_label c) (List.rev g.plots) in
+  let background =
+    Item ("rect", [ ("class", "plot_info_background") ])
+  in
+  let border = create_line "plot_info_line" "100%" "100%" "0" "100%" in
+  let header = create_text "plot_info_header" "0" "0" "Relations" in
+  let divider =
+    let h = string_of_int c.header_height in
+    create_line "plot_info_line" "0" "100%" h h
+  in
+  background :: border :: header :: divider :: labels
+
+let config_from_stylesheet i =
+  let base_cfg =
+    {
+      header_height = 0;
+      body_min_width = 0;
+      body_min_height = 0;
+      label_vertical_spacing = 0;
+      label_indent = 0;
+      label_font_size = 0;
+    }
+  in
+  let rec parse_line acc =
+    try
+      match
+        Scanf.sscanf (input_line i) " --%s@: %upx" (fun v n -> (v, n))
+      with
+      | "header-height", header_height ->
+          parse_line { acc with header_height }
+      | "body-min-width", body_min_width ->
+          parse_line { acc with body_min_width }
+      | "body-min-height", body_min_height ->
+          parse_line { acc with body_min_height }
+      | "label-vertical-spacing", label_vertical_spacing ->
+          parse_line { acc with label_vertical_spacing }
+      | "label-indent", label_indent ->
+          parse_line { acc with label_indent }
+      | "label-font-size", label_font_size ->
+          parse_line { acc with label_font_size }
+      | s, _ -> parse_line acc
+      | exception Scanf.Scan_failure _ -> parse_line acc
+    with End_of_file -> acc
+  in
+  let parsed_cfg = parse_line base_cfg in
+  seek_in i 0;
+  parsed_cfg
+
+let graph_viewbox g =
+  Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
+    (span g.x_bounds) (span g.y_bounds)
+
+let create_polyline stroke c points =
+  let coords =
+    List.fold_left
+      (fun acc (x, y) ->
+        Printf.sprintf "%s %f,%f" acc x (Common.flip y))
+      "" points
+  in
+  Item
+    ( "polyline",
+      [ ("stroke", stroke); ("class", c); ("points", coords) ] )
+
+let make_plot p =
+  Container
+    ( "g",
+      [],
+      List.map
+        (create_polyline (hsl_string_of_hsv p.color) "graph_path")
+        p.segments )
+
+let make_graph g = List.map make_plot g.plots
 
 let to_svg filename g =
   (* load stylesheet, create DOM element *)
-  let styles = open_in "graph_styles.css" in
-  let styles_str =
-    read_lines styles |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
+  let stylesheet = open_in "graph_styles.css" in
+  let config = config_from_stylesheet stylesheet in
+  let styles =
+    Container ("style", [], [ Text (styles_from_stylesheet stylesheet) ])
   in
-  let styles_elem = Container ("style", [], [ Text styles_str ]) in
-  close_in styles;
-  (* begin export *)
-  let f = open_out filename in
+  close_in stylesheet;
+  let height = plot_info_height config g in
+  let plot_info_width = plot_info_width config g in
+  let plot_info =
+    Container
+      ( "svg",
+        [
+          ("width", string_of_int plot_info_width);
+          ("height", string_of_int height);
+        ],
+        make_plot_info config g )
+  in
+  let graph_ratio = span g.x_bounds /. span g.y_bounds in
+  let graph_width = int_of_float (float_of_int height *. graph_ratio) in
+  let graph =
+    Container
+      ( "svg",
+        [
+          ("x", string_of_int plot_info_width);
+          ("width", string_of_int graph_width);
+          ("height", string_of_int height);
+          ("viewBox", graph_viewbox g);
+        ],
+        make_graph g )
+  in
   let dom =
     Container
       ( "svg",
         [ ("xmlns", "http://www.w3.org/2000/svg") ],
-        [ styles_elem; plot_info g ] )
+        [ styles; plot_info; graph ] )
   in
+  (* begin export *)
+  let f = open_out filename in
   output_xml f dom;
   close_out f

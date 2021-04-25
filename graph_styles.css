@@ -1,6 +1,15 @@
-/** This stylesheet is *copied* into all generated graphs.
-    Certain attributes, such as positioning and equation colors,
-    are handled by ocamlgrapher. */
+/* This stylesheet is *copied* into all generated graphs.
+   Certain attributes are handled by ocamlgrapher. */
+:root {
+  /* Do NOT edit the names of these variables! 
+     They are parsed by OCamlgrapher. */
+  --header-height: 60px;
+  --body-min-width: 220px;
+  --body-min-height: 400px;
+  --label-vertical-spacing: 30px;
+  --label-indent: 60px;
+  --label-font-size: 20px;
+}
 .plot_info_background {
   fill: #EFEFF4;
   width: 100%;
@@ -10,18 +19,26 @@
   stroke: #999;
   stoke-width: 4px;
 }
+
 .plot_info_header {
   font-family: verdana;
   font-size: 30px;
   fill: #444;
+  transform: translate(15px, calc(var(--header-height) - 20px));
 }
-.plot_info_text {
+.plot_info_label {
   font-family: consolas;
-  font-size: 20px;
+  font-size: var(--label-font-size);
   stroke: #777;
   stroke-width: 1px;
 }
 .plot_info_disc {
   stroke: #444;
   stroke-width: 1px;
+  transform: translate(-20px, -5px);
+}
+
+.graph_path {
+  stroke-width: 1%;
+  fill: none;
 }
