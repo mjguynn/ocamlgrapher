@@ -26,7 +26,7 @@ let rec root_est_help
   match output_list with
   | [] -> acc
   | (x, y) :: t ->
-      if y = 0. then
+      if Common.fpeq y 0. then
         match t with
         | [] -> root_est_help (x, y) (x :: acc) t
         | (x_next, y_next) :: tt ->
