@@ -21,7 +21,7 @@ let eval_equation eq samples x_bounds y_bounds =
   let eq_tokenized = Tokenizer.tokenize eq in
   samples
   |> List.map (fun v -> (v, Parser.compute_f_of_x eq_tokenized v))
-  |> limiter x_bounds y_bounds
+  |> limiter_2 x_bounds y_bounds
 
 (** [print_point_list] prints a list of points to stdout, with each
     point on a new line.*)
@@ -43,19 +43,19 @@ let print_stylized s =
     given [points], a list of points satisfying [eq].*)
 let print_roots (eq, points) =
   print_stylized ("Approximate roots (X-axis) for " ^ eq ^ ": \n");
-  points |> root_estimator |> print_float_list
+  List.flatten points |> root_estimator |> print_float_list
 
 (** [print_points (eq, points)] prints the points [points] satisfying
     [eq].*)
 let print_points (eq, points) =
   print_stylized ("Points satisfying " ^ eq ^ ": \n");
-  points |> print_point_list
+  List.flatten points |> print_point_list
 
 let extrema_printer (eq, points) =
   print_stylized ("Approximate maximums for " ^ eq ^ ": \n");
-  points |> max_output |> print_point_list;
+  List.flatten points |> max_output |> print_point_list;
   print_stylized ("Approximate minimums " ^ eq ^ ": \n");
-  points |> min_output |> print_point_list
+  List.flatten points |> min_output |> print_point_list
 
 (** Executes OCamlgrapher using [config]. *)
 let main_grapher (config : Config.t) =
@@ -69,7 +69,7 @@ let main_grapher (config : Config.t) =
   match command config with
   | Graph ->
       List.fold_left
-        (fun g (eq, points) -> Grapher.add_plot eq [ points ] g)
+        (fun g (eq, points) -> Grapher.add_plot eq points g)
         (Grapher.create (x_bounds config) (y_bounds config))
         processed
       |> Grapher.to_svg (output_file config)
