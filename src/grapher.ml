@@ -66,28 +66,22 @@ let add_plot label segments g =
   in
   { g with plots = { label; segments; color } :: g.plots }
 
-let make_text ?fill:(f = "black") c x y txt =
+let make_text c atts x y txt =
   Container
-    ( "text",
-      [ ("fill", f); ("class", c); ("x", x); ("y", y) ],
-      [ Text txt ] )
+    ("text", atts @ [ ("class", c); ("x", x); ("y", y) ], [ Text txt ])
 
-let make_line ?fill:(f = "black") c x1 x2 y1 y2 =
+let make_circle c atts x y r =
   Item
-    ( "line",
-      [
-        ("fill", f);
-        ("class", c);
-        ("x1", x1);
-        ("x2", x2);
-        ("y1", y1);
-        ("y2", y2);
-      ] )
+    ("circle", atts @ [ ("class", c); ("cx", x); ("cy", y); ("r", r) ])
 
-let make_circle ?fill:(f = "black") c x y r =
-  Item
-    ( "circle",
-      [ ("fill", f); ("class", c); ("cx", x); ("cy", y); ("r", r) ] )
+let make_polyline c atts points =
+  let coords =
+    List.fold_left
+      (fun acc (x, y) ->
+        Printf.sprintf "%s %f,%f" acc x (Common.flip y))
+      "" points
+  in
+  Item ("polyline", atts @ [ ("class", c); ("points", coords) ])
 
 type config = {
   header_height : int;
@@ -133,33 +127,38 @@ let make_plot_label c i eq =
     ( "g",
       [],
       [
-        make_circle "plot_info_disc" ~fill:col x y "10";
-        make_text "plot_info_label" ~fill:col x y eq.label;
+        make_circle "plot_info_disc" [ ("fill", col) ] x y "10";
+        make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
       ] )
 
-let make_region_borders c x1 y1 x2 y2 =
+let make_region_borders c (x1, y1) (x2, y2) =
   [
     (* left/right *)
-    make_line c x1 x1 y1 y2;
-    make_line c x2 x2 y1 y2;
+    make_polyline c [] [ (x1, y1); (x1, y2) ];
+    make_polyline c [] [ (x2, y1); (x2, y2) ];
     (* top/bottom *)
-    make_line c x1 x2 y1 y1;
-    make_line c x1 x2 y2 y2;
+    make_polyline c [] [ (x1, y1); (x2, y1) ];
+    make_polyline c [] [ (x1, y2); (x2, y2) ];
   ]
 
-let make_plot_info c g =
+let make_plot_info c g w h =
   let labels = List.mapi (make_plot_label c) (List.rev g.plots) in
   let background =
     Item ("rect", [ ("class", "plot_info_background") ])
   in
-  let header = make_text "plot_info_header" "0" "0" "Relations" in
+  let header = make_text "plot_info_header" [] "0" "0" "Relations" in
+  let hh = float_of_int c.header_height in
   let divider =
-    let h = string_of_int c.header_height in
-    make_line "plot_info_border" "0" "100%" h h
+    make_polyline "plot_info_border" []
+      [ (0., hh); (float_of_int w, hh) ]
   in
-  background :: header :: divider
-  :: make_region_borders "plot_info_border" "0" "0" "100%" "100%"
-  @ labels
+  Container
+    ( "svg",
+      [ ("width", string_of_int w); ("height", string_of_int h) ],
+      [ background; header; divider ]
+      @ make_region_borders "plot_info_border" (0., 0.)
+          (float_of_int w, float_of_int h)
+      @ labels )
 
 let config_from_stylesheet i =
   let base_cfg =
@@ -201,31 +200,30 @@ let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
 
-let make_polyline stroke c points =
-  let coords =
-    List.fold_left
-      (fun acc (x, y) ->
-        Printf.sprintf "%s %f,%f" acc x (Common.flip y))
-      "" points
-  in
-  Item
-    ( "polyline",
-      [ ("stroke", stroke); ("class", c); ("points", coords) ] )
-
 let make_plot p =
   Container
     ( "g",
       [],
       List.map
-        (make_polyline (hsl_string_of_hsv p.color) "graph_path")
+        (make_polyline "graph_path"
+           [ ("stroke", hsl_string_of_hsv p.color) ])
         p.segments )
 
-let make_graph g =
+let make_graph g x w h =
+  let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
   (* X & Y Axis *)
-  make_line "graph_axis" "-50%" "50%" "0" "0"
-  :: make_line "graph_axis" "0" "0" "-50%" "50%"
-  :: make_region_borders "graph_border" "-50%" "-50%" "50%" "50%"
-  @ List.map make_plot g.plots
+  Container
+    ( "svg",
+      [
+        ("x", string_of_int x);
+        ("width", string_of_int w);
+        ("height", string_of_int h);
+        ("viewBox", graph_viewbox g);
+      ],
+      make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ]
+      :: make_polyline "graph_axis" [] [ (0., y1); (0., y2) ]
+      :: List.map make_plot g.plots
+      @ make_region_borders "graph_border" (x1, y1) (x2, y2) )
 
 let to_svg filename g =
   (* load stylesheet, create DOM element *)
@@ -235,30 +233,13 @@ let to_svg filename g =
     Container ("style", [], [ Text (styles_from_stylesheet stylesheet) ])
   in
   close_in stylesheet;
+  (* set up graph *)
   let height = plot_info_height config g in
   let plot_info_width = plot_info_width config g in
-  let plot_info =
-    Container
-      ( "svg",
-        [
-          ("width", string_of_int plot_info_width);
-          ("height", string_of_int height);
-        ],
-        make_plot_info config g )
-  in
+  let plot_info = make_plot_info config g plot_info_width height in
   let graph_ratio = span g.x_bounds /. span g.y_bounds in
   let graph_width = int_of_float (float_of_int height *. graph_ratio) in
-  let graph =
-    Container
-      ( "svg",
-        [
-          ("x", string_of_int plot_info_width);
-          ("width", string_of_int graph_width);
-          ("height", string_of_int height);
-          ("viewBox", graph_viewbox g);
-        ],
-        make_graph g )
-  in
+  let graph = make_graph g plot_info_width graph_width height in
   let dom =
     Container
       ( "svg",
