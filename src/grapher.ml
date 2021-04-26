@@ -202,7 +202,7 @@ let get_grid_pos
     (x_max : float)
     (y_min : float)
     (y_max : float) : float list * float list =
-  ([], [])
+  ([ 1. ], [ 1. ])
 
 (* helper method that returns a make_polyline command. For this, graphs
    the vertical gridlines. *)
@@ -245,9 +245,9 @@ let make_graph g x w h =
       let background =
         Item ("rect", [ ("class", "graph_background") ])
       in
+      let fst_list, snd_list = get_grid_pos x1 x2 y1 y2 in
       background
-      :: hor_grids_draw (x1, x2) (y1, y2) [ -1.; 1.; 2. ]
-           [ -1.; 1.; 2. ] []
+      :: hor_grids_draw (x1, x2) (y1, y2) fst_list snd_list []
       @ (axes :: List.map make_plot g.plots)
       @ [
           make_region_border "graph_border"
