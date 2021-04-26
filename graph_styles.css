@@ -47,22 +47,22 @@
 }
 
 .graph_path {
-  stroke-width: 1%;
+  stroke-width: 0.1px;
   fill: none;
 }
 .graph_border {
   stroke: black;
-  stroke-width: 0.015em;
+  stroke-width: 0.3px;
 }
 .graph_axis
 {
   stroke: #444;
-  stroke-width: 0.01em;
+  stroke-width: 0.15px;
 }
 .graph_gridline
 {
   stroke: #DDD;
-  stroke-width: 0.005em;
+  stroke-width: 0.1px;
   fill: none;
 }
 .graph_background

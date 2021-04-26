@@ -177,10 +177,11 @@ let make_plot_info c g w h =
       @ labels )
 
 let graph_viewbox g =
-  Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
+  Printf.sprintf "%f %f %f %f" (fst g.x_bounds)
+    (flip (snd g.y_bounds))
     (span g.x_bounds) (span g.y_bounds)
 
-let invert_y = List.map (fun (x, y) -> (x, Common.flip y))
+let invert_y = List.map (fun (x, y) -> (x, flip y))
 
 let make_plot p =
   Container
@@ -213,13 +214,14 @@ let rec hor_grids_draw (x1, x2) (y1, y2) hor_coords vert_coords acc =
 
 let make_graph g x w h =
   let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
+  let background = Item ("rect", [ ("class", "graph_background") ]) in
   let axes =
     Container
       ( "g",
         [ ("id", "graph-axes") ],
         [
           make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-          make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
+          make_polyline "graph_axis" [] [ (0., flip y1); (0., flip y2) ];
         ] )
   in
   (* X & Y Axis *)
@@ -231,9 +233,6 @@ let make_graph g x w h =
         ("height", string_of_int h);
         ("viewBox", graph_viewbox g);
       ],
-      let background =
-        Item ("rect", [ ("class", "graph_background") ])
-      in
       background
       :: hor_grids_draw (x1, x2) (y1, y2) [ -1.; 1.; 2. ]
            [ -1.; 1.; 2. ] []
@@ -241,7 +240,8 @@ let make_graph g x w h =
       @ [
           make_region_border "graph_border"
             [ ("id", "graph-border") ]
-            (x1, y1) (x2, y2);
+            (x1, flip y1)
+            (x2, flip y2);
         ] )
 
 let to_svg filename g =
