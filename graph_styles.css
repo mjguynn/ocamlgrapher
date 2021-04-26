@@ -62,7 +62,7 @@
 
 .gridline
 {
-  stroke: rgb(172, 172, 172);
+  stroke: #DDD;
   stroke-width: 0.5%;
   fill: none;
 }

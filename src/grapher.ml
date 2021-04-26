@@ -217,12 +217,12 @@ let make_graph g x w h =
     Container
       ( "g",
         [ ("id", "graph-axes") ],
-        [
-          make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-          make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
-        ]
-        @ hor_grids_draw (x1, x2) (y1, y2) [ -1.; 1.; 2. ]
-            [ -1.; 1.; 2. ] []
+        hor_grids_draw (x1, x2) (y1, y2) [ -1.; 1.; 2. ] [ -1.; 1.; 2. ]
+          []
+        @ [
+            make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
+            make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
+          ]
         (*this is just an example*) )
   in
   (* X & Y Axis *)
