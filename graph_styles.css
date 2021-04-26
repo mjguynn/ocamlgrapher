@@ -52,17 +52,23 @@
 }
 .graph_border {
   stroke: black;
-  stroke-width: 1%;
+  stroke-width: 0.015em;
 }
 .graph_axis
 {
   stroke: #444;
-  stroke-width: 0.5%;
+  stroke-width: 0.01em;
 }
-
-.gridline
+.graph_gridline
 {
   stroke: #DDD;
-  stroke-width: 0.5%;
+  stroke-width: 0.005em;
   fill: none;
+}
+.graph_background
+{
+  fill: white;
+  transform: translate(-100%, -100%);
+  width: 200%;
+  height: 200%;
 }

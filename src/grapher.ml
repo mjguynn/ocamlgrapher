@@ -200,7 +200,7 @@ let rec vert_grids_draw (x1, x2) (y1, y2) vert_coords acc =
   | [] -> acc
   | h :: tail ->
       vert_grids_draw (x1, x2) (y1, y2) tail
-        (make_polyline "gridline" [] [ (h, y1); (h, y2) ] :: acc)
+        (make_polyline "graph_gridline" [] [ (h, y1); (h, y2) ] :: acc)
 
 (* helper method that returns a make_polyline command. For this, graphs
    the horizontal gridlines. *)
@@ -209,7 +209,7 @@ let rec hor_grids_draw (x1, x2) (y1, y2) hor_coords vert_coords acc =
   | [] -> vert_grids_draw (x1, x2) (y1, y2) vert_coords acc
   | h :: tail ->
       hor_grids_draw (x1, x2) (y1, y2) tail vert_coords
-        (make_polyline "gridline" [] [ (x1, h); (x2, h) ] :: acc)
+        (make_polyline "graph_gridline" [] [ (x1, h); (x2, h) ] :: acc)
 
 let make_graph g x w h =
   let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
@@ -217,13 +217,10 @@ let make_graph g x w h =
     Container
       ( "g",
         [ ("id", "graph-axes") ],
-        hor_grids_draw (x1, x2) (y1, y2) [ -1.; 1.; 2. ] [ -1.; 1.; 2. ]
-          []
-        @ [
-            make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-            make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
-          ]
-        (*this is just an example*) )
+        [
+          make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
+          make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
+        ] )
   in
   (* X & Y Axis *)
   Container
@@ -234,7 +231,13 @@ let make_graph g x w h =
         ("height", string_of_int h);
         ("viewBox", graph_viewbox g);
       ],
-      (axes :: List.map make_plot g.plots)
+      let background =
+        Item ("rect", [ ("class", "graph_background") ])
+      in
+      background
+      :: hor_grids_draw (x1, x2) (y1, y2) [ -1.; 1.; 2. ]
+           [ -1.; 1.; 2. ] []
+      @ (axes :: List.map make_plot g.plots)
       @ [
           make_region_border "graph_border"
             [ ("id", "graph-border") ]
