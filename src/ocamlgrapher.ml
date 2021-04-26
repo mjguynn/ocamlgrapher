@@ -9,7 +9,7 @@ open Numericalmethods
 let make_samples (low, high) steps =
   let step_size = span (low, high) /. float_of_int steps in
   let rec do_step cur acc =
-    if cur < low then acc else do_step (cur -. step_size) (cur :: acc)
+    if cur <= low then acc else do_step (cur -. step_size) (cur :: acc)
   in
   do_step high []
 
