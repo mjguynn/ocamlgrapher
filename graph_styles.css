@@ -59,3 +59,10 @@
   stroke: #444;
   stroke-width: 0.5%;
 }
+
+.gridline
+{
+  stroke: rgb(172, 172, 172);
+  stroke-width: 0.5%;
+  fill: none;
+}
