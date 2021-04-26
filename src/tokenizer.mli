@@ -39,7 +39,7 @@ type operator =
   | Divide
   | Exponent
 
-(** [parentheses] represents a a left or right parentheses, as specified
+(** [parentheses] represents a left or right parentheses, as specified
     in the grammar. *)
 type parentheses =
   | LParen

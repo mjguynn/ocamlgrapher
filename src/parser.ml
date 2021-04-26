@@ -102,9 +102,7 @@ let compute_f_of_x equation x =
     | Operator Exponent ->
         next ();
         elem ** parse_elem ()
-    | Operator _ -> elem
-    | Parentheses RParen -> elem
-    | EOF -> elem
+    | Operator _ | Parentheses RParen | EOF -> elem
     | _ -> elem *. parse_group ()
   in
 
