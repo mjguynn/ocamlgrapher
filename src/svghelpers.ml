@@ -1,3 +1,4 @@
+(** Implementation of moduke [Svghelpers].*)
 open Xmldom
 
 let make_text c atts x y txt =

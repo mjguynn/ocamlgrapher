@@ -1,3 +1,5 @@
+(** [Svghelpers] provides functions to help create SVG visual elements. *)
+
 (** [make_text css_class attributes x y message] creates an SVG element
     which, when drawn, creates text containing [message] at position
     [x], [y], where [x] and [y] are valid CSS scalars (eg. "40", "12px",
