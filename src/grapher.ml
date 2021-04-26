@@ -1,7 +1,7 @@
 (** Implementation of module [Grapher].*)
 
 open Xmldom
-open Svg_helpers
+open Svghelpers
 open Common
 
 (** [hsv (h, s, v)] has hue [h], saturation [s], and value [v]. Each
