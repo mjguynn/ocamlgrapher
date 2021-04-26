@@ -21,7 +21,7 @@ let eval_equation eq samples x_bounds y_bounds =
   let eq_tokenized = Tokenizer.tokenize eq in
   samples
   |> List.map (fun v -> (v, Parser.compute_f_of_x eq_tokenized v))
-  |> limiter_2 x_bounds y_bounds
+  |> limiter x_bounds y_bounds
 
 (** [print_point_list] prints a list of points to stdout, with each
     point on a new line.*)

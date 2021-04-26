@@ -9,13 +9,7 @@ exception Invalid_bounds
     points was provided with an empty list.*)
 exception No_points
 
-(** [limiter (x1, x2) (y1, y2) points] returns [points] but without any
-    point (x,y) where (x < x1), (x > x2), (y < y1), or (y > y2). Raises
-    [Invalid_bounds] if the lower limit is strictly greater than upper
-    limit. *)
-val limiter : float * float -> float * float -> points -> points
-
-(** [limiter_2 (x1, x2) (y1, y2) points] returns a [points] list. Each
+(** [limiter (x1, x2) (y1, y2) points] returns a [points] list. Each
     [points] in the points list is separated when a value is outside the
     given domain. Raises [Invalid_bounds] if the lower limit is strictly
     greater than upper limit.
@@ -24,7 +18,7 @@ val limiter : float * float -> float * float -> points -> points
     (-10. , 10.)
     [(5., 9.5); (5.5, 9.7); (6., 10.3);(6.5, 9.7);(7., 9.5)] =
     [\[(5., 9.5); (5.5, 9.7)\] ; \[(6.5, 9.7);(7., 9.5)\]] *)
-val limiter_2 : float * float -> float * float -> points -> points list
+val limiter : float * float -> float * float -> points -> points list
 
 (** [root_estimator fun_output] estimates the roots of the function from
     the list of outputs given by the function. If there are no roots,

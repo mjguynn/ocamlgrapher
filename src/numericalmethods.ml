@@ -36,21 +36,13 @@ let rec outer_list
         outer_list (x1, x2) (y1, y2) unprocessed (in_list :: acc)
       else outer_list (x1, x2) (y1, y2) tail acc
 
-let limiter_2
+let limiter
     ((x1 : float), (x2 : float))
     ((y1 : float), (y2 : float))
     points =
   if not (Common.valid_bounds (x1, x2) && Common.valid_bounds (y1, y2))
   then raise Invalid_bounds
   else outer_list (x1, x2) (y1, y2) points []
-
-let limiter (x1, x2) (y1, y2) points =
-  if not (Common.valid_bounds (x1, x2) && Common.valid_bounds (y1, y2))
-  then raise Invalid_bounds
-  else
-    List.filter
-      (fun (px, py) -> x1 <= px && px <= x2 && y1 <= py && py <= y2)
-      points
 
 (** [diff_signs] returns whether [a] and [b] have different signs. *)
 let diff_signs (a : float) (b : float) : bool =
@@ -95,7 +87,7 @@ let rec max_help lst (max_x, max_y) (acc : (float * float) list) =
 
 let max_output lst =
   match lst with
-  | [] -> failwith "Type is empty"
+  | [] -> raise No_points
   | (x, y) :: tail -> max_help lst (0., Float.neg_infinity) []
 
 (* helper method to obtain the minimum point of a function output *)
@@ -109,5 +101,5 @@ let rec min_help lst (min_x, min_y) acc =
 
 let min_output lst =
   match lst with
-  | [] -> failwith "Type is empty"
+  | [] -> raise No_points
   | (x, y) :: tail -> min_help lst (0., Float.infinity) []
