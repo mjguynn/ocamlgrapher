@@ -59,16 +59,14 @@ let cmdline_info =
   ]
 
 let help errc =
-  let open Common in
-  let header s = style stderr "96" ^ s ^ style stderr "0" in
-  let grey s = style stderr "38;2;140;140;140" ^ s ^ style stderr "0" in
-  Printf.eprintf "%s"
-    ( header "Usage: " ^ "./ocamlgrapher.byte "
-    ^ grey "<options> <equations>\n" );
-  Printf.eprintf "%s"
-    ( header "Example: "
-    ^ "./ocamlgrapher.byte -g -o my_graph.png \"y=2x^2-4ln(x)\"\n" );
-  Printf.eprintf "%s" (header "Options: \n");
+  let open Io in
+  print_header ~channel:stderr "Usage: ";
+  prerr_string "./ocamlgrapher.byte ";
+  print_detail ~channel:stderr "<options> <equations>\n";
+  print_header ~channel:stderr "Example: ";
+  prerr_string
+    "./ocamlgrapher.byte -g -o my_graph.svg \"y=2x^2-4ln(x)\"\n";
+  print_header ~channel:stderr "Options: \n";
   let build_name long short append_long append_short =
     Printf.sprintf "--%s%s%s" long append_long
       ( match short with
@@ -82,7 +80,8 @@ let help errc =
            | Flag (f, s) -> build_name f s "" ""
            | Opt (o, s) -> build_name o s "=<...>" " <...>"
          in
-         Printf.eprintf "\t%-28s: %s\n" name (grey desc));
+         Printf.eprintf "\t%-28s: " name;
+         print_detail ~channel:stderr (desc ^ "\n"));
   exit errc
 
 (** [extract_equations cmdline]: If >= 1 equations on [cmdline], returns

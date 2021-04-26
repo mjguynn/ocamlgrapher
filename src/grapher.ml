@@ -114,7 +114,7 @@ let config_from_stylesheet i =
 
 let styles_from_stylesheet i =
   let styles =
-    read_lines i |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
+    Io.read_lines i |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
   in
   seek_in i 0;
   styles

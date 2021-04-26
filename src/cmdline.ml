@@ -90,7 +90,7 @@ let rec parse_worker (ic : in_channel) (args : string list) (acc : t) =
   | "--" :: t -> Ok { acc with args = List.rev_append t acc.args }
   | "-" :: t ->
       parse_worker ic t
-        { acc with args = List.append (read_lines ic) acc.args }
+        { acc with args = List.append (Io.read_lines ic) acc.args }
   | h :: t ->
       let continue = function
         | Ok (t, acc) -> parse_worker ic t acc

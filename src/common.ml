@@ -27,25 +27,8 @@ let concat_with j a b = a ^ j ^ b
 let prepend_assoc key x =
   List.map (fun (k, v) -> (k, if k = key then x :: v else v))
 
-(** [read_lines] returns a list of strings, where each entry is a line
-    in [ch] (without the newline character). The list contains an entry
-    for each line in [ch] and in *reverse* order. Requies: [ch] is
-    readable.*)
-let rec read_lines (ch : in_channel) : string list =
-  let rec step (acc : string list) =
-    try step (input_line ch :: acc) with End_of_file -> acc
-  in
-  step []
-
 (** [span (min, max)] is syntactic sugar for [max -. min]. *)
 let span (min, max) = max -. min
-
-(** [style o s] returns the escape code for the virtual text formatting
-    sequence [s] if [o] is a virtual terminal. Otherwise, it returns the
-    empty string. Ex: [style "96" = "\x1b[96m"]. *)
-let style o s =
-  if Unix.isatty (Unix.descr_of_out_channel o) then "\x1b[" ^ s ^ "m"
-  else ""
 
 (** [valid bounds (a, b)] returns whether the bounds [a..b] are valid,
     where valid bounds are those bounds where [a] and [b] are *finite*
