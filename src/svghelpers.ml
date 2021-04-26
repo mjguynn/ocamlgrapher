@@ -11,8 +11,7 @@ let make_circle c atts x y r =
 let make_polyline c atts points =
   let coords =
     List.fold_left
-      (fun acc (x, y) ->
-        Printf.sprintf "%s %f,%f" acc x (Common.flip y))
+      (fun acc (x, y) -> Printf.sprintf "%s %f,%f" acc x y)
       "" points
   in
   Item ("polyline", atts @ [ ("class", c); ("points", coords) ])

@@ -180,13 +180,17 @@ let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
 
+let invert_y = List.map (fun (x, y) -> (x, Common.flip y))
+
 let make_plot p =
   Container
     ( "g",
       [],
       List.map
-        (make_polyline "graph_path"
-           [ ("stroke", hsl_string_of_hsv p.color) ])
+        (fun l ->
+          make_polyline "graph_path"
+            [ ("stroke", hsl_string_of_hsv p.color) ]
+            (invert_y l))
         p.segments )
 
 let make_graph g x w h =
