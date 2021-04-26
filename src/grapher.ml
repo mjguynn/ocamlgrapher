@@ -92,6 +92,42 @@ type config = {
   label_font_size : int;
 }
 
+let config_from_stylesheet i =
+  let base_cfg =
+    {
+      header_height = 0;
+      body_min_width = 0;
+      body_min_height = 0;
+      label_vertical_spacing = 0;
+      label_indent = 0;
+      label_font_size = 0;
+    }
+  in
+  let rec parse_line acc =
+    try
+      match
+        Scanf.sscanf (input_line i) " --%s@: %upx" (fun v n -> (v, n))
+      with
+      | "header-height", header_height ->
+          parse_line { acc with header_height }
+      | "body-min-width", body_min_width ->
+          parse_line { acc with body_min_width }
+      | "body-min-height", body_min_height ->
+          parse_line { acc with body_min_height }
+      | "label-vertical-spacing", label_vertical_spacing ->
+          parse_line { acc with label_vertical_spacing }
+      | "label-indent", label_indent ->
+          parse_line { acc with label_indent }
+      | "label-font-size", label_font_size ->
+          parse_line { acc with label_font_size }
+      | s, _ -> parse_line acc
+      | exception Scanf.Scan_failure _ -> parse_line acc
+    with End_of_file -> acc
+  in
+  let parsed_cfg = parse_line base_cfg in
+  seek_in i 0;
+  parsed_cfg
+
 let styles_from_stylesheet i =
   let styles =
     read_lines i |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
@@ -159,42 +195,6 @@ let make_plot_info c g w h =
       @ make_region_borders "plot_info_border" (0., 0.)
           (float_of_int w, float_of_int h)
       @ labels )
-
-let config_from_stylesheet i =
-  let base_cfg =
-    {
-      header_height = 0;
-      body_min_width = 0;
-      body_min_height = 0;
-      label_vertical_spacing = 0;
-      label_indent = 0;
-      label_font_size = 0;
-    }
-  in
-  let rec parse_line acc =
-    try
-      match
-        Scanf.sscanf (input_line i) " --%s@: %upx" (fun v n -> (v, n))
-      with
-      | "header-height", header_height ->
-          parse_line { acc with header_height }
-      | "body-min-width", body_min_width ->
-          parse_line { acc with body_min_width }
-      | "body-min-height", body_min_height ->
-          parse_line { acc with body_min_height }
-      | "label-vertical-spacing", label_vertical_spacing ->
-          parse_line { acc with label_vertical_spacing }
-      | "label-indent", label_indent ->
-          parse_line { acc with label_indent }
-      | "label-font-size", label_font_size ->
-          parse_line { acc with label_font_size }
-      | s, _ -> parse_line acc
-      | exception Scanf.Scan_failure _ -> parse_line acc
-    with End_of_file -> acc
-  in
-  let parsed_cfg = parse_line base_cfg in
-  seek_in i 0;
-  parsed_cfg
 
 let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
