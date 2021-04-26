@@ -2,7 +2,8 @@
    Certain attributes are handled by ocamlgrapher. */
 :root {
   /* Do NOT edit the names of these variables! 
-     They are parsed by OCamlgrapher. */
+     They are parsed by OCamlgrapher. 
+	 You may add your own variables. */
   --header-height: 60px;
   --body-min-width: 220px;
   --body-min-height: 400px;
@@ -10,6 +11,7 @@
   --label-indent: 60px;
   --label-font-size: 20px;
 }
+
 .plot_info_background {
   fill: #EFEFF4;
   width: 100%;
@@ -19,14 +21,13 @@
   stroke: #999;
   stoke-width: 4px;
 }
-
 .plot_info_header {
   font-family: verdana;
   font-size: 30px;
   fill: #444;
   transform: translate(15px, calc(var(--header-height) - 20px));
 }
-.plot_info_label {
+.plot_info_border {
   font-family: consolas;
   font-size: var(--label-font-size);
   stroke: #777;
@@ -37,8 +38,24 @@
   stroke-width: 1px;
   transform: translate(-20px, -5px);
 }
+.plot_info_label {
+  font-family: consolas;
+  font-size: 20px;
+  font-size: var(--label-font-size);
+  stroke: #777;
+  stroke-width: 1px;
+}
 
 .graph_path {
   stroke-width: 1%;
   fill: none;
+}
+.graph_border {
+  stroke: black;
+  stroke-width: 1%;
+}
+.graph_axis
+{
+  stroke: #444;
+  stroke-width: 0.5%;
 }
