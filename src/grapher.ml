@@ -1,6 +1,7 @@
 (** Implementation of module [Grapher].*)
 
 open Xmldom
+open Svg_helpers
 open Common
 
 (** [hsv (h, s, v)] has hue [h], saturation [s], and value [v]. Each
@@ -65,23 +66,6 @@ let add_plot label segments g =
     | h :: _ -> hsv_step h.color
   in
   { g with plots = { label; segments; color } :: g.plots }
-
-let make_text c atts x y txt =
-  Container
-    ("text", atts @ [ ("class", c); ("x", x); ("y", y) ], [ Text txt ])
-
-let make_circle c atts x y r =
-  Item
-    ("circle", atts @ [ ("class", c); ("cx", x); ("cy", y); ("r", r) ])
-
-let make_polyline c atts points =
-  let coords =
-    List.fold_left
-      (fun acc (x, y) ->
-        Printf.sprintf "%s %f,%f" acc x (Common.flip y))
-      "" points
-  in
-  Item ("polyline", atts @ [ ("class", c); ("points", coords) ])
 
 type config = {
   header_height : int;
@@ -167,16 +151,6 @@ let make_plot_label c i eq =
         make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
       ] )
 
-let make_region_borders c (x1, y1) (x2, y2) =
-  [
-    (* left/right *)
-    make_polyline c [] [ (x1, y1); (x1, y2) ];
-    make_polyline c [] [ (x2, y1); (x2, y2) ];
-    (* top/bottom *)
-    make_polyline c [] [ (x1, y1); (x2, y1) ];
-    make_polyline c [] [ (x1, y2); (x2, y2) ];
-  ]
-
 let make_plot_info c g w h =
   let labels = List.mapi (make_plot_label c) (List.rev g.plots) in
   let background =
@@ -191,9 +165,15 @@ let make_plot_info c g w h =
   Container
     ( "svg",
       [ ("width", string_of_int w); ("height", string_of_int h) ],
-      [ background; header; divider ]
-      @ make_region_borders "plot_info_border" (0., 0.)
-          (float_of_int w, float_of_int h)
+      [
+        background;
+        header;
+        divider;
+        make_region_border "plot_info_border"
+          [ ("id", "plot-info-border") ]
+          (0., 0.)
+          (float_of_int w, float_of_int h);
+      ]
       @ labels )
 
 let graph_viewbox g =
@@ -211,6 +191,15 @@ let make_plot p =
 
 let make_graph g x w h =
   let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
+  let axes =
+    Container
+      ( "g",
+        [ ("id", "graph-axes") ],
+        [
+          make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
+          make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
+        ] )
+  in
   (* X & Y Axis *)
   Container
     ( "svg",
@@ -220,10 +209,12 @@ let make_graph g x w h =
         ("height", string_of_int h);
         ("viewBox", graph_viewbox g);
       ],
-      make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ]
-      :: make_polyline "graph_axis" [] [ (0., y1); (0., y2) ]
-      :: List.map make_plot g.plots
-      @ make_region_borders "graph_border" (x1, y1) (x2, y2) )
+      (axes :: List.map make_plot g.plots)
+      @ [
+          make_region_border "graph_border"
+            [ ("id", "graph-border") ]
+            (x1, y1) (x2, y2);
+        ] )
 
 let to_svg filename g =
   (* load stylesheet, create DOM element *)
