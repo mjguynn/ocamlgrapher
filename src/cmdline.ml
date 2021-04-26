@@ -71,7 +71,7 @@ let parse_long_arg token args acc =
       | Some (Flag (f, _)), _ ->
           Ok (args, { acc with flags = f :: acc.flags })
       | Some (Opt (o, _)), h :: t ->
-          let param = List.fold_left (concat_with "=") h t in
+          let param = List.fold_left (fun a b -> a ^ "=" ^ b) h t in
           Ok (args, { acc with opts = prepend_assoc arg param acc.opts })
       | Some (Opt (o, _)), [] ->
           Error ("Long option --" ^ o ^ " requires a parameter")

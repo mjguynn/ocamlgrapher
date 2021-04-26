@@ -8,7 +8,8 @@ type point = float * float
 (** [points] represents a list of points. *)
 type points = point list
 
-(** [starts_with str sub] returns whether [str] starts with [sub].*)
+(** [starts_with str sub] returns whether [str] starts with [sub]. All
+    strings start with the empty string.*)
 let rec starts_with str sub =
   try String.sub str 0 (String.length sub) = sub
   with Invalid_argument s -> false
@@ -17,9 +18,6 @@ let rec starts_with str sub =
     [str] is shorter than [n] characters, the empty string is returned.*)
 let drop str n =
   try String.sub str n (String.length str - n) with _ -> ""
-
-(** [concat_with join a b] returns a ^ join ^ b*)
-let concat_with j a b = a ^ j ^ b
 
 (** [prepend_assoc key x] takes an association list where keys are
     mapped to a list. Then, for all keys = [key], [x] is cons-ed onto
