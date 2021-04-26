@@ -4,6 +4,8 @@ let abs_floor (num : float) : float =
 let compute_error (increment : float) : float =
   abs_float (Float.round increment -. increment)
 
+(* Fixed-ish number of grid lines for range, number of grid-lines for
+   domain depends on what multiple domain's range is of range's range *)
 let compute_increment (min : float) (max : float) (line_count : int) :
     float =
   let min_line = abs_floor min in

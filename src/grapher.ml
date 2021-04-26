@@ -193,6 +193,17 @@ let make_plot p =
             (invert_y l))
         p.segments )
 
+(** [get_grid_pos x_min x_max y_min y_max] returns a tuple of float
+    lists, with the first float list being the positions to draw the
+    vertical lines and the second float list being the positions to draw
+    the horizontal lines *)
+let get_grid_pos
+    (x_min : float)
+    (x_max : float)
+    (y_min : float)
+    (y_max : float) : float list * float list =
+  ([], [])
+
 (* helper method that returns a make_polyline command. For this, graphs
    the vertical gridlines. *)
 let rec vert_grids_draw (x1, x2) (y1, y2) vert_coords acc =
