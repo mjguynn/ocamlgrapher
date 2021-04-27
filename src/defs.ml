@@ -66,3 +66,15 @@ type token =
 type parse_rule_t =
   | Flag of (string * char option)
   | Opt of (string * char option)
+
+(** [command_t] represents the "action" that the user wants the program
+    to perform on their provided equation. [Graph] means to graph the
+    equation. [Points] means to calculate a list of points satisfying
+    the equation. [Roots] means to calculate a list of roots of the
+    equation. [Extrema] means to calculate a list of extrema of the
+    equation. *)
+type command_t =
+  | Graph
+  | Points
+  | Roots
+  | Extrema

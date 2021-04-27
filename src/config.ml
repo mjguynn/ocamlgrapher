@@ -3,13 +3,6 @@ open Cmdline
 
 open Defs
 
-(* Unfortunately, I must duplicate this code from the MLI.*)
-type command_t =
-  | Graph
-  | Points
-  | Roots
-  | Extrema
-
 (** AF: Let [(x1, x2)=x_bounds] and [(y1, y2)=y_bounds]. Then an
     instance of [t] represents a user's desires to execute [command] on
     the equations in [equations] (in ASCII math notation) within a

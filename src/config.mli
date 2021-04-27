@@ -4,18 +4,6 @@
     the command line.*)
 type t
 
-(** [command_t] represents the "action" that the user wants the program
-    to perform on their provided equation. [Graph] means to graph the
-    equation. [Points] means to calculate a list of points satisfying
-    the equation. [Roots] means to calculate a list of roots of the
-    equation. [Extrema] means to calculate a list of extrema of the
-    equation. *)
-type command_t =
-  | Graph
-  | Points
-  | Roots
-  | Extrema
-
 (** [from_cmdline default_x_span default_y_span default_quality
     default_output_file ic argv] takes an argv-style list of args [argv]
     and uses it to construct a [Config.t]. It follows the
@@ -107,9 +95,9 @@ val y_bounds : t -> float * float
     least one.*)
 val steps : t -> int
 
-(** [command cfg] returns the [command_t] that the user wanted to
+(** [command cfg] returns the [Defs.command_t] that the user wanted to
     perform. *)
-val command : t -> command_t
+val command : t -> Defs.command_t
 
 (** [output_file cfg] returns the desired output filename for graphs.*)
 val output_file : t -> string
