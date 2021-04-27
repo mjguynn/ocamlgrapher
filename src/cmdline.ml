@@ -1,11 +1,7 @@
 (** Implementation of module [Cmdline].*)
 
 open Common
-
-(* Unfortunately, I have to duplicate some code from the interface. *)
-type parse_rule_t =
-  | Flag of (string * char option)
-  | Opt of (string * char option)
+open Defs
 
 (** AF: Represents a valid, parsed command line where the binary name is
     [name].

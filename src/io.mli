@@ -1,6 +1,5 @@
-(** [Io] handles functionality relating to program IO, such as functions
-    to write formatted output and helper functions for reading from
-    files. *)
+(** Handles functionality relating to program IO, such as functions to
+    write formatted output and helper functions for reading from files. *)
 
 (** [print_header ?channel:c s] prints [s] to channel [c]. Bold,
     noticable styling is used if [c] is a virtual terminal. By default,

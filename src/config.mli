@@ -1,4 +1,4 @@
-(** Representation of the program's current configuration. *)
+(** Representation of the program's current command-line configuration. *)
 
 (** The abstract type representing the way the program was configured on
     the command line.*)

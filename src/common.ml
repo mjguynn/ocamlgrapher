@@ -1,5 +1,5 @@
-(** [Common] contains helper functions which are potentially useful to
-    multiple modules. *)
+(** Contains helper functions which are potentially useful to multiple
+    modules. *)
 
 (** A [point] is an (x,y) point on the Cartesian XY plane, where x and y
     are finite floats.*)

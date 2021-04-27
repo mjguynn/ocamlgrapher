@@ -1,6 +1,6 @@
 (** Implementation of module [Parser]. *)
 
-open Tokenizer
+open Defs
 
 let compute_f_of_x equation x =
   let tokens = Array.of_list equation in
@@ -17,7 +17,9 @@ let compute_f_of_x equation x =
 
   let consume token =
     if peek_check token then next ()
-    else syntax_error "expected character not found. [consume failure]"
+    else
+      Tokenizer.syntax_error
+        "expected character not found. [consume failure]"
   in
 
   let rec parse_elem () =
@@ -60,9 +62,9 @@ let compute_f_of_x equation x =
         match c with
         | Pi -> Float.pi
         | E -> 2.71828182845904523
-        | Number n -> n)
+        | Number n -> n )
     | _ ->
-        syntax_error
+        Tokenizer.syntax_error
           "expected character not found. [parse elem failure]"
   and parse_expr () =
     let term = ref (parse_term ()) in

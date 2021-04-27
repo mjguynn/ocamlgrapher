@@ -1,9 +1,13 @@
-(** A [tag] is the "type" of a DOM element. For example, the tag of <p>
-    is "p" and the tag of "<img /> is "img.*)
+(** Provides functionality to safely create and manipulate XML DOM
+    trees. *)
+
+(** A [tag] is the "type" of a DOM element. For example, the tag of
+    <code><p></code> is ["p"] and the tag of <code><img /></code> is
+    ["img"].*)
 type tag = string
 
 (** An [attribute] is a key-value pair of a DOM element. For example, in
-    <img src="here.png" />, there is an attribute of
+    <code><img src="here.png" /></code>, there is an attribute of
     [("src", "here.png")].*)
 type attribute = string * string
 
@@ -23,8 +27,8 @@ type attribute = string * string
     a DOM element with tag [t] and attributes [atts] which may contain
     other elements (i.e. has a closing tag). For example,
     [Container "div" \[\] \[Item "img" \[("src", "here.png")\]; Item
-    "img" \[("src", "there.png")\]\]] corresponds to <div> <img
-    src="here.png" /> <img src="there.png" /> </div> *)
+    "img" \[("src", "there.png")\]\]] corresponds to <code><div> <img
+    src="here.png" /> <img src="there.png" /> </div></code>*)
 type element =
   | Text of string
   | Comment of string

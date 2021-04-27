@@ -1,6 +1,8 @@
 (** Implementation of module [Config].*)
 open Cmdline
 
+open Defs
+
 (* Unfortunately, I must duplicate this code from the MLI.*)
 type command_t =
   | Graph

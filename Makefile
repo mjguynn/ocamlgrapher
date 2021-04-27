@@ -1,7 +1,6 @@
-MODULES=src/ocamlgrapher src/config src/cmdline src/numericalmethods src/tokenizer src/parser
+PUBLIC=src/author.mli src/cmdline.mli src/common.ml src/config.mli src/defs.ml src/grapher.mli src/grid_lines.ml src/io.mli src/numericalmethods.mli src/parser.mli src/svghelpers.mli src/tokenizer.mli src/xmldom.ml
+PRIVATE=src/cmdline.ml src/config.ml src/grapher.ml src/io.ml src/numericalmethods.ml src/ocamlgrapher.ml src/parser.ml src/svghelpers.ml src/tokenizer.ml
 OBJECTS=$(MODULES:=.cmo)
-MLS=$(MODULES:=.ml)
-MLIS=$(MODULES:=.mli)
 TESTS=$(shell find ./tests -name "*.ml" | sed s/ml/byte/g | sed s/.\\/tests\\///g )
 MAIN=src/ocamlgrapher.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
@@ -24,14 +23,14 @@ docs: docs-public docs-private
 	
 docs-public: build
 	mkdir -p _doc.public
-	ocamlfind ocamldoc -I _build -package yojson \
-		-html -stars -d _doc.public $(MLIS)
+	ocamlfind ocamldoc -I _build/src -I src \
+		-html -stars -d _doc.public $(PUBLIC)
 
 docs-private: build
 	mkdir -p _doc.private
-	ocamlfind ocamldoc -I _build -package yojson \
+	ocamlfind ocamldoc -I _build/src -I src \
 		-html -stars -d _doc.private \
-		-inv-merge-ml-mli -m A $(MLIS) $(MLS)
+		-inv-merge-ml-mli -m A $(PUBLIC) $(PRIVATE)
 
 clean:
 	ocamlbuild -clean

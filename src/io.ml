@@ -2,7 +2,7 @@
 
 (** [style o s] returns the escape code for the virtual text formatting
     sequence [s] if [o] is a virtual terminal. Otherwise, it returns the
-    empty string. Ex: [style "96" = "\x1b[96m"]. *)
+    empty string. Ex: [style "96" = "\x1b\[96m"]. *)
 let style o s =
   if Unix.isatty (Unix.descr_of_out_channel o) then "\x1b[" ^ s ^ "m"
   else ""
