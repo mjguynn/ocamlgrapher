@@ -244,9 +244,9 @@ let make_graph g x w h =
         ("height", string_of_int h);
         ("viewBox", graph_viewbox g);
       ],
-      let fst_list, snd_list = get_grid_pos x1 x2 y1 y2 in
+      let hor_bars, vert_bars = get_grid_pos x1 x2 y1 y2 in
       background
-      :: hor_grids_draw (x1, x2) (y1, y2) fst_list snd_list []
+      :: hor_grids_draw (x1, x2) (y1, y2) hor_bars vert_bars []
       @ (axes :: List.map make_plot g.plots)
       @ [
           make_region_border "graph_border"
