@@ -203,7 +203,7 @@ let get_grid_pos
     (x_max : float)
     (y_min : float)
     (y_max : float) : float list * float list =
-  let y_max_line_count = 10 in
+  let y_max_line_count = 20 in
 
   let abs_floor (num : float) : float =
     if num > 0. then floor num else ceil num
@@ -236,7 +236,8 @@ let get_grid_pos
     match line_count with
     | 2 -> (2, selected_increment)
     | n ->
-        if selected_increment < range then (n, selected_increment)
+        if selected_increment < range && selected_increment <> 0. then
+          (n, selected_increment)
         else compute_increment range (n - 1)
   in
 
@@ -258,15 +259,13 @@ let get_grid_pos
   let x_range = abs_floor x_max -. abs_floor x_min in
   let y_range = abs_floor y_max -. abs_floor y_min in
   let x_range_scale = x_range /. y_range in
-  let y_axis_endpoint = y_range /. 2. in
-  let x_axis_endpoint = x_range /. 2. in
   let x_mid = (x_min +. x_max) /. 2. in
   let y_mid = (y_min +. y_max) /. 2. in
   ( begin
       match compute_increment y_range y_max_line_count with
       | n, h ->
           increment_to_coords [ 0. -. y_min ] [ 0. -. y_max ]
-            (y_axis_endpoint /. float_of_int n)
+            (y_range /. float_of_int n)
             y_mid
     end,
     match
@@ -277,7 +276,7 @@ let get_grid_pos
     with
     | n, k ->
         increment_to_coords [ x_max ] [ x_min ]
-          (x_axis_endpoint /. float_of_int n)
+          (x_range /. float_of_int n)
           x_mid )
 
 (* helper method that returns a make_polyline command. For this, graphs
