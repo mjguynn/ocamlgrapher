@@ -6,6 +6,8 @@ let compute_error (increment : float) : float =
 
 let y_max_line_count = 10
 
+let y_axis_endpoint = 10.
+
 (* Fixed-ish number of grid lines for range, number of grid-lines for
    domain depends on what multiple domain's range is of range's range *)
 
@@ -51,6 +53,7 @@ let get_grid_pos
   let x_range = abs_floor x_max -. abs_floor x_min in
   let y_range = abs_floor y_max -. abs_floor y_min in
   let x_range_scale = x_range /. y_range in
+  let x_axis_endpoint = y_axis_endpoint *. x_range_scale in
   let x_max_line_count =
     int_of_float
       (Float.round (x_range_scale *. float_of_int y_max_line_count))
@@ -60,9 +63,10 @@ let get_grid_pos
   ( begin
       match x_increment with
       | n, k ->
-          increment_to_coords
-            [ 10. *. x_range_scale ]
-            (10. /. float_of_int n)
+          increment_to_coords [ x_axis_endpoint ]
+            (x_axis_endpoint /. float_of_int n)
     end,
     match y_increment with
-    | n, h -> increment_to_coords [ 10. ] (10. /. float_of_int n) )
+    | n, h ->
+        increment_to_coords [ y_axis_endpoint ]
+          (y_axis_endpoint /. float_of_int n) )
