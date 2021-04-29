@@ -203,7 +203,72 @@ let get_grid_pos
     (x_max : float)
     (y_min : float)
     (y_max : float) : float list * float list =
-  ([], [])
+  let y_max_line_count = 10 in
+
+  let y_axis_endpoint = 10. in
+
+  let abs_floor (num : float) : float =
+    if num > 0. then floor num else ceil num
+  in
+
+  let compute_error (increment : float) : float =
+    abs_float (Float.round increment -. increment)
+  in
+
+  (* Discard if increment 0 or greater than range *)
+  let rec compute_increment range line_count =
+    (* possible increment of multiple of 10^n *)
+    let increment_1 =
+      log10 (Float.trunc (range /. float_of_int line_count))
+    in
+    (* possible increment of multiple of 2(10^n) *)
+    let increment_2 = increment_1 -. log10 2. in
+    (* possible increment of multiple of 5(10^n) *)
+    let increment_5 = increment_1 -. log10 5. in
+    let error_1 = compute_error increment_1 in
+    let error_2 = compute_error increment_2 in
+    let error_5 = compute_error increment_5 in
+    let selected_increment =
+      if error_1 < error_2 && error_1 < error_5 then
+        10. ** Float.round increment_1
+      else if error_2 < error_1 && error_2 < error_5 then
+        2. *. (10. ** Float.round increment_2)
+      else 5. *. (10. ** Float.round increment_5)
+    in
+    match line_count with
+    | 2 -> (2, selected_increment)
+    | n ->
+        if selected_increment < range then (n, selected_increment)
+        else compute_increment range (n - 1)
+  in
+
+  let rec increment_to_coords acc increment =
+    match acc with
+    | h :: t ->
+        if h -. increment <= 0. then h :: t
+        else increment_to_coords ((h -. increment) :: h :: t) increment
+    | _ -> failwith "Invalid list supplied"
+  in
+
+  let x_range = abs_floor x_max -. abs_floor x_min in
+  let y_range = abs_floor y_max -. abs_floor y_min in
+  let x_range_scale = x_range /. y_range in
+  let x_axis_endpoint = y_axis_endpoint *. x_range_scale in
+  ( begin
+      match
+        compute_increment x_range
+          (int_of_float
+             (Float.round
+                (x_range_scale *. float_of_int y_max_line_count)))
+      with
+      | n, k ->
+          increment_to_coords [ x_axis_endpoint ]
+            (x_axis_endpoint /. float_of_int n)
+    end,
+    match compute_increment y_range y_max_line_count with
+    | n, h ->
+        increment_to_coords [ y_axis_endpoint ]
+          (y_axis_endpoint /. float_of_int n) )
 
 (* helper method that returns a make_polyline command. For this, graphs
    the vertical gridlines. *)
