@@ -251,23 +251,21 @@ let get_grid_pos
     in
     List.merge
       (fun x y -> 0)
-      (convert_half ( <= ) acc_pos increment)
-      (convert_half ( >= ) acc_neg (0. -. increment))
+      (convert_half ( < ) acc_pos increment)
+      (convert_half ( > ) acc_neg (0. -. increment))
   in
 
   let x_range = abs_floor x_max -. abs_floor x_min in
   let y_range = abs_floor y_max -. abs_floor y_min in
   let x_range_scale = x_range /. y_range in
-  let y_axis_endpoint = 10. *. (y_range /. 20.) in
-  let x_axis_endpoint = y_axis_endpoint *. x_range_scale in
+  let y_axis_endpoint = y_range /. 2. in
+  let x_axis_endpoint = x_range /. 2. in
   let x_mid = (x_min +. x_max) /. 2. in
   let y_mid = (y_min +. y_max) /. 2. in
   ( begin
       match compute_increment y_range y_max_line_count with
       | n, h ->
-          increment_to_coords
-            [ y_max /. y_range *. (2. *. y_axis_endpoint) ]
-            [ y_min /. y_range *. (2. *. y_axis_endpoint) ]
+          increment_to_coords [ 0. -. y_min ] [ 0. -. y_max ]
             (y_axis_endpoint /. float_of_int n)
             y_mid
     end,
@@ -278,9 +276,7 @@ let get_grid_pos
               (x_range_scale *. float_of_int y_max_line_count)))
     with
     | n, k ->
-        increment_to_coords
-          [ x_max /. x_range *. (2. *. x_axis_endpoint) ]
-          [ x_min /. x_range *. (2. *. x_axis_endpoint) ]
+        increment_to_coords [ x_max ] [ x_min ]
           (x_axis_endpoint /. float_of_int n)
           x_mid )
 
