@@ -203,7 +203,7 @@ let get_grid_pos
     (x_max : float)
     (y_min : float)
     (y_max : float) : float list * float list =
-  ([ 1. ], [ 1. ])
+  ([], [])
 
 (* helper method that returns a make_polyline command. For this, graphs
    the vertical gridlines. *)
