@@ -19,7 +19,7 @@
 }
 .plot_info_line {
   stroke: #999;
-  stoke-width: 4px;
+  stroke-width: 4px;
 }
 .plot_info_header {
   font-family: verdana;
@@ -47,22 +47,26 @@
 }
 
 .graph_path {
-  stroke-width: 0.1px;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 3px;
   fill: none;
 }
 .graph_border {
   stroke: black;
-  stroke-width: 0.3px;
+  stroke-width: 4px;
+  vector-effect: non-scaling-stroke;
 }
 .graph_axis
 {
   stroke: #444;
-  stroke-width: 0.15px;
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
 }
 .graph_gridline
 {
   stroke: #DDD;
-  stroke-width: 0.1px;
+  stroke-width: 1.3px;
+  vector-effect: non-scaling-stroke;
   fill: none;
 }
 .graph_background
