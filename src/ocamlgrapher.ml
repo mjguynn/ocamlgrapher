@@ -35,7 +35,22 @@ type equation = {
     Example:
     [split (( = ) 'a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] = \[
     \['f'\]; \['d'; 'g'\]; \['c'\]\]]*)
-let split pred lst = [ lst ]
+let split pred lst =
+  (* reject functional, return to ~~monke~~ imperative *)
+  let cur_list = ref [] in
+  let prev_lists = ref [] in
+  let rec step = function
+    | [] -> List.rev (!cur_list :: !prev_lists)
+    | h :: t when pred h ->
+        if !cur_list <> [] then (
+          prev_lists := List.rev !cur_list :: !prev_lists;
+          cur_list := [] );
+        step t
+    | h :: t ->
+        cur_list := h :: !cur_list;
+        step t
+  in
+  step lst
 
 (** [process_equation text samples x_bounds y_bounds] produces the
     [equation] object specified by [text] and evaluated with [steps]
@@ -47,7 +62,8 @@ let process_equation text steps x_b y_b =
     let graph_data =
       make_samples x_b steps
       |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
-      |> split (fun p -> not (valid_bounds p))
+      |> split (fun (_, y) ->
+             classify_float y = FP_infinite || classify_float y = FP_nan)
     in
     {
       text;
