@@ -39,8 +39,41 @@ let drop_tests =
     test_drop "string drop > its length is empty" "what" 5 "";
   ]
 
+let string_of_list string_of_element_fun l =
+  Printf.sprintf "[ %s]"
+    (List.fold_left
+       (fun acc e -> acc ^ string_of_element_fun e ^ "; ")
+       "" l)
+
+(** [test_drop pred lst expected] creates an OUnit test case named
+    [name] which asserts that [test_split pred lst = expected].*)
+let test_split name pred lst expected =
+  name >:: fun _ ->
+  assert_equal
+    ~printer:(string_of_list (string_of_list (String.make 1)))
+    expected (split pred lst)
+
+let simple_pred = ( = ) 'a'
+
+let split_tests =
+  [
+    test_split "empty" simple_pred [] [];
+    test_split "no splitters" simple_pred [ 'b'; 'c'; 'd' ]
+      [ [ 'b'; 'c'; 'd' ] ];
+    test_split "one splitter" simple_pred
+      [ 'b'; 'c'; 'a'; 'd'; 'u' ]
+      [ [ 'b'; 'c' ]; [ 'd'; 'u' ] ];
+    test_split "two splitters" simple_pred
+      [ 'b'; 'c'; 'a'; 'd'; 'u'; 'a'; 'a'; 'c'; 'v' ]
+      [ [ 'b'; 'c' ]; [ 'd'; 'u' ]; [ 'c'; 'v' ] ];
+    test_split "oops! all splitters" simple_pred [ 'a'; 'a' ] [];
+    test_split "end with splitter" simple_pred
+      [ 'c'; 'a'; 'd'; 'g'; 'a' ]
+      [ [ 'c' ]; [ 'd'; 'g' ] ];
+  ]
+
 let suite =
   "ocamlgrapher [Common] test suite"
-  >::: List.flatten [ starts_with_tests; drop_tests ]
+  >::: List.flatten [ starts_with_tests; drop_tests; split_tests ]
 
 let _ = run_test_tt_main suite
