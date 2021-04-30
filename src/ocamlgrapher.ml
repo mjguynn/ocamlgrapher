@@ -13,16 +13,18 @@ let make_samples (low, high) steps =
   in
   do_step high []
 
-(** [eval_equation eq samples x_bounds y_bounds] tokenizes [eq] and
-    evaluates it at every point in [samples], returning a list of points
-    (with all points outside of [x_bounds] and [y_bounds] discarded).
-    Requires: [x_bounds] an [y_bounds] are valid bounds.*)
-let eval_equation eq samples x_bounds y_bounds =
+(** [eval_equation eq samples] tokenizes [eq] and evaluates it at every
+    value in [samples], returning a list of list of points. Each
+    "sub-list" (list of points) represents a continous segment of [eq].
+    For example, if [eq] is "y=4x^2", then each value in samples is
+    interpreted as a value of [x] and plugged in to the equation; if it
+    were "x=4y^2", each value in samples is interpreted as a value of
+    [y]. *)
+let eval_equation eq samples =
   try
     let eq_tokenized = Tokenizer.tokenize eq in
     samples
-    |> List.map (fun v -> (v, Parser.compute_f_of_x eq_tokenized v))
-    |> limiter x_bounds y_bounds
+    |> List.map (fun v -> (v, [ Parser.compute_f_of_x eq_tokenized v ]))
   with Invalid_argument s ->
     Io.print_error (s ^ "\n");
     []
@@ -61,22 +63,27 @@ let main_grapher (config : Config.t) =
   let x_b, y_b = (x_bounds config, y_bounds config) in
   let x_samples = make_samples x_b (steps config) in
   (* (equation string, list of points satisfying the equation )*)
-  let processed =
+  let eqs_pre_limiter =
     equations config
-    |> List.map (fun eq -> (eq, eval_equation eq x_samples x_b y_b))
+    |> List.map (fun eq -> (eq, eval_equation eq x_samples))
+  in
+  let eqs =
+    eqs_pre_limiter
+    |> List.map (fun (eq, ps) ->
+           (eq, ps |> List.map (limiter x_b y_b) |> List.flatten))
   in
   match command config with
   | Graph ->
       List.fold_left
         (fun g (eq, points) -> Grapher.add_plot eq points g)
         (Grapher.create (x_bounds config) (y_bounds config))
-        processed
+        [ eqs_pre_limiter ]
       |> Grapher.to_svg (output_file config);
       (* print the output file to stdout so the user can pipe it *)
       print_endline (output_file config)
-  | Points -> List.iter print_points processed
-  | Extrema -> List.iter extrema_printer processed
-  | Roots -> List.iter print_roots processed
+  | Points -> List.iter print_points eqs
+  | Extrema -> List.iter extrema_printer eqs
+  | Roots -> List.iter print_roots eqs
 
 (** [main ()] is the entry point for ocamlgrapher. *)
 let main () =
