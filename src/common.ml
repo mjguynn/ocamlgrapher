@@ -32,10 +32,17 @@ let span (min, max) = max -. min
 let regular_float f =
   classify_float f <> FP_infinite && classify_float f <> FP_nan
 
-(** [valid bounds (a, b)] returns whether the bounds [a..b] are valid,
+(** [valid_bounds (a, b)] returns whether the bounds [a..b] are valid,
     where valid bounds are those bounds where [a] and [b] are *finite*
     and [a<=b]. *)
 let valid_bounds (a, b) = regular_float a && regular_float b && a <= b
+
+(** [in_bounds v (a, b)] returns whether [v] is contained within the
+    bounds [a..b]. Requires: [(a, b)] is valid according to
+    [valid_bounds].*)
+let in_bounds v (a, b) =
+  assert (valid_bounds (a, b));
+  a <= v && v <= b
 
 (** [fpeq ?tolerance:t a b] returns whether [a] and [b] are roughly
     equal (within some tolerance for floating-point precision loss). The
@@ -59,7 +66,8 @@ let flip f = f *. -1.0
 
 (** [split pred lst] partitions [lst] into a list of lists by splitting
     on every element for which [pred] is true. The produced list does
-    not contain any empty lists. Order is preserved.
+    not contain any empty lists. Order is preserved and elements are
+    guaranteed to be processed in the order they appear in [lst].
 
     Example:
     [split (( = ) 'a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] = \[

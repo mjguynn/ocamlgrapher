@@ -4,12 +4,13 @@ exception Invalid_bounds
 
 exception No_points
 
-let limiter (x1, x2) (y1, y2) points =
-  if not (Common.valid_bounds (x1, x2) && Common.valid_bounds (y1, y2))
-  then raise Invalid_bounds
+let limiter x_b y_b points =
+  let open Common in
+  if not (valid_bounds x_b && valid_bounds y_b) then
+    raise Invalid_bounds
   else
     List.filter
-      (fun (px, py) -> x1 <= px && px <= x2 && y1 <= py && py <= y2)
+      (fun (px, py) -> in_bounds px x_b && in_bounds py y_b)
       points
 
 (** [diff_signs] returns whether [a] and [b] have different signs. *)
