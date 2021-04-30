@@ -4,41 +4,6 @@ exception Invalid_bounds
 
 exception No_points
 
-let rec inner_list
-    ((x1 : float), (x2 : float))
-    ((y1 : float), (y2 : float))
-    points
-    (keep_going : bool)
-    (acc : (float * float) list) =
-  match (points, keep_going) with
-  | [], _ -> (List.rev acc, points)
-  | (px, py) :: tail, true ->
-      if x1 <= px && px <= x2 && y1 <= py && py <= y2 then
-        inner_list (x1, x2) (y1, y2) tail true ((px, py) :: acc)
-      else inner_list (x1, x2) (y1, y2) tail false acc
-  | _, false -> (List.rev acc, points)
-
-let rec outer_list
-    ((x1 : float), (x2 : float))
-    ((y1 : float), (y2 : float))
-    points
-    (acc : (float * float) list list) =
-  match points with
-  | [] -> List.rev acc
-  | _ :: _ ->
-      let in_list, unprocessed =
-        inner_list (x1, x2) (y1, y2) points true []
-      in
-      outer_list (x1, x2) (y1, y2) unprocessed (in_list :: acc)
-
-let limiter_2
-    ((x1 : float), (x2 : float))
-    ((y1 : float), (y2 : float))
-    points =
-  if not (Common.valid_bounds (x1, x2) && Common.valid_bounds (y1, y2))
-  then raise Invalid_bounds
-  else outer_list (x1, x2) (y1, y2) points []
-
 let limiter (x1, x2) (y1, y2) points =
   if not (Common.valid_bounds (x1, x2) && Common.valid_bounds (y1, y2))
   then raise Invalid_bounds
