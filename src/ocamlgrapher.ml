@@ -28,6 +28,25 @@ type equation = {
   query_data : points;
 }
 
+(** [prev_ib x_b y_b lst i] is whether the point preceding the element
+    at index [i] in [lst] is in-bounds according to the X bounds [x_b]
+    and the Y bounds [y_b]. If [i=0], returns false. *)
+let prev_ib x_b y_b lst i =
+  if i <= 0 then false
+  else
+    let prev_x, prev_y = List.nth lst (i - 1) in
+    in_bounds prev_x x_b && in_bounds prev_y y_b
+
+(** [next_ib x_b y_b lst i] is whether the point succeeding the element
+    at index [i] in [lst] is in-bounds according to the X bounds [x_b]
+    and the Y bounds [y_b]. If [i] represents the last element in the
+    list, returns false. *)
+let next_ib x_b y_b lst i =
+  if i >= List.length lst - 1 then false
+  else
+    let next_x, next_y = List.nth lst (i + 1) in
+    in_bounds next_x x_b && in_bounds next_y y_b
+
 (** [process_equation text samples x_bounds y_bounds] produces the
     [equation] object specified by [text] and evaluated with [steps]
     samples over [x_bounds] and [y_bounds]. Requires: [x_bounds] an
@@ -36,9 +55,21 @@ let process_equation text steps x_b y_b =
   try
     let tokens = Tokenizer.tokenize text in
     let graph_data =
-      make_samples x_b steps
-      |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
-      |> split (fun (_, y) -> not (regular_float y))
+      let computed =
+        make_samples x_b steps
+        |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
+      in
+      (* split when: 1. number is irregular (inf/nan) OR 2. number is
+         outside the range and the preceding and following numbers are
+         also both outside the range *)
+      computed
+      |> split (fun (x, y) i ->
+             let prev_oob = not (prev_ib x_b y_b computed i) in
+             let this_oob = not (in_bounds x x_b && in_bounds y y_b) in
+             let next_oob = not (next_ib x_b y_b computed i) in
+             (not (regular_float x))
+             || (not (regular_float y))
+             || (prev_oob && this_oob && next_oob))
     in
     {
       text;

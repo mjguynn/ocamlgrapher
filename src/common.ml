@@ -65,9 +65,10 @@ let avg a b = (a + b) / 2
 let flip f = f *. -1.0
 
 (** [split pred lst] partitions [lst] into a list of lists by splitting
-    on every element for which [pred] is true. The produced list does
-    not contain any empty lists. Order is preserved and elements are
-    guaranteed to be processed in the order they appear in [lst].
+    on every element [e] for which [pred e i] is true, where [i] is the
+    index of the element in the list. The produced list does not contain
+    any empty lists. Order is preserved and elements are guaranteed to
+    be processed in the order they appear in [lst].
 
     Example:
     [split (( = ) 'a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] = \[
@@ -76,17 +77,17 @@ let split pred =
   (* reject functional, return to ~~monke~~ imperative *)
   let cur = ref [] in
   let prevs = ref [] in
-  let rec step = function
+  let rec step i = function
     | [] ->
         let lst =
           if !cur <> [] then List.rev !cur :: !prevs else !prevs
         in
         List.rev lst
     | h :: t ->
-        if not (pred h) then cur := h :: !cur
+        if not (pred h i) then cur := h :: !cur
         else if !cur <> [] then (
           prevs := List.rev !cur :: !prevs;
           cur := [] );
-        step t
+        step (i + 1) t
   in
-  step
+  step 0
