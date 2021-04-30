@@ -28,6 +28,15 @@ type equation = {
   query_data : points;
 }
 
+(** [split pred lst] partitions [lst] into a list of lists by splitting
+    on every element for which [pred] is true. The produced list does
+    not contain any empty lists. Order is preserved.
+
+    Example:
+    [split (( = ) 'a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] = \[
+    \['f'\]; \['d'; 'g'\]; \['c'\]\]]*)
+let split pred lst = [ lst ]
+
 (** [process_equation text samples x_bounds y_bounds] produces the
     [equation] object specified by [text] and evaluated with [steps]
     samples over [x_bounds] and [y_bounds]. Requires: [x_bounds] an
@@ -36,11 +45,9 @@ let process_equation text steps x_b y_b =
   try
     let tokens = Tokenizer.tokenize text in
     let graph_data =
-      [
-        make_samples x_b steps
-        |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x));
-      ]
-      (* |> List.map (fun y -> [ (Parser.compute_f_of_y tokens y), y ]) *)
+      make_samples x_b steps
+      |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
+      |> split (fun p -> not (valid_bounds p))
     in
     {
       text;
