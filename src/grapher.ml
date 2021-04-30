@@ -239,14 +239,14 @@ let get_grid_pos
           | increment, error ->
               if increment < range && increment <> 0. then
                 if error <> 0. then
-                  generate_increments ((n, increment) :: acc) (n - 1)
-                else [ (n, increment) ]
+                  generate_increments (increment :: acc) (n - 1)
+                else [ increment ]
               else generate_increments acc (n - 1))
     in
     List.hd (List.rev (generate_increments [] line_count))
   in
 
-  let increment_to_coords pos_bound neg_bound increment min =
+  let increment_to_coords pos_bound neg_bound increment =
     let rec convert_half rel acc bound increment_c =
       match acc with
       | h :: t ->
@@ -259,32 +259,20 @@ let get_grid_pos
     in
     List.merge
       (fun x y -> 0)
-      (convert_half ( > ) [ min ] pos_bound increment)
-      (convert_half ( < ) [ min ] neg_bound (0. -. increment))
+      (convert_half ( > ) [ 0. ] pos_bound increment)
+      (convert_half ( < ) [ 0. ] neg_bound (0. -. increment))
   in
 
   let x_range = abs_floor x_max -. abs_floor x_min in
   let y_range = abs_floor y_max -. abs_floor y_min in
-  let x_range_scale = x_range /. y_range in
-  let x_mid = (x_min +. x_max) /. 2. in
-  let y_mid = (y_min +. y_max) /. 2. in
-  ( begin
-      match compute_increment y_range y_max_line_count with
-      | n, h ->
-          increment_to_coords (0. -. y_min) (0. -. y_max)
-            (y_range /. float_of_int n)
-            y_mid
-    end,
-    match
-      compute_increment x_range
-        (int_of_float
-           (Float.round
-              (x_range_scale *. float_of_int y_max_line_count)))
-    with
-    | n, k ->
-        increment_to_coords x_max x_min
-          (x_range /. float_of_int n)
-          x_mid )
+  ( increment_to_coords (0. -. y_min) (0. -. y_max)
+      (compute_increment y_range y_max_line_count),
+    increment_to_coords x_max x_min
+      (compute_increment x_range
+         (int_of_float
+            (Float.round
+               (x_range /. y_range *. float_of_int y_max_line_count))))
+  )
 
 (* helper method that returns a make_polyline command. For this, graphs
    the vertical gridlines. *)
