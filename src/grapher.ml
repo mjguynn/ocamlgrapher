@@ -214,46 +214,53 @@ let get_grid_pos
   in
 
   (* Discard if increment 0 or greater than range *)
-  let rec compute_increment range line_count =
-    (* possible increment of multiple of 10^n *)
-    let increment_1 =
-      log10 (Float.trunc (range /. float_of_int line_count))
+  let compute_increment range line_count =
+    let rec generate_increments acc line_count_c =
+      (* possible increment of multiple of 10^n *)
+      let increment_1 = log10 (range /. float_of_int line_count_c) in
+      (* possible increment of multiple of 2(10^n) *)
+      let increment_2 = increment_1 -. log10 2. in
+      (* possible increment of multiple of 5(10^n) *)
+      let increment_5 = increment_1 -. log10 5. in
+      let error_1 = compute_error increment_1 in
+      let error_2 = compute_error increment_2 in
+      let error_5 = compute_error increment_5 in
+      let selected_increment =
+        if error_1 < error_2 && error_1 < error_5 then
+          (10. ** Float.round increment_1, error_1)
+        else if error_2 < error_1 && error_2 < error_5 then
+          (2. *. (10. ** Float.round increment_2), error_2)
+        else (5. *. (10. ** Float.round increment_5), error_5)
+      in
+      match line_count_c with
+      | 2 -> acc
+      | n -> (
+          match selected_increment with
+          | increment, error ->
+              if increment < range && increment <> 0. then
+                if error <> 0. then
+                  generate_increments ((n, increment) :: acc) (n - 1)
+                else [ (n, increment) ]
+              else generate_increments acc (n - 1))
     in
-    (* possible increment of multiple of 2(10^n) *)
-    let increment_2 = increment_1 -. log10 2. in
-    (* possible increment of multiple of 5(10^n) *)
-    let increment_5 = increment_1 -. log10 5. in
-    let error_1 = compute_error increment_1 in
-    let error_2 = compute_error increment_2 in
-    let error_5 = compute_error increment_5 in
-    let selected_increment =
-      if error_1 < error_2 && error_1 < error_5 then
-        10. ** Float.round increment_1
-      else if error_2 < error_1 && error_2 < error_5 then
-        2. *. (10. ** Float.round increment_2)
-      else 5. *. (10. ** Float.round increment_5)
-    in
-    match line_count with
-    | 2 -> (2, selected_increment)
-    | n ->
-        if selected_increment < range && selected_increment <> 0. then
-          (n, selected_increment)
-        else compute_increment range (n - 1)
+    List.hd (List.rev (generate_increments [] line_count))
   in
 
-  let increment_to_coords acc_pos acc_neg increment min =
-    let rec convert_half rel acc_c increment_c =
-      match acc_c with
+  let increment_to_coords pos_bound neg_bound increment min =
+    let rec convert_half rel acc bound increment_c =
+      match acc with
       | h :: t ->
-          if rel (h -. increment_c) min then h :: t
+          if rel (h +. increment_c) bound then h :: t
           else
-            convert_half rel ((h -. increment_c) :: h :: t) increment_c
+            convert_half rel
+              ((h +. increment_c) :: h :: t)
+              bound increment_c
       | _ -> failwith "Invalid list supplied"
     in
     List.merge
       (fun x y -> 0)
-      (convert_half ( < ) acc_pos increment)
-      (convert_half ( > ) acc_neg (0. -. increment))
+      (convert_half ( > ) [ min ] pos_bound increment)
+      (convert_half ( < ) [ min ] neg_bound (0. -. increment))
   in
 
   let x_range = abs_floor x_max -. abs_floor x_min in
@@ -264,7 +271,7 @@ let get_grid_pos
   ( begin
       match compute_increment y_range y_max_line_count with
       | n, h ->
-          increment_to_coords [ 0. -. y_min ] [ 0. -. y_max ]
+          increment_to_coords (0. -. y_min) (0. -. y_max)
             (y_range /. float_of_int n)
             y_mid
     end,
@@ -275,7 +282,7 @@ let get_grid_pos
               (x_range_scale *. float_of_int y_max_line_count)))
     with
     | n, k ->
-        increment_to_coords [ x_max ] [ x_min ]
+        increment_to_coords x_max x_min
           (x_range /. float_of_int n)
           x_mid )
 
