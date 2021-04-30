@@ -28,14 +28,14 @@ let prepend_assoc key x =
 (** [span (min, max)] is syntactic sugar for [max -. min]. *)
 let span (min, max) = max -. min
 
+(** [regular_float f] returns true if [f] is NOT infinite or NaN.*)
+let regular_float f =
+  classify_float f <> FP_infinite && classify_float f <> FP_nan
+
 (** [valid bounds (a, b)] returns whether the bounds [a..b] are valid,
     where valid bounds are those bounds where [a] and [b] are *finite*
     and [a<=b]. *)
-let valid_bounds (a, b) =
-  let a_class, b_class = (classify_float a, classify_float b) in
-  let a_valid = a_class = FP_normal || a_class = FP_zero in
-  let b_valid = a_class = FP_normal || a_class = FP_zero in
-  a_valid && b_valid && a <= b
+let valid_bounds (a, b) = regular_float a && regular_float b && a <= b
 
 (** [fpeq ?tolerance:t a b] returns whether [a] and [b] are roughly
     equal (within some tolerance for floating-point precision loss). The

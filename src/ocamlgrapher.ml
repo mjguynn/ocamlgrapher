@@ -38,8 +38,7 @@ let process_equation text steps x_b y_b =
     let graph_data =
       make_samples x_b steps
       |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
-      |> split (fun (_, y) ->
-             classify_float y = FP_infinite || classify_float y = FP_nan)
+      |> split (fun (_, y) -> not (regular_float y))
     in
     {
       text;
