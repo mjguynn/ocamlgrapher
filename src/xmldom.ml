@@ -46,7 +46,7 @@ let rec output_xml f ?tab_level:(tl = 0) =
   let tabs = String.make tl '\t' in
   function
   | Text s -> Printf.fprintf f "%s" s
-  | Comment s -> Printf.fprintf f "<!--%s-->" s
+  | Comment s -> Printf.fprintf f "%s<!--%s-->" tabs s
   | Item (e, o) ->
       Printf.fprintf f "%s<%s %s/>\n" tabs e (string_of_attributes o)
   | Container (e, o, c) ->
