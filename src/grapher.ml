@@ -178,10 +178,10 @@ let make_plot_info c g w h =
 
 let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds)
-    (flip (snd g.y_bounds))
+    (-.snd g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
 
-let invert_y = List.map (fun (x, y) -> (x, flip y))
+let invert_y = List.map (fun (x, y) -> (x, -.y))
 
 let make_plot p =
   Container
@@ -241,7 +241,7 @@ let get_grid_pos
                 if error <> 0. then
                   generate_increments (increment :: acc) (n - 1)
                 else [ increment ]
-              else generate_increments acc (n - 1))
+              else generate_increments acc (n - 1) )
     in
     List.hd (List.rev (generate_increments [] line_count))
   in
@@ -301,7 +301,7 @@ let make_graph g x w h =
         [ ("id", "graph-axes") ],
         [
           make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-          make_polyline "graph_axis" [] [ (0., flip y1); (0., flip y2) ];
+          make_polyline "graph_axis" [] [ (0., -.y1); (0., -.y2) ];
         ] )
   in
   (* X & Y Axis *)
@@ -320,8 +320,7 @@ let make_graph g x w h =
       @ [
           make_region_border "graph_border"
             [ ("id", "graph-border") ]
-            (x1, flip y1)
-            (x2, flip y2);
+            (x1, -.y1) (x2, -.y2);
         ] )
 
 let to_svg filename g =
