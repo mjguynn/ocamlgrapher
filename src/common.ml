@@ -28,14 +28,21 @@ let prepend_assoc key x =
 (** [span (min, max)] is syntactic sugar for [max -. min]. *)
 let span (min, max) = max -. min
 
-(** [valid bounds (a, b)] returns whether the bounds [a..b] are valid,
+(** [regular_float f] returns true if [f] is NOT infinite or NaN.*)
+let regular_float f =
+  classify_float f <> FP_infinite && classify_float f <> FP_nan
+
+(** [valid_bounds (a, b)] returns whether the bounds [a..b] are valid,
     where valid bounds are those bounds where [a] and [b] are *finite*
     and [a<=b]. *)
-let valid_bounds (a, b) =
-  let a_class, b_class = (classify_float a, classify_float b) in
-  let a_valid = a_class = FP_normal || a_class = FP_zero in
-  let b_valid = a_class = FP_normal || a_class = FP_zero in
-  a_valid && b_valid && a <= b
+let valid_bounds (a, b) = regular_float a && regular_float b && a <= b
+
+(** [in_bounds v (a, b)] returns whether [v] is contained within the
+    bounds [a..b]. Requires: [(a, b)] is valid according to
+    [valid_bounds].*)
+let in_bounds v (a, b) =
+  assert (valid_bounds (a, b));
+  a <= v && v <= b
 
 (** [fpeq ?tolerance:t a b] returns whether [a] and [b] are roughly
     equal (within some tolerance for floating-point precision loss). The
@@ -53,3 +60,39 @@ let trunc x = if fpeq x 1e-13 then 0. else x
 
 (** [avg a b] returns the average of two ints [a] and [b]. *)
 let avg a b = (a + b) / 2
+
+
+(** [hd_opt lst] is like [List.hd], but returns [Some h] if [lst] begins
+    with an element [h] and [None] if [lst] is empty.*)
+let hd_opt = function h :: _ -> Some h | [] -> None
+
+(** [split pred lst] partitions [lst] into a list of lists by splitting
+    on every element [e] for which [pred p e n] is true, where [p] is an
+    option containing the element before [e] (or [None] if none exists)
+    and [n] is an option containing the element after [e] (or [None] if
+    none exists). The produced list does not contain any empty lists.
+    Order is preserved and elements are guaranteed to be processed in
+    the order they appear in [lst].
+
+    Example:
+    [split (fun _ c _ -> c ='a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] =
+    \[ \['f'\]; \['d'; 'g'\]; \['c'\]\]]*)
+let split pred =
+  let working = ref [] in
+  let processed = ref [] in
+  let update prev cur next =
+    if not (pred prev cur next) then working := cur :: !working
+    else if !working <> [] then (
+      processed := List.rev !working :: !processed;
+      working := [] )
+  in
+  let rec step prev = function
+    | [] ->
+        List.rev
+          ( if !working <> [] then List.rev !working :: !processed
+          else !processed )
+    | cur :: t ->
+        update prev cur (hd_opt t);
+        step (Some cur) t
+  in
+  step None

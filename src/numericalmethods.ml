@@ -4,45 +4,14 @@ exception Invalid_bounds
 
 exception No_points
 
-let within (x1, x2) (y1, y2) (px, py) =
-  x1 <= px && px <= x2 && y1 <= py && py <= y2
-
-let rec inner_list
-    ((x1 : float), (x2 : float))
-    ((y1 : float), (y2 : float))
-    points
-    (keep_going : bool)
-    (acc : (float * float) list) =
-  match (points, keep_going) with
-  | [], _ -> (List.rev acc, points)
-  | (px, py) :: tail, true ->
-      if within (x1, x2) (y1, y2) (px, py) then
-        inner_list (x1, x2) (y1, y2) tail true ((px, py) :: acc)
-      else inner_list (x1, x2) (y1, y2) tail false acc
-  | _, false -> (List.rev acc, points)
-
-let rec outer_list
-    ((x1 : float), (x2 : float))
-    ((y1 : float), (y2 : float))
-    points
-    (acc : (float * float) list list) =
-  match points with
-  | [] -> List.rev acc
-  | (px, py) :: tail ->
-      if within (x1, x2) (y1, y2) (px, py) then
-        let in_list, unprocessed =
-          inner_list (x1, x2) (y1, y2) tail true [ (px, py) ]
-        in
-        outer_list (x1, x2) (y1, y2) unprocessed (in_list :: acc)
-      else outer_list (x1, x2) (y1, y2) tail acc
-
-let limiter
-    ((x1 : float), (x2 : float))
-    ((y1 : float), (y2 : float))
-    points =
-  if not (Common.valid_bounds (x1, x2) && Common.valid_bounds (y1, y2))
-  then raise Invalid_bounds
-  else outer_list (x1, x2) (y1, y2) points []
+let limiter x_b y_b points =
+  let open Common in
+  if not (valid_bounds x_b && valid_bounds y_b) then
+    raise Invalid_bounds
+  else
+    List.filter
+      (fun (px, py) -> in_bounds px x_b && in_bounds py y_b)
+      points
 
 (** [diff_signs] returns whether [a] and [b] have different signs. *)
 let diff_signs (a : float) (b : float) : bool =
@@ -87,7 +56,7 @@ let rec max_help lst (max_x, max_y) (acc : (float * float) list) =
 
 let max_output lst =
   match lst with
-  | [] -> raise No_points
+  | [] -> failwith "Type is empty"
   | (x, y) :: tail -> max_help lst (0., Float.neg_infinity) []
 
 (* helper method to obtain the minimum point of a function output *)
@@ -101,5 +70,5 @@ let rec min_help lst (min_x, min_y) acc =
 
 let min_output lst =
   match lst with
-  | [] -> raise No_points
+  | [] -> failwith "Type is empty"
   | (x, y) :: tail -> min_help lst (0., Float.infinity) []

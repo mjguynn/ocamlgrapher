@@ -13,19 +13,58 @@ let make_samples (low, high) steps =
   in
   do_step high []
 
-(** [eval_equation eq samples x_bounds y_bounds] tokenizes [eq] and
-    evaluates it at every point in [samples], returning a list of points
-    (with all points outside of [x_bounds] and [y_bounds] discarded).
-    Requires: [x_bounds] an [y_bounds] are valid bounds.*)
-let eval_equation eq samples x_bounds y_bounds =
+(** An [equation] contains information about a single equation whose
+    formula is specified by [text] using the rules defined in
+    [Tokenizer] and [Parser]. [graph_data] is a list of point lists,
+    where each point list represents a single continuous segment of the
+    function evaluated over an arbitrary domin, where connecting one
+    point to the next point in the list with a line would form a
+    reasonable approximation to the function. [query_data] is a list of
+    points satisfying [graph_data] on the same (arbitary) domain but
+    with all points outside a given arbitrary range discarded.*)
+type equation = {
+  text : string;
+  graph_data : points list;
+  query_data : points;
+}
+
+(** [point_oob x_b y_b opt] returns false if [opt = Some (x,y)]
+    where[(x,y)] is within the X bounds [x_b] and Y bounds [x_b].
+    Otherwise, it returns true.*)
+let point_oob x_b y_b = function
+  | Some (x, y) -> not (in_bounds x x_b && in_bounds y y_b)
+  | None -> true
+
+(** [process_equation text samples x_bounds y_bounds] produces the
+    [equation] object specified by [text] and evaluated with [steps]
+    samples over [x_bounds] and [y_bounds]. Requires: [x_bounds] an
+    [y_bounds] are valid bounds.*)
+let process_equation text steps x_b y_b =
   try
-    let eq_tokenized = Tokenizer.tokenize eq in
-    samples
-    |> List.map (fun v -> (v, Parser.compute_f_of_x eq_tokenized v))
-    |> limiter x_bounds y_bounds
+    let tokens = Tokenizer.tokenize text in
+    let graph_data =
+      let computed =
+        make_samples x_b steps
+        |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
+      in
+      (* split when: 1. number is irregular (inf/nan) OR 2. number is
+         outside the range and the preceding and following numbers are
+         also both outside the range *)
+      computed
+      |> split (fun p (x, y) n ->
+             let oob = point_oob x_b y_b in
+             (not (regular_float x))
+             || (not (regular_float y))
+             || (oob p && oob (Some (x, y)) && oob n))
+    in
+    {
+      text;
+      graph_data;
+      query_data = graph_data |> List.flatten |> limiter x_b y_b;
+    }
   with Invalid_argument s ->
     Io.print_error (s ^ "\n");
-    []
+    { text; graph_data = []; query_data = [] }
 
 (** [print_point_list] prints a list of points to stdout, with each
     point on a new line.*)
@@ -38,44 +77,45 @@ let rec print_point_list =
 let print_float_list =
   List.iter (fun x -> Printf.printf "%10g\n" (trunc x))
 
-(** [print_roots (eq, points)] estimates and prints the roots of [eq]
-    given [points], a list of points satisfying [eq].*)
-let print_roots (eq, points) =
-  Io.print_header ("Approximate roots (X-axis) for " ^ eq ^ ": \n");
-  List.flatten points |> root_estimator |> print_float_list
+(** [print_roots eq] estimates and prints the approximated roots of [eq]
+    on its X and Y bounds. *)
+let print_roots eq =
+  Io.print_header ("Approximate roots (X-axis) for " ^ eq.text ^ ": \n");
+  eq.query_data |> root_estimator |> print_float_list
 
-(** [print_points (eq, points)] prints the points [points] satisfying
-    [eq].*)
-let print_points (eq, points) =
-  Io.print_header ("Points satisfying " ^ eq ^ ": \n");
-  List.flatten points |> print_point_list
+(** [print_points eq] prints the points computed to satisfy [eq] on its
+    X and Y bounds. *)
+let print_points eq =
+  Io.print_header ("Points satisfying " ^ eq.text ^ ": \n");
+  print_point_list eq.query_data
 
-let extrema_printer (eq, points) =
-  Io.print_header ("Approximate maximums for " ^ eq ^ ": \n");
-  List.flatten points |> max_output |> print_point_list;
-  Io.print_header ("Approximate minimums " ^ eq ^ ": \n");
-  List.flatten points |> min_output |> print_point_list
+(** [print_extrema eq] prints the approximated extrema of [eq] on its X
+    and Y bounds. *)
+let print_extrema eq =
+  Io.print_header ("Approximate maximums for " ^ eq.text ^ ": \n");
+  eq.query_data |> max_output |> print_point_list;
+  Io.print_header ("Approximate minimums " ^ eq.text ^ ": \n");
+  eq.query_data |> min_output |> print_point_list
 
 (** Executes OCamlgrapher using [config]. *)
 let main_grapher (config : Config.t) =
   let x_b, y_b = (x_bounds config, y_bounds config) in
-  let x_samples = make_samples x_b (steps config) in
   (* (equation string, list of points satisfying the equation )*)
   let processed =
     equations config
-    |> List.map (fun eq -> (eq, eval_equation eq x_samples x_b y_b))
+    |> List.map (fun t -> process_equation t (steps config) x_b y_b)
   in
   match command config with
   | Graph ->
       List.fold_left
-        (fun g (eq, points) -> Grapher.add_plot eq points g)
+        (fun g eq -> Grapher.add_plot eq.text eq.graph_data g)
         (Grapher.create (x_bounds config) (y_bounds config))
         processed
       |> Grapher.to_svg (output_file config);
       (* print the output file to stdout so the user can pipe it *)
       print_endline (output_file config)
   | Points -> List.iter print_points processed
-  | Extrema -> List.iter extrema_printer processed
+  | Extrema -> List.iter print_extrema processed
   | Roots -> List.iter print_roots processed
 
 (** [main ()] is the entry point for ocamlgrapher. *)
