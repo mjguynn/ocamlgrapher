@@ -61,8 +61,6 @@ let trunc x = if fpeq x 1e-13 then 0. else x
 (** [avg a b] returns the average of two ints [a] and [b]. *)
 let avg a b = (a + b) / 2
 
-(** [flip f] flips the sign of [f].*)
-let flip f = f *. -1.0
 
 (** [hd_opt lst] is like [List.hd], but returns [Some h] if [lst] begins
     with an element [h] and [None] if [lst] is empty.*)
