@@ -64,30 +64,37 @@ let avg a b = (a + b) / 2
 (** [flip f] flips the sign of [f].*)
 let flip f = f *. -1.0
 
+(** [hd_opt lst] is like [List.hd], but returns [Some h] if [lst] begins
+    with an element [h] and [None] if [lst] is empty.*)
+let hd_opt = function h :: _ -> Some h | [] -> None
+
 (** [split pred lst] partitions [lst] into a list of lists by splitting
-    on every element [e] for which [pred e i] is true, where [i] is the
-    index of the element in the list. The produced list does not contain
-    any empty lists. Order is preserved and elements are guaranteed to
-    be processed in the order they appear in [lst].
+    on every element [e] for which [pred p e n] is true, where [p] is an
+    option containing the element before [e] (or [None] if none exists)
+    and [n] is an option containing the element after [e] (or [None] if
+    none exists). The produced list does not contain any empty lists.
+    Order is preserved and elements are guaranteed to be processed in
+    the order they appear in [lst].
 
     Example:
-    [split (( = ) 'a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] = \[
-    \['f'\]; \['d'; 'g'\]; \['c'\]\]]*)
+    [split (fun _ c _ -> c ='a') \['f'; 'a'; 'd'; 'g'; 'a'; 'a'; 'c'\] =
+    \[ \['f'\]; \['d'; 'g'\]; \['c'\]\]]*)
 let split pred =
-  (* reject functional, return to ~~monke~~ imperative *)
-  let cur = ref [] in
-  let prevs = ref [] in
-  let rec step i = function
-    | [] ->
-        let lst =
-          if !cur <> [] then List.rev !cur :: !prevs else !prevs
-        in
-        List.rev lst
-    | h :: t ->
-        if not (pred h i) then cur := h :: !cur
-        else if !cur <> [] then (
-          prevs := List.rev !cur :: !prevs;
-          cur := [] );
-        step (i + 1) t
+  let working = ref [] in
+  let processed = ref [] in
+  let update prev cur next =
+    if not (pred prev cur next) then working := cur :: !working
+    else if !working <> [] then (
+      processed := List.rev !working :: !processed;
+      working := [] )
   in
-  step 0
+  let rec step prev = function
+    | [] ->
+        List.rev
+          ( if !working <> [] then List.rev !working :: !processed
+          else !processed )
+    | cur :: t ->
+        update prev cur (hd_opt t);
+        step (Some cur) t
+  in
+  step None

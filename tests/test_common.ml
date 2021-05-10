@@ -53,7 +53,7 @@ let test_split name pred lst expected =
     ~printer:(string_of_list (string_of_list (String.make 1)))
     expected (split pred lst)
 
-let simple_pred c _ = c = 'a'
+let simple_pred _ c _ = c = 'a'
 
 let split_tests =
   [
