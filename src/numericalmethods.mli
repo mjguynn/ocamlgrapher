@@ -34,7 +34,8 @@ val max_output : points -> point list
     is the empty list)*)
 val min_output : points -> point list
 
-(** [make_samples (low, high) steps] generates a list of [steps] values
-    evenly distributed between [low] and [high]. Requires: the provided
-    bounds are valid*)
+(** [make_samples (low, high) steps] generates a list of [steps]
+    evenly-distributed values between [low] and [high], from left to
+    right, with the final step at [high]. Requires: the provided bounds
+    are valid and steps >= 1. *)
 val make_samples : bounds -> int -> float list

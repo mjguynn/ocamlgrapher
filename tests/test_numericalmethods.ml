@@ -16,6 +16,13 @@ let max_test name input exp_output =
 let min_test name input exp_output =
   name >:: fun _ -> assert_equal exp_output (min_output input)
 
+let close_enough =
+  List.fold_left2 (fun acc a b -> acc && Common.fpeq a b) true
+
+let samples_test name bounds steps exp_output =
+  name >:: fun _ ->
+  assert_equal ~cmp:close_enough exp_output (make_samples bounds steps)
+
 let suite =
   "Numerical Methods Suite"
   >::: [
@@ -125,6 +132,12 @@ let suite =
            [
              (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
            ];
+         samples_test "one sample" (0.0, 1.0) 1 [ 1.0 ];
+         samples_test "two sample" (0.0, 1.0) 2 [ 0.5; 1.0 ];
+         samples_test "three sample" (0.0, 1.0) 3
+           [ 1.0 /. 3.0; 2.0 /. 3.0; 1.0 ];
+         samples_test "negative & positive sample" (-1.0, 1.0) 4
+           [ -0.5; 0.0; 0.5; 1.0 ];
          (* exception testing *)
          ( "limiter invalid x bounds" >:: fun _ ->
            assert_raises Invalid_bounds (fun () ->

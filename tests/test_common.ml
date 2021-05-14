@@ -131,9 +131,37 @@ let trunc_tests =
     test_trunc_zero "trunc negative tiny float" ~-.tiny_flt;
   ]
 
+let test_oob name x_b y_b input expected =
+  name >:: fun _ ->
+  assert_equal ~printer:string_of_bool expected
+    (point_oob x_b y_b input)
+
+let oob_tests =
+  [
+    test_oob "in bounds" (-5.0, 5.0) (-5.0, 5.0)
+      (Some (0.0, 0.05))
+      false;
+    test_oob "out bounds y" (-5.0, 5.0) (-5.0, 5.0)
+      (Some (0.0, 10.0))
+      true;
+    test_oob "out bounds x" (-5.0, 5.0) (-5.0, 5.0)
+      (Some (-6.25, 4.0))
+      true;
+    test_oob "out bounds x AND y" (-5.0, 5.0) (-5.0, 5.0)
+      (Some (-6.25, 12.0))
+      true;
+    test_oob "nonexistent point" (-5.0, 5.0) (-5.0, 5.0) None true;
+  ]
+
 let suite =
   "ocamlgrapher [Common] test suite"
   >::: List.flatten
-         [ starts_with_tests; drop_tests; split_tests; trunc_tests ]
+         [
+           starts_with_tests;
+           drop_tests;
+           split_tests;
+           trunc_tests;
+           oob_tests;
+         ]
 
 let _ = run_test_tt_main suite

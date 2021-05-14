@@ -75,7 +75,11 @@ let min_output lst =
 
 let make_samples (low, high) steps =
   let step_size = Common.span (low, high) /. float_of_int steps in
-  let rec do_step cur acc =
-    if cur <= low then acc else do_step (cur -. step_size) (cur :: acc)
+  let rec do_step acc remaining =
+    if remaining = 0 then acc
+    else
+      do_step
+        ((low +. (step_size *. float_of_int remaining)) :: acc)
+        (remaining - 1)
   in
-  do_step high []
+  do_step [] steps
