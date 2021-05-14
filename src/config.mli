@@ -95,6 +95,10 @@ val y_bounds : t -> float * float
     least one.*)
 val steps : t -> int
 
+(** [ratio cfg] returns the user-specified aspect ratio for a single
+    square unit of the output graph. This value is guaranteed to be > 0.*)
+val ratio : t -> float
+
 (** [command cfg] returns the [Defs.command_t] that the user wanted to
     perform. *)
 val command : t -> Defs.command_t

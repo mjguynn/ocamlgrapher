@@ -111,6 +111,10 @@ let suite =
     test_config "Config w/ Changed Steps (cmdline)"
       [| "y=x"; "--quality=420" |]
       steps 420;
+    test_config "Config default aspect ratio" [| "y=x" |] ratio 1.0;
+    test_config "Config changed aspect ratio"
+      [| "y=x"; "--aspect-ratio=1.5" |]
+      ratio 1.5;
     test_mode "graph" "-g" Graph;
     test_mode "points" "-p" Points;
     test_mode "roots" "-r" Roots;
@@ -168,6 +172,16 @@ let suite =
     test_config_error "Invalid Steps (0)" [| "y=x"; "--quality=0" |];
     test_config_error "Invalid Steps (negative)"
       [| "y=x"; "--quality=-12" |];
+    test_config_error "Duplicate Steps"
+      [| "y=x"; "--quality=5 --quality=6" |];
+    test_config_error "Invalid Aspect Ratio (string)"
+      [| "y=x"; "--aspect-ratio=Dog" |];
+    test_config_error "Invalid Aspect Ratio (0)"
+      [| "y=x"; "--aspect-ratio=0" |];
+    test_config_error "Invalid Aspect Ratio (negative)"
+      [| "y=x"; "--aspect-ratio=-12" |];
+    test_config_error "Duplicate Aspect Ratios"
+      [| "y=x"; "--aspect-ratio=5 --aspect-ratio=6" |];
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];

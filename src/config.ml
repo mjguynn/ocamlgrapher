@@ -10,13 +10,15 @@ open Defs
     with a precision of [steps]. [output_file] represents the file which
     shall recieve relevant program output.
 
-    RI: [cfg] is only meaningful if [x1<x2], [y1<y2], and [steps>=1].*)
+    RI: [cfg] is only meaningful if [x1<x2], [y1<y2], [steps>=1], and
+    [ratio > 0].*)
 type t = {
   command : command_t;
   equations : string list;
   x_bounds : float * float;
   y_bounds : float * float;
   steps : int;
+  ratio : float;
   output_file : string;
 }
 
@@ -48,6 +50,9 @@ let cmdline_info =
     (Opt ("x-max", None), "Set the maximum bound on the X axis.");
     (Opt ("y-min", None), "Set the minimum bound on the Y axis.");
     (Opt ("y-max", None), "Set the maxmimum bound on the Y axis.");
+    ( Opt ("aspect-ratio", None),
+      "Set the aspect ratio of a *single square unit* on the graph. \
+       Must be < 0. Default is 1." );
     ( Opt ("quality", Some 'q'),
       "Set the number of \"steps\" used to analyze the function and/or \
        draw its graph. Higher is better." );
@@ -100,7 +105,8 @@ let extract_output cmdline default_out =
 (** [extract_steps cmdline default]: returns the user specified number
     of steps on the command line, if it exists; otherwise, returns the
     default value. If the user typed something but it wasn't an integer
-    OR it was < 1, return an error message instead.*)
+    OR it was < 1, or if multiple qualities were specified, return an
+    error message instead.*)
 let extract_steps cmdline default_steps =
   match List.assoc "quality" (options cmdline) with
   | [] ->
@@ -111,6 +117,20 @@ let extract_steps cmdline default_steps =
       | Some i when i >= 1 -> Ok i
       | _ -> Error "Quality must be an integer >= 1" )
   | _ -> Error "Multiple qualities specified"
+
+(** [extract_ratio cmdline default]: returns the user-specified aspect
+    ratio, if it exists; otherwise, returns the default value. If the
+    user typed something but it wasn't a float OR it was >=0, or if
+    multiple aspect ratios were specified, return an error message
+    instead.*)
+let extract_ratio cmdline default_steps =
+  match List.assoc "aspect-ratio" (options cmdline) with
+  | [] -> Ok 1.0
+  | [ s ] -> (
+      match float_of_string_opt s with
+      | Some f when f > 0.0 -> Ok f
+      | _ -> Error "Aspect ratio must be a finite float > 0" )
+  | _ -> Error "Multiple aspect ratios specified"
 
 (** [extract_bounds cmdline (min, max) dim]: returns an [Ok] result
     containing the pair (a, b) bounding [dim] as specified on [cmdline].
@@ -137,7 +157,7 @@ let extract_bounds cmdline (default_min, default_max) dimension =
     if not (Common.valid_bounds (min, max)) then
       Error
         ( "Invalid bounds on " ^ dimension
-        ^ ". (Make sure min <= max and min,max are finite.)" )
+        ^ ". (Make sure min <= max and min, max are finite.)" )
     else Ok (min, max)
   with Bad_assume s -> Error s
 
@@ -169,6 +189,7 @@ let from_cmdline xs ys s o ic argv =
             x_bounds = extract_bounds res xs "x" |> assume_ok;
             y_bounds = extract_bounds res ys "y" |> assume_ok;
             steps = extract_steps res s |> assume_ok;
+            ratio = extract_ratio res s |> assume_ok;
             output_file = extract_output res o |> assume_ok;
           }
       with Bad_assume s -> Error s )
@@ -180,6 +201,8 @@ let x_bounds cfg = cfg.x_bounds
 let y_bounds cfg = cfg.y_bounds
 
 let steps cfg = cfg.steps
+
+let ratio cfg = cfg.ratio
 
 let command cfg = cfg.command
 
