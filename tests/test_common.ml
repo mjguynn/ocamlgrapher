@@ -85,7 +85,7 @@ let float_tests =
     test_regular_float "positive regular number" 12.7 true;
     test_regular_float "negative regular number" (-87.2) true;
     test_regular_float "positive inf irregular" infinity false;
-    test_regular_float "negative inf irregular" (flip infinity) false;
+    test_regular_float "negative inf irregular" ~-.infinity false;
     test_regular_float "NaN irregular" nan true;
   ]
 
