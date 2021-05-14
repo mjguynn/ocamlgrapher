@@ -55,6 +55,10 @@ let test_split name pred lst expected =
 
 let simple_pred _ c _ = c = 'a'
 
+(* like it or not, this is peak predicate *)
+let peak_pred p c n =
+  c >= Option.value p ~default:'z' && c >= Option.value n ~default:'z'
+
 let split_tests =
   [
     test_split "empty" simple_pred [] [];
@@ -70,6 +74,12 @@ let split_tests =
     test_split "end with splitter" simple_pred
       [ 'c'; 'a'; 'd'; 'g'; 'a' ]
       [ [ 'c' ]; [ 'd'; 'g' ] ];
+    test_split "complex pred, in the middle" peak_pred
+      [ 'a'; 'b'; 'c'; 'b'; 'a' ]
+      [ [ 'a'; 'b' ]; [ 'b'; 'a' ] ];
+    test_split "complex pred, flatline & stuff " peak_pred
+      [ 'a'; 'b'; 'c'; 'c'; 'c'; 'c'; 'b'; 'c'; 'd'; 'e'; 'a' ]
+      [ [ 'a'; 'b' ]; [ 'b'; 'c'; 'd' ]; [ 'a' ] ];
   ]
 
 (** [test_regular_float name flt expected] creates an OUnit test case
@@ -89,8 +99,41 @@ let float_tests =
     test_regular_float "NaN irregular" nan true;
   ]
 
+(* fpeq is tested by test_numericalmethods & was tested manually, in
+   real circumstances, much better than I could do here. *)
+
+(* I totally just eyeballed trunc to make the output look pretty so
+   these tests are pretty vague*)
+
+let test_trunc_base name flt expected =
+  name >:: fun _ ->
+  assert_equal ~printer:string_of_float expected (trunc flt)
+
+let test_trunc_ident name flt = test_trunc_base name flt flt
+
+let test_trunc_zero name flt = test_trunc_base name flt 0.0
+
+let small_flt = 0.0000000001
+
+let tiny_flt = 1e-16
+
+let trunc_tests =
+  [
+    test_trunc_ident "trunc normal number" 5.6;
+    test_trunc_ident "trunc larger normal number" 1056.7;
+    test_trunc_ident "trunc +inf" infinity;
+    test_trunc_ident "trunc -inf" ~-.infinity;
+    test_trunc_ident "trunc negative number" ~-.12.0;
+    test_trunc_ident "trunc zero" 0.0;
+    test_trunc_ident "trunc small float" small_flt;
+    test_trunc_ident "trunc negative small float" ~-.small_flt;
+    test_trunc_zero "trunc TINY float" tiny_flt;
+    test_trunc_zero "trunc negative tiny float" ~-.tiny_flt;
+  ]
+
 let suite =
   "ocamlgrapher [Common] test suite"
-  >::: List.flatten [ starts_with_tests; drop_tests; split_tests ]
+  >::: List.flatten
+         [ starts_with_tests; drop_tests; split_tests; trunc_tests ]
 
 let _ = run_test_tt_main suite

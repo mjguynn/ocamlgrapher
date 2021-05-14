@@ -26,7 +26,7 @@ let prepend_assoc key x =
   List.map (fun (k, v) -> (k, if k = key then x :: v else v))
 
 (** [span (min, max)] is syntactic sugar for [max -. min]. *)
-let span (min, max) = max -. min
+let span (min, max) = max -. min [@@coverage off]
 
 (** [regular_float f] returns true if [f] is NOT infinite or NaN.*)
 let regular_float f =
@@ -53,14 +53,10 @@ let fpeq ?tolerance:(t = 1e3) a b =
   let epsilon_scale =
     Float.max 1. (Float.max (Float.abs a) (Float.abs b))
   in
-  Float.abs (b -. a) <= Float.epsilon *. epsilon_scale *. t
+  Float.abs (b -. a) < Float.epsilon *. epsilon_scale *. t
 
 (** [trunc x] rounds [x] to 0 if it's really close to 0.*)
 let trunc x = if fpeq x 1e-13 then 0. else x
-
-(** [avg a b] returns the average of two ints [a] and [b]. *)
-let avg a b = (a + b) / 2
-
 
 (** [hd_opt lst] is like [List.hd], but returns [Some h] if [lst] begins
     with an element [h] and [None] if [lst] is empty.*)
