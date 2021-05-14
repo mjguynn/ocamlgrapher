@@ -51,8 +51,8 @@ type plot = {
     RI: [x2 >= x1] and [y2 >= y1]. *)
 type t = {
   plots : plot list;
-  x_bounds : float * float;
-  y_bounds : float * float;
+  x_bounds : bounds;
+  y_bounds : bounds;
 }
 
 let create x_bounds y_bounds =

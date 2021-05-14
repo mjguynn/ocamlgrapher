@@ -72,3 +72,10 @@ let min_output lst =
   match lst with
   | [] -> raise No_points
   | (x, y) :: tail -> min_help lst (0., Float.infinity) []
+
+let make_samples (low, high) steps =
+  let step_size = Common.span (low, high) /. float_of_int steps in
+  let rec do_step cur acc =
+    if cur <= low then acc else do_step (cur -. step_size) (cur :: acc)
+  in
+  do_step high []

@@ -5,6 +5,10 @@
     are finite floats.*)
 type point = float * float
 
+(** A [bounds] (a,b) represents the numeric bound \[a..b\], where [a]
+    and [b] are finite. *)
+type bounds = float * float
+
 (** [points] represents a list of points. *)
 type points = point list
 
@@ -92,3 +96,10 @@ let split pred =
         step (Some cur) t
   in
   step None
+
+(** [point_oob x_b y_b opt] returns false if [opt = Some (x,y)]
+    where[(x,y)] is within the X bounds [x_b] and Y bounds [x_b].
+    Otherwise, it returns true.*)
+let point_oob x_b y_b = function
+  | Some (x, y) -> not (in_bounds x x_b && in_bounds y y_b)
+  | None -> true

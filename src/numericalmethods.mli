@@ -13,7 +13,7 @@ exception No_points
     point (x,y) where (x < x1), (x > x2), (y < y1), or (y > y2). Raises
     [Invalid_bounds] if the lower limit is strictly greater than upper
     limit. *)
-val limiter : float * float -> float * float -> points -> points
+val limiter : bounds -> bounds -> points -> points
 
 (** [root_estimator fun_output] estimates the roots of the function from
     the list of outputs given by the function. If there are no roots,
@@ -26,10 +26,15 @@ val root_estimator : points -> float list
     function output from the given list. Output is in left-to-right
     order. Raises [No_points] if there are no input points ([fun_output]
     is the empty list)*)
-val max_output : points -> (float * float) list
+val max_output : points -> point list
 
 (** [min_output fun_output] estimates the minimum point(s) of the
     function output from the given list. Output is in left-to-right
     order. Raises [No_points] if there are no input points ([fun_output]
     is the empty list)*)
-val min_output : points -> (float * float) list
+val min_output : points -> point list
+
+(** [make_samples (low, high) steps] generates a list of [steps] values
+    evenly distributed between [low] and [high]. Requires: the provided
+    bounds are valid*)
+val make_samples : bounds -> int -> float list
