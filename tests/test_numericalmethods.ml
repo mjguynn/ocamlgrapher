@@ -68,14 +68,12 @@ let suite =
              (-1.0, -1.7);
            ]
            [ (0.0, -0.5) ];
-         (*limiter_test "Should raise exception" (-10.0, 10.0) (1.0,
-           -1.0) [ (1.0, 2.3); (0.5, 0.4); (0.0, -0.5); (-0.5, -0.7);
-           (-1.0, -1.7); ] [ (0.5, 0.4); (0.0, -0.5); (-0.5, -0.7) ];*)
          root_test "no roots"
            [
              (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.5); (0.5, 0.7); (1.0, 1.7);
            ]
            [];
+         root_test "empty input" [] [];
          root_test "one root"
            [
              (-1.0, 2.3);
@@ -127,6 +125,17 @@ let suite =
            [
              (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
            ];
+         (* exception testing *)
+         ( "limiter invalid x bounds" >:: fun _ ->
+           assert_raises Invalid_bounds (fun () ->
+               limiter (8.0, 7.0) (6.0, 7.0) []) );
+         ( "limiter invalid y bounds" >:: fun _ ->
+           assert_raises Invalid_bounds (fun () ->
+               limiter (-7.0, 7.0) (~-.infinity, 7.0) []) );
+         ( "min_output no points" >:: fun _ ->
+           assert_raises No_points (fun () -> max_output []) );
+         ( "max_output no points" >:: fun _ ->
+           assert_raises No_points (fun () -> min_output []) );
        ]
 
 let _ = run_test_tt_main suite

@@ -56,7 +56,7 @@ let rec max_help lst (max_x, max_y) (acc : (float * float) list) =
 
 let max_output lst =
   match lst with
-  | [] -> failwith "Type is empty"
+  | [] -> raise No_points
   | (x, y) :: tail -> max_help lst (0., Float.neg_infinity) []
 
 (* helper method to obtain the minimum point of a function output *)
@@ -70,5 +70,5 @@ let rec min_help lst (min_x, min_y) acc =
 
 let min_output lst =
   match lst with
-  | [] -> failwith "Type is empty"
+  | [] -> raise No_points
   | (x, y) :: tail -> min_help lst (0., Float.infinity) []
