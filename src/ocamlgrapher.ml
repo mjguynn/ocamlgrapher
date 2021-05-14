@@ -4,15 +4,6 @@ open Config
 open Common
 open Numericalmethods
 
-(** [make_samples (low, high) steps] generates a list of [steps] values
-    evenly distributed between [low] and [high].*)
-let make_samples (low, high) steps =
-  let step_size = span (low, high) /. float_of_int steps in
-  let rec do_step cur acc =
-    if cur <= low then acc else do_step (cur -. step_size) (cur :: acc)
-  in
-  do_step high []
-
 (** An [equation] contains information about a single equation whose
     formula is specified by [text] using the rules defined in
     [Tokenizer] and [Parser]. [graph_data] is a list of point lists,
@@ -27,13 +18,6 @@ type equation = {
   graph_data : points list;
   query_data : points;
 }
-
-(** [point_oob x_b y_b opt] returns false if [opt = Some (x,y)]
-    where[(x,y)] is within the X bounds [x_b] and Y bounds [x_b].
-    Otherwise, it returns true.*)
-let point_oob x_b y_b = function
-  | Some (x, y) -> not (in_bounds x x_b && in_bounds y y_b)
-  | None -> true
 
 (** [process_equation text samples x_bounds y_bounds] produces the
     [equation] object specified by [text] and evaluated with [steps]
