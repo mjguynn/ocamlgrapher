@@ -3,11 +3,13 @@
 (** [Grapher.t] is the abstract representation of a graph.*)
 type t
 
-(** [create (x_min, x_max) (y_min, y_max)] creates a new, empty graph
-    that viewing the area [x_min, x_max] X [y_min, y_max].
+(** [create (x_min, x_max) (y_min, y_max) aspect_ratio] creates a new,
+    empty graph that views the area [x_min, x_max] X [y_min, y_max]. The
+    aspect ratio of a square unit on the graph is determined by
+    [aspect_ratio].
 
-    Requires: [x_min < x_max] and [y_min < y_max].*)
-val create : float * float -> float * float -> t
+    Requires: [x_min < x_max], [y_min < y_max], and [aspect_ratio > 0]. *)
+val create : float * float -> float * float -> float -> t
 
 (** [add_plot label segments graph] adds [segments] to [graph], where
     each segment is a list of points, and each point within a segment is

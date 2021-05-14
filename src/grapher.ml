@@ -53,11 +53,12 @@ type t = {
   plots : plot list;
   x_bounds : bounds;
   y_bounds : bounds;
+  ratio : float;
 }
 
-let create x_bounds y_bounds =
+let create x_bounds y_bounds ratio =
   assert (valid_bounds x_bounds && valid_bounds y_bounds);
-  { plots = []; x_bounds; y_bounds }
+  { plots = []; x_bounds; y_bounds; ratio }
 
 let add_plot label segments g =
   let color =
@@ -312,6 +313,7 @@ let make_graph g x w h =
         ("width", string_of_int w);
         ("height", string_of_int h);
         ("viewBox", graph_viewbox g);
+        ("preserveAspectRatio", "none");
       ],
       let hor_bars, vert_bars = get_grid_pos x1 x2 y1 y2 in
       background
@@ -335,8 +337,10 @@ let to_svg filename g =
   let height = plot_info_height config g in
   let plot_info_width = plot_info_width config g in
   let plot_info = make_plot_info config g plot_info_width height in
-  let graph_ratio = span g.x_bounds /. span g.y_bounds in
-  let graph_width = int_of_float (float_of_int height *. graph_ratio) in
+  let default_ratio = span g.x_bounds /. span g.y_bounds in
+  let graph_width =
+    int_of_float (float_of_int height *. default_ratio *. g.ratio)
+  in
   let graph = make_graph g plot_info_width graph_width height in
   let dom =
     Container

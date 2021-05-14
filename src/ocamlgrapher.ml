@@ -93,7 +93,8 @@ let main_grapher (config : Config.t) =
   | Graph ->
       List.fold_left
         (fun g eq -> Grapher.add_plot eq.text eq.graph_data g)
-        (Grapher.create (x_bounds config) (y_bounds config))
+        (Grapher.create (x_bounds config) (y_bounds config)
+           (ratio config))
         processed
       |> Grapher.to_svg (output_file config);
       (* print the output file to stdout so the user can pipe it *)
