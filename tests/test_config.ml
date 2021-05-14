@@ -69,8 +69,10 @@ let test_mode name flag =
     ("Config w/ Command " ^ name)
     [| "y=x"; flag |] Config.command
 
+let cmdline_rules = [ Defs.Opt ("testing", Some 't') ]
+
 let suite =
-  "ocamlgrapher [Config] test suite"
+  "ocamlgrapher [Config] and [Cmdline] test suite"
   >:::
   let open Config in
   [
@@ -189,6 +191,28 @@ let suite =
       [| "--points"; "--extrema"; "y=x" |];
     test_config_error "No Equation (with -)" ~input_override:(Some "")
       [| "-" |];
+    (* cmdline tests, to get the remaining coverage*)
+    ( "cmdline no program" >:: fun _ ->
+      try ignore (Cmdline.parse_cmdline cmdline_rules stdin [||]) with
+      | Invalid_argument _ -> assert_equal true true
+      | _ -> assert_equal true false );
+    ( "cmdline name" >:: fun _ ->
+      assert_equal "./ocamlgrapher" ~printer:Fun.id
+        ( Cmdline.parse_cmdline cmdline_rules stdin
+            [| "./ocamlgrapher" |]
+        |> Result.get_ok |> Cmdline.name ) );
+    ( "cmdline long option with equals in it" >:: fun _ ->
+      assert_equal
+        [ ("testing", [ "hey=you" ]) ]
+        ( Cmdline.parse_cmdline cmdline_rules stdin
+            [| "./ocamlgrapher"; "--testing=hey=you" |]
+        |> Result.get_ok |> Cmdline.options ) );
+    ( "cmdline shrot option with equals in it" >:: fun _ ->
+      assert_equal
+        [ ("testing", [ "hey=you" ]) ]
+        ( Cmdline.parse_cmdline cmdline_rules stdin
+            [| "./ocamlgrapher"; "-t"; "hey=you" |]
+        |> Result.get_ok |> Cmdline.options ) );
   ]
 
 let _ = run_test_tt_main suite

@@ -61,7 +61,8 @@ let parse_long_arg token args acc =
          | Opt (o, _) -> o = s)
   in
   match String.split_on_char '=' token with
-  | [] -> raise (Invalid_argument "Impossible state")
+  | [] -> (
+      raise (Invalid_argument "Impossible state") [@coverage off] )
   | arg :: t -> (
       match (is_long_rule arg, t) with
       | Some (Flag (f, _)), _ ->
