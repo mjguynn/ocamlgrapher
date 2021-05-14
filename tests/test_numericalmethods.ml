@@ -26,7 +26,8 @@ let samples_test name bounds steps exp_output =
 let suite =
   "Numerical Methods Suite"
   >::: [
-         limiter_test "Return empty list" (-10.0, 10.0) (0.0, 0.0)
+         limiter_test "limiter: return empty list" (-10.0, 10.0)
+           (0.0, 0.0)
            [
              (-1.0, 2.3);
              (-0.5, 0.4);
@@ -35,7 +36,7 @@ let suite =
              (1.0, -1.7);
            ]
            [];
-         limiter_test "Return Basic 1" (-10.0, 10.0) (-1.0, 1.0)
+         limiter_test "limiter basic" (-10.0, 10.0) (-1.0, 1.0)
            [
              (-1.0, 2.3);
              (-0.5, 0.4);
@@ -44,7 +45,7 @@ let suite =
              (1.0, -1.7);
            ]
            [ (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7) ];
-         limiter_test "Return Basic 2: point equal to lower range limit"
+         limiter_test "limiter: point equal to lower range limit"
            (-10.0, 10.0) (-0.5, 0.5)
            [
              (-1.0, 2.3);
@@ -54,7 +55,7 @@ let suite =
              (1.0, -1.7);
            ]
            [ (-0.5, 0.4); (0.0, -0.5) ];
-         limiter_test "Return Basic: point equal to upper range limit"
+         limiter_test "limiter: point equal to upper range limit"
            (-10.0, 10.0) (-1.0, 0.4)
            [
              (-1.0, 2.3);
@@ -64,8 +65,7 @@ let suite =
              (1.0, -1.7);
            ]
            [ (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7) ];
-         limiter_test
-           "Return Basic: upper limit = lower limit, point within"
+         limiter_test "limiter: upper limit = lower limit, point within"
            (-10.0, 10.0) (-0.5, -0.5)
            [
              (1.0, 2.3);
@@ -99,7 +99,27 @@ let suite =
              (1.0, 1.7);
            ]
            [ -0.25; 0.25 ];
-         (*max_test "Failing Test: empty list" (get_t []) (2., 3.);*)
+         root_test "one root"
+           [
+             (-1.0, 2.3);
+             (-0.5, 0.4);
+             (0.0, -0.5);
+             (0.5, -0.7);
+             (1.0, -1.7);
+           ]
+           [ -0.25 ];
+         root_test "root is in the list"
+           [
+             (-1.0, 2.3);
+             (-0.5, 0.4);
+             (0.0, 0.0);
+             (0.5, -0.7);
+             (1.0, -1.7);
+           ]
+           [ 0.0 ];
+         root_test "root is the last item in the list"
+           [ (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.0) ]
+           [ 0.0 ];
          max_test "Maximum"
            [
              (-1.0, 2.3);
@@ -109,7 +129,7 @@ let suite =
              (1.0, 1.7);
            ]
            [ (-1.0, 2.3) ];
-         max_test "Maximum: list"
+         max_test "Maximum: multiple"
            [
              (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
            ]
@@ -125,7 +145,7 @@ let suite =
              (1.0, 1.7);
            ]
            [ (0.0, -0.5) ];
-         min_test "Minimum: list"
+         min_test "Minimum: multiple"
            [
              (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
            ]
@@ -133,11 +153,11 @@ let suite =
              (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
            ];
          samples_test "one sample" (0.0, 1.0) 1 [ 1.0 ];
-         samples_test "two sample" (0.0, 1.0) 2 [ 0.5; 1.0 ];
-         samples_test "three sample" (0.0, 1.0) 3
+         samples_test "two samples" (0.0, 1.0) 2 [ 0.5; 1.0 ];
+         samples_test "three samples" (0.0, 1.0) 3
            [ 1.0 /. 3.0; 2.0 /. 3.0; 1.0 ];
-         samples_test "negative & positive sample" (-1.0, 1.0) 4
-           [ -0.5; 0.0; 0.5; 1.0 ];
+         samples_test "negative & positive bounds for samples"
+           (-1.0, 1.0) 4 [ -0.5; 0.0; 0.5; 1.0 ];
          (* exception testing *)
          ( "limiter invalid x bounds" >:: fun _ ->
            assert_raises Invalid_bounds (fun () ->
