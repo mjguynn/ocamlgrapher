@@ -27,6 +27,9 @@ type t
 
     "--y-max=[num]": Set maximum value on Y axis
 
+    "--aspect-ratio=[num]": Set aspect ratio of a square unit on the
+    graph.
+
     "-q [num]", "--quality=[num]": The number of "steps" in the graph.
     num > 0
 
@@ -47,7 +50,12 @@ type t
     command line, the returned representation shall use [default_steps]
     steps, and if no output file is specified on the command line, the
     returned representation shall use [default_output_file]. Requires:
-    [default_steps] >= 1
+    [default_steps] >= 1.
+
+    If no aspect ratio was specified, [from_cmdline] pretends that the
+    user specified an aspect ratio of 1. The aspect ratio must be finite
+    and > 0. Specifying multiple aspect ratios on the command line is an
+    error.
 
     If no command option is provided on the command line, the returned
     representation will have [Graph] as the command.
@@ -96,7 +104,8 @@ val y_bounds : t -> float * float
 val steps : t -> int
 
 (** [ratio cfg] returns the user-specified aspect ratio for a single
-    square unit of the output graph. This value is guaranteed to be > 0.*)
+    square unit of the output graph. This value is guaranteed to be
+    finite and > 0.*)
 val ratio : t -> float
 
 (** [command cfg] returns the [Defs.command_t] that the user wanted to

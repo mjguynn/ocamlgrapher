@@ -52,7 +52,7 @@ let cmdline_info =
     (Opt ("y-max", None), "Set the maxmimum bound on the Y axis.");
     ( Opt ("aspect-ratio", None),
       "Set the aspect ratio of a *single square unit* on the graph. \
-       Must be < 0. Default is 1." );
+       Must be finite and < 0. Default is 1." );
     ( Opt ("quality", Some 'q'),
       "Set the number of \"steps\" used to analyze the function and/or \
        draw its graph. Higher is better." );
@@ -122,15 +122,15 @@ let extract_steps cmdline default_steps =
 
 (** [extract_ratio cmdline default]: returns the user-specified aspect
     ratio, if it exists; otherwise, returns the default value. If the
-    user typed something but it wasn't a float OR it was >=0, or if
-    multiple aspect ratios were specified, return an error message
-    instead.*)
+    user typed a non-float, typed a float <= 0, typed a non-finite
+    float, or specified multiple aspect ratios were specified, return an
+    error message instead.*)
 let extract_ratio cmdline default_steps =
   match List.assoc "aspect-ratio" (options cmdline) with
   | [] -> Ok 1.0
   | [ s ] -> (
       match float_of_string_opt s with
-      | Some f when f > 0.0 -> Ok f
+      | Some f when f > 0.0 && Common.regular_float f -> Ok f
       | _ -> Error "Aspect ratio must be a finite float > 0" )
   | _ -> Error "Multiple aspect ratios specified"
 

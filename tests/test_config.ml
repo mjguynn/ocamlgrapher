@@ -179,6 +179,12 @@ let suite =
       [| "y=x"; "--aspect-ratio=0" |];
     test_config_error "Invalid Aspect Ratio (negative)"
       [| "y=x"; "--aspect-ratio=-12" |];
+    test_config_error "Invalid Aspect Ratio (inf)"
+      [| "y=x"; "--aspect-ratio=inf" |];
+    test_config_error "Invalid Aspect Ratio (-inf)"
+      [| "y=x"; "--aspect-ratio=-inf" |];
+    test_config_error "Invalid Aspect Ratio (nan)"
+      [| "y=x"; "--aspect-ratio=NaN" |];
     test_config_error "Duplicate Aspect Ratios"
       [| "y=x"; "--aspect-ratio=5"; "--aspect-ratio=6" |];
     test_config_error "Multiple Output Files"

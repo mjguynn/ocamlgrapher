@@ -8,7 +8,8 @@ type t
     aspect ratio of a square unit on the graph is determined by
     [aspect_ratio].
 
-    Requires: [x_min < x_max], [y_min < y_max], and [aspect_ratio > 0]. *)
+    Requires: [x_min < x_max], [y_min < y_max], and
+    [0 < aspect_ratio < +inf]. *)
 val create : float * float -> float * float -> float -> t
 
 (** [add_plot label segments graph] adds [segments] to [graph], where
