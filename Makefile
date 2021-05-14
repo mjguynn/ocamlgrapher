@@ -3,7 +3,7 @@ PRIVATE=src/cmdline.ml src/config.ml src/grapher.ml src/io.ml src/numericalmetho
 OBJECTS=$(MODULES:=.cmo)
 TESTS=$(shell find ./tests -name "*.ml" | sed s/ml/byte/g | sed s/.\\/tests\\///g )
 MAIN=src/ocamlgrapher.byte
-OCAMLBUILD=ocamlbuild -use-ocamlfind
+OCAMLBUILD=ocamlbuild -use-ocamlfind -plugin-tag 'package(bisect_ppx-ocamlbuild)'
 
 define \n
 
@@ -14,7 +14,7 @@ default: build
 	OCAMLRUNPARAM=b utop
 
 build:
-	$(OCAMLBUILD) -tag 'debug' $(MAIN)
+	$(OCAMLBUILD) -I src -tag 'debug' $(MAIN)
 
 test:
 	$(foreach TEST,$(TESTS),$(OCAMLBUILD) -I src -I tests -tag 'debug' tests/$(TEST) && echo RUNNING $(TEST) && ./$(TEST) -runner sequential ${\n})
@@ -34,4 +34,10 @@ docs-private: build
 
 clean:
 	ocamlbuild -clean
-	rm -rf _doc.public _doc.private
+	rm -rf _doc.public _doc.private _coverage bisect*.coverage
+
+bisect-test:
+	$(foreach TEST,$(TESTS),BISECT_COVERAGE=YES $(OCAMLBUILD) -I src -I tests -tag 'debug' tests/$(TEST) && echo RUNNING $(TEST) && ./$(TEST) ${\n})
+
+bisect: clean bisect-test
+	bisect-ppx-report html

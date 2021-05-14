@@ -62,9 +62,6 @@ let test_config_error
 let test_simple name =
   test_config ("Simple Valid Config - " ^ name) [| "y=12x+4" |]
 
-(* I would write a helper function to transform a string into an argv
-   array, but the logic for doing that is *really* complicated...*)
-
 let cfg_xy cfg = (Config.x_bounds cfg, Config.y_bounds cfg)
 
 let test_mode name flag =
@@ -173,7 +170,7 @@ let suite =
     test_config_error "Invalid Steps (negative)"
       [| "y=x"; "--quality=-12" |];
     test_config_error "Duplicate Steps"
-      [| "y=x"; "--quality=5 --quality=6" |];
+      [| "y=x"; "--quality=5"; "--quality=6" |];
     test_config_error "Invalid Aspect Ratio (string)"
       [| "y=x"; "--aspect-ratio=Dog" |];
     test_config_error "Invalid Aspect Ratio (0)"
@@ -181,7 +178,7 @@ let suite =
     test_config_error "Invalid Aspect Ratio (negative)"
       [| "y=x"; "--aspect-ratio=-12" |];
     test_config_error "Duplicate Aspect Ratios"
-      [| "y=x"; "--aspect-ratio=5 --aspect-ratio=6" |];
+      [| "y=x"; "--aspect-ratio=5"; "--aspect-ratio=6" |];
     test_config_error "Multiple Output Files"
       [| "y=x"; "--output=test.txt"; "-otest2.txt" |];
     test_config_error "No Equation" [||];

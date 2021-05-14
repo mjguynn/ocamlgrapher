@@ -11,6 +11,8 @@ _doc.private
 *.native
 *.byte
 _build
+_coverage
+*.coverage
 
 # temporary files
 *.swp

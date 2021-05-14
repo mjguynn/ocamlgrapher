@@ -1,1 +1,3 @@
+<src/{config,cmdline}.ml>: coverage
+<tests/test_{*}.{byte,native}>: coverage
 true: package(ounit2)

@@ -83,6 +83,8 @@ let help errc =
          Printf.eprintf "\t%-28s: " name;
          print_detail ~channel:stderr (desc ^ "\n"));
   exit errc
+  (* manually tested *)
+  [@@coverage off]
 
 (** [extract_equations cmdline]: If >= 1 equations on [cmdline], returns
     those equations in the order they appeared on the command line.
@@ -180,7 +182,8 @@ let from_cmdline xs ys s o ic argv =
   match parse_cmdline (List.map fst cmdline_info) ic argv with
   | Error e -> Error e
   | Ok res -> (
-      if List.mem "help" (flags res) then help 0;
+      (* manually tested *)
+      if [@coverage off] List.mem "help" (flags res) then help 0;
       try
         Ok
           {
@@ -230,3 +233,4 @@ let to_string cfg =
   ^
   if cfg.command = Graph then ", outputting to " ^ cfg.output_file
   else ""
+  [@@coverage off]

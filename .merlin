@@ -4,3 +4,5 @@ B _build
 B _build/src
 B _build/tests
 PKG ounit2
+PKG ocamlbuild
+PKG bisect_ppx-ocamlbuild
