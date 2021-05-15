@@ -39,14 +39,13 @@ let rep_ok s =
 let load_internal ic =
   let empty_cfg = { stylesheet = ""; variables = [] } in
   let rec parse_line acc =
-    try
-      match
-        Scanf.sscanf (input_line ic) " --%s@: %upx" (fun v n -> (v, n))
-      with
-      | s, i ->
-          parse_line { acc with variables = (s, i) :: acc.variables }
-      | exception Scanf.Scan_failure _ -> parse_line acc
-    with End_of_file -> acc
+    match
+      Scanf.sscanf (input_line ic) " --%s@: %upx" (fun v n -> (v, n))
+    with
+    | s, i ->
+        parse_line { acc with variables = (s, i) :: acc.variables }
+    | exception Scanf.Scan_failure _ -> parse_line acc
+    | exception End_of_file -> acc
   in
   let parsed_cfg = parse_line empty_cfg in
   seek_in ic 0;
