@@ -59,7 +59,7 @@ let cmdline_info =
     (Opt ("y-max", None), "Set the maxmimum bound on the Y axis.");
     ( Opt ("aspect-ratio", None),
       "Set the aspect ratio of a *single square unit* on the graph. \
-       Must be finite and < 0. Default is 1." );
+       Must be finite and > 0. Default is 1." );
     ( Opt ("quality", Some 'q'),
       "Set the number of \"steps\" used to analyze the function and/or \
        draw its graph. Higher is better. Must be a finite integer > 1."
@@ -91,7 +91,7 @@ let help errc =
   print_header ~channel:stderr "Example: ";
   prerr_string
     "./ocamlgrapher.byte -g -o my_graph.svg \"y=2x^2-4ln(x)\"\n";
-  print_detail ~channel:stderr
+  prerr_string
     "Duplicate options are disallowed. -g, -p, -r, -e are mutually \
      exclusive. \n";
   print_header ~channel:stderr "Options: \n";
