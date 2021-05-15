@@ -66,6 +66,23 @@ let cmdline_info =
     );
   ]
 
+(** [print_rule_info (rule, desc)] prints a pretty, indented information
+    string about [rule] using its description [desc] to stderr.*)
+let print_rule_info (rule, desc) =
+  let build_name long short append_long append_short =
+    Printf.sprintf "--%s%s%s" long append_long
+      ( match short with
+      | None -> ""
+      | Some c -> Printf.sprintf ", -%c%s" c append_short )
+  in
+  let name =
+    match rule with
+    | Flag (f, s) -> build_name f s "" ""
+    | Opt (o, s) -> build_name o s "=<...>" " <...>"
+  in
+  Printf.eprintf "\t%-28s: " name;
+  Io.print_detail ~channel:stderr (desc ^ "\n")
+
 let help errc =
   let open Io in
   print_header ~channel:stderr "Usage: ";
@@ -78,21 +95,8 @@ let help errc =
     "Duplicate options are disallowed. -g, -p, -r, -e are mutually \
      exclusive. \n";
   print_header ~channel:stderr "Options: \n";
-  let build_name long short append_long append_short =
-    Printf.sprintf "--%s%s%s" long append_long
-      ( match short with
-      | None -> ""
-      | Some c -> Printf.sprintf ", -%c%s" c append_short )
-  in
-  cmdline_info
-  |> List.iter (fun (rule, desc) ->
-         let name =
-           match rule with
-           | Flag (f, s) -> build_name f s "" ""
-           | Opt (o, s) -> build_name o s "=<...>" " <...>"
-         in
-         Printf.eprintf "\t%-28s: " name;
-         print_detail ~channel:stderr (desc ^ "\n"));
+
+  List.iter print_rule_info cmdline_info;
   exit errc
   (* manually tested *)
   [@@coverage off]
@@ -145,33 +149,33 @@ let extract_ratio cmdline default_steps =
       | _ -> Error "Aspect ratio must be a finite float > 0" )
   | _ -> Error "Multiple aspect ratios specified"
 
-(** [extract_bounds cmdline (min, max) dim]: returns an [Ok] result
-    containing the pair (a, b) bounding [dim] as specified on [cmdline].
-    [dim] is the name of of the dimension (ex. "x", "y"). If a minimum
-    bound was not specified on the command line, it defaults to [min];
-    if a maximum bound was not specified on the command line, it
-    defaults to [max]. If the minimum bound ends up being greater than
-    the maximum bound, or one or both bounds are inf or nan, an [Error]
-    with an error message is returned instead.*)
-let extract_bounds cmdline (default_min, default_max) dimension =
+(** [extract_bounds cmdline (min, max) dimension]: returns an [Ok]
+    result containing the pair (a, b) bounding [dimension] as specified
+    on [cmdline]. [dimension] is the name of of the dimension (ex. "x",
+    "y"). If a minimum bound was not specified on the command line, it
+    defaults to [min]; if a maximum bound was not specified on the
+    command line, it defaults to [max]. If the minimum bound ends up
+    being greater than the maximum bound, or one or both bounds are inf
+    or nan, an [Error] with an error message is returned instead.*)
+let extract_bounds cmdline (default_min, default_max) dim =
   let float_opt suffix default =
-    match List.assoc (dimension ^ suffix) (options cmdline) with
+    match List.assoc (dim ^ suffix) (options cmdline) with
     | [] -> Ok default
     | [ v ] ->
         float_of_string_opt v
-        |> Option.to_result ~none:(dimension ^ " bound must be floats")
-    | _ -> Error ("Multiple bounds specified on " ^ dimension)
+        |> Option.to_result ~none:(dim ^ " bound must be floats")
+    | _ -> Error ("Multiple bounds specified on " ^ dim)
   in
   try
     let min, max =
       ( float_opt "-min" default_min |> assume_ok,
         float_opt "-max" default_max |> assume_ok )
     in
-    if not (Common.valid_bounds (min, max)) then
+    if Common.valid_bounds (min, max) then Ok (min, max)
+    else
       Error
-        ( "Invalid bounds on " ^ dimension
-        ^ ". (Make sure min <= max and min, max are finite.)" )
-    else Ok (min, max)
+        ( "Invalid bounds on " ^ dim
+        ^ ", ensure min <= max and min, max are finite." )
   with Bad_assume s -> Error s
 
 (** [extract_command cmdline] identitifies and returns the command from
@@ -222,25 +226,27 @@ let command cfg = cfg.command
 
 let output_file cfg = cfg.output_file
 
+(** [string_of_command cmd] returns a human-readable string specifying
+    what "cmd eq" means (assuming eq is a command).*)
+let string_of_command = function
+  | Graph -> "Graph"
+  | Points -> "List points satisfying"
+  | Roots -> "List the roots of"
+  | Extrema -> "List the extrema of"
+
 let to_string cfg =
-  let verb =
-    match cfg.command with
-    | Graph -> "Graph"
-    | Points -> "List points satisfying"
-    | Roots -> "List the roots of"
-    | Extrema -> "List the extrema of"
-  in
-  let a, b = cfg.x_bounds in
-  let c, d = cfg.y_bounds in
-  let equation_str =
+  let x0, x1 = cfg.x_bounds in
+  let y0, y1 = cfg.y_bounds in
+  let equations_str =
     match cfg.equations with
-    | [] -> failwith "Impossible - RI violated"
+    | [] -> failwith "Impossible"
     | [ e1 ] -> e1
     | e1 :: t -> List.fold_left (fun a b -> a ^ ", " ^ b) e1 t
   in
   Printf.sprintf
-    "%s %s with x in [%f, %f] and y in [%f, %f], using %i steps" verb
-    equation_str a b c d cfg.steps
+    "%s %s with x in [%f, %f] and y in [%f, %f], using %i steps"
+    (string_of_command cfg.command)
+    equations_str x0 x1 y0 y1 cfg.steps
   ^
   if cfg.command = Graph then ", outputting to " ^ cfg.output_file
   else ""
