@@ -1,4 +1,4 @@
-PUBLIC=src/author.mli src/cmdline.mli src/common.ml src/config.mli src/defs.ml src/grapher.mli src/grid_lines.ml src/io.mli src/numericalmethods.mli src/parser.mli src/svghelpers.mli src/tokenizer.mli src/xmldom.ml
+PUBLIC=src/author.mli src/cmdline.mli src/common.ml src/config.mli src/defs.ml src/grapher.mli src/io.mli src/numericalmethods.mli src/parser.mli src/svghelpers.mli src/tokenizer.mli src/xmldom.ml
 PRIVATE=src/cmdline.ml src/config.ml src/grapher.ml src/io.ml src/numericalmethods.ml src/ocamlgrapher.ml src/parser.ml src/svghelpers.ml src/tokenizer.ml
 OBJECTS=$(MODULES:=.cmo)
 TESTS=$(shell find ./tests -name "*.ml" | sed s/ml/byte/g | sed s/.\\/tests\\///g )
