@@ -24,6 +24,14 @@ type equation = {
     samples over [x_bounds] and [y_bounds]. Requires: [x_bounds] an
     [y_bounds] are valid bounds.*)
 let process_equation text steps x_b y_b =
+  (* split when: 1. number is irregular (inf/nan) OR 2. number is
+     outside the range and the preceding and following numbers are also
+     both outside the range *)
+  let should_split p (x, y) n =
+    let oob = point_oob x_b y_b in
+    (not (regular_float x && regular_float y))
+    || (oob p && oob (Some (x, y)) && oob n)
+  in
   try
     let tokens = Tokenizer.tokenize text in
     let graph_data =
@@ -31,21 +39,10 @@ let process_equation text steps x_b y_b =
         make_samples x_b steps
         |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
       in
-      (* split when: 1. number is irregular (inf/nan) OR 2. number is
-         outside the range and the preceding and following numbers are
-         also both outside the range *)
-      computed
-      |> split (fun p (x, y) n ->
-             let oob = point_oob x_b y_b in
-             (not (regular_float x))
-             || (not (regular_float y))
-             || (oob p && oob (Some (x, y)) && oob n))
+      split should_split computed
     in
-    {
-      text;
-      graph_data;
-      query_data = graph_data |> List.flatten |> limiter x_b y_b;
-    }
+    let query_data = graph_data |> List.flatten |> limiter x_b y_b in
+    { text; graph_data; query_data }
   with Invalid_argument s ->
     Io.print_error (s ^ "\n");
     { text; graph_data = []; query_data = [] }
@@ -84,7 +81,6 @@ let print_extrema eq =
 (** Executes OCamlgrapher using [config]. *)
 let main_grapher (config : Config.t) =
   let x_b, y_b = (x_bounds config, y_bounds config) in
-  (* (equation string, list of points satisfying the equation )*)
   let processed =
     equations config
     |> List.map (fun t -> process_equation t (steps config) x_b y_b)
