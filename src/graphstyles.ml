@@ -34,8 +34,9 @@ let rep_ok s =
   |> check_var "label-indent"
   |> check_var "label-font-size"
 
-let load filename =
-  let ic = open_in filename in
+(** [load_internal ic] functions the same as [load], except uses an
+    already-open [in_channel] instead of opening one from a filename. *)
+let load_internal ic =
   let empty_cfg = { stylesheet = ""; variables = [] } in
   let rec parse_line acc =
     try
@@ -52,8 +53,15 @@ let load filename =
   let stylesheet =
     Io.read_lines ic |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
   in
-  close_in ic;
   rep_ok { parsed_cfg with stylesheet }
+
+let load filename =
+  try
+    let ic = open_in filename in
+    let res = load_internal ic in
+    close_in ic;
+    res
+  with Sys_error e -> Error ("Error opening stylesheet: " ^ e)
 
 let raw_stylesheet t = t.stylesheet
 
