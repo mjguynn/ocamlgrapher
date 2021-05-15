@@ -3,6 +3,7 @@
 open Xmldom
 open Svghelpers
 open Common
+open Graphstyles
 
 (** [hsv (h, s, v)] has hue [h], saturation [s], and value [v]. Each
     value is a normalized float [0..1] *)
@@ -68,80 +69,29 @@ let add_plot label segments g =
   in
   { g with plots = { label; segments; color } :: g.plots }
 
-type config = {
-  header_height : int;
-  body_min_width : int;
-  body_min_height : int;
-  label_vertical_spacing : int;
-  label_indent : int;
-  label_font_size : int;
-}
+let plot_info_height s g =
+  header_height s
+  + max (body_min_height s)
+      ((List.length g.plots + 1) * label_vertical_spacing s)
 
-let config_from_stylesheet i =
-  let base_cfg =
-    {
-      header_height = 0;
-      body_min_width = 0;
-      body_min_height = 0;
-      label_vertical_spacing = 0;
-      label_indent = 0;
-      label_font_size = 0;
-    }
-  in
-  let rec parse_line acc =
-    try
-      match
-        Scanf.sscanf (input_line i) " --%s@: %upx" (fun v n -> (v, n))
-      with
-      | "header-height", header_height ->
-          parse_line { acc with header_height }
-      | "body-min-width", body_min_width ->
-          parse_line { acc with body_min_width }
-      | "body-min-height", body_min_height ->
-          parse_line { acc with body_min_height }
-      | "label-vertical-spacing", label_vertical_spacing ->
-          parse_line { acc with label_vertical_spacing }
-      | "label-indent", label_indent ->
-          parse_line { acc with label_indent }
-      | "label-font-size", label_font_size ->
-          parse_line { acc with label_font_size }
-      | s, _ -> parse_line acc
-      | exception Scanf.Scan_failure _ -> parse_line acc
-    with End_of_file -> acc
-  in
-  let parsed_cfg = parse_line base_cfg in
-  seek_in i 0;
-  parsed_cfg
-
-let styles_from_stylesheet i =
-  let styles =
-    Io.read_lines i |> List.fold_left (fun acc s -> s ^ "\n" ^ acc) ""
-  in
-  seek_in i 0;
-  styles
-
-let plot_info_height c g =
-  c.header_height
-  + max c.body_min_height
-      ((List.length g.plots + 1) * c.label_vertical_spacing)
-
-let plot_info_width c g =
+let plot_info_width s g =
   (* rough approximation *)
   let char_width =
-    int_of_float (float_of_int c.label_font_size *. 0.6)
+    int_of_float (float_of_int (label_font_size s) *. 0.6)
   in
   let max_label_chars =
     List.fold_left
       (fun maxlen eq -> max maxlen (String.length eq.label))
       0 g.plots
   in
-  max c.body_min_width (c.label_indent + (char_width * max_label_chars))
+  max (body_min_width s)
+    (label_indent s + (char_width * max_label_chars))
 
-let make_plot_label c i eq =
+let make_plot_label s i eq =
   let col = hsl_string_of_hsv eq.color in
-  let x = string_of_int c.label_indent in
+  let x = string_of_int (label_indent s) in
   let y =
-    ((i + 1) * c.label_vertical_spacing) + c.header_height
+    ((i + 1) * label_vertical_spacing s) + header_height s
     |> string_of_int
   in
   Container
@@ -152,13 +102,13 @@ let make_plot_label c i eq =
         make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
       ] )
 
-let make_plot_info c g w h =
-  let labels = List.mapi (make_plot_label c) (List.rev g.plots) in
+let make_plot_info s g w h =
+  let labels = List.mapi (make_plot_label s) (List.rev g.plots) in
   let background =
     Item ("rect", [ ("class", "plot_info_background") ])
   in
   let header = make_text "plot_info_header" [] "0" "0" "Relations" in
-  let hh = float_of_int c.header_height in
+  let hh = float_of_int (Graphstyles.header_height s) in
   let divider =
     make_polyline "plot_info_border" []
       [ (0., hh); (float_of_int w, hh) ]
@@ -327,16 +277,20 @@ let make_graph g x w h =
 
 let to_svg filename g =
   (* load stylesheet, create DOM element *)
-  let stylesheet = open_in "graph_styles.css" in
-  let config = config_from_stylesheet stylesheet in
   let styles =
-    Container ("style", [], [ Text (styles_from_stylesheet stylesheet) ])
+    match load "graph_styles.css" with
+    | Ok s -> s
+    | Error e ->
+        Io.print_error (e ^ "\n");
+        exit 1
   in
-  close_in stylesheet;
+  let styles_elem =
+    Container ("style", [], [ Text (raw_stylesheet styles) ])
+  in
   (* set up graph *)
-  let height = plot_info_height config g in
-  let plot_info_width = plot_info_width config g in
-  let plot_info = make_plot_info config g plot_info_width height in
+  let height = plot_info_height styles g in
+  let plot_info_width = plot_info_width styles g in
+  let plot_info = make_plot_info styles g plot_info_width height in
   let default_ratio = span g.x_bounds /. span g.y_bounds in
   let graph_width =
     int_of_float (float_of_int height *. default_ratio *. g.ratio)
@@ -346,7 +300,7 @@ let to_svg filename g =
     Container
       ( "svg",
         [ ("xmlns", "http://www.w3.org/2000/svg") ],
-        [ styles; plot_info; graph ] )
+        [ styles_elem; plot_info; graph ] )
   in
   (* begin export *)
   let f = open_out filename in
