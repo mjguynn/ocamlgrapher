@@ -15,7 +15,7 @@ type t
 
     Requires: [argv] must have at least one entry.*)
 val parse_cmdline :
-  Defs.parse_rule_t list ->
+  Defs.parse_rule list ->
   in_channel ->
   string array ->
   (t, string) result

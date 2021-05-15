@@ -26,7 +26,7 @@ type t = {
   args : string list;
   flags : string list;
   opts : (string * string list) list;
-  rules : parse_rule_t list;
+  rules : parse_rule list;
 }
 
 (** [is_short_rule c rules] returns whether [c] is the short-form

@@ -13,7 +13,7 @@ open Defs
     RI: [cfg] is only meaningful if [x1<x2], [y1<y2], [steps>=1], and
     [ratio > 0].*)
 type t = {
-  command : command_t;
+  command : command;
   equations : string list;
   x_bounds : float * float;
   y_bounds : float * float;

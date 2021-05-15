@@ -65,7 +65,7 @@ val ratio : t -> float
 
 (** [command cfg] returns the [Defs.command_t] that the user wanted to
     perform. *)
-val command : t -> Defs.command_t
+val command : t -> Defs.command
 
 (** [output_file cfg] returns the desired output filename for graphs.*)
 val output_file : t -> string

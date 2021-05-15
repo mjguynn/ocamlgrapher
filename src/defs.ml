@@ -55,7 +55,7 @@ type token =
   | Function of m_function
   | EOF
 
-(** [parse_rule_t] represents a rule that should be respected while
+(** [parse_rule] represents a rule that should be respected while
     parsing. A [Flag] rule represents an option that takes no
     parameters. A [Opt] rule represents an option that takes no
     parameters, aka, a "parameterized option". The first element in the
@@ -63,17 +63,17 @@ type token =
     name of the option, and the second element is an optional character
     that can be used as a short option. For example, if you wanted to
     use "-h" or "--help", you would add an [Opt ("help", Some 'h')].*)
-type parse_rule_t =
+type parse_rule =
   | Flag of (string * char option)
   | Opt of (string * char option)
 
-(** [command_t] represents the "action" that the user wants the program
-    to perform on their provided equation. [Graph] means to graph the
+(** [command] represents the "action" that the user wants the program to
+    perform on their provided equation. [Graph] means to graph the
     equation. [Points] means to calculate a list of points satisfying
     the equation. [Roots] means to calculate a list of roots of the
     equation. [Extrema] means to calculate a list of extrema of the
     equation. *)
-type command_t =
+type command =
   | Graph
   | Points
   | Roots
