@@ -36,16 +36,23 @@ let assume_ok x =
 let cmdline_info =
   [
     ( Flag ("help", Some 'h'),
-      "Print this help dialog and don't perform any actual work." );
-    ( Flag ("roots", Some 'r'),
-      "List the roots of the equation(s) within the given bounds." );
+      "Print this help dialog. If encountered anywhere on the command \
+       line, the program won't do any work and will terminate after \
+       displaying the help text." );
     ( Flag ("graph", Some 'g'),
-      "Create a visual graph of the equation(s), and print the \
-       filename of the resulting file." );
-    (Flag ("points", Some 'p'), "List some points on the equation(s).");
+      "Create a visual graph of the equation(s) and outputs the \
+       filename of the resulting SVG file to stdout. This is the \
+       default action if none is specified." );
+    ( Flag ("points", Some 'p'),
+      "List some points on the equation(s) within the given bounds." );
     ( Flag ("extrema", Some 'e'),
-      "List the extrema of the equation(s) within the given bounds." );
-    (Opt ("output", Some 'o'), "The name of the graph output file.");
+      "Estimate and list the extrema of the equation(s) within the \
+       given bounds." );
+    ( Flag ("roots", Some 'r'),
+      "Estimate and list the roots of the equation(s) within the given \
+       bounds." );
+    ( Opt ("output", Some 'o'),
+      "The name of the file which the graph is outputted to." );
     (Opt ("x-min", None), "Set the minimum bound on the X axis.");
     (Opt ("x-max", None), "Set the maximum bound on the X axis.");
     (Opt ("y-min", None), "Set the minimum bound on the Y axis.");
@@ -55,7 +62,8 @@ let cmdline_info =
        Must be finite and < 0. Default is 1." );
     ( Opt ("quality", Some 'q'),
       "Set the number of \"steps\" used to analyze the function and/or \
-       draw its graph. Higher is better." );
+       draw its graph. Higher is better. Must be a finite integer > 1."
+    );
   ]
 
 let help errc =
@@ -66,6 +74,9 @@ let help errc =
   print_header ~channel:stderr "Example: ";
   prerr_string
     "./ocamlgrapher.byte -g -o my_graph.svg \"y=2x^2-4ln(x)\"\n";
+  print_detail ~channel:stderr
+    "Duplicate options are disallowed. -g, -p, -r, -e are mutually \
+     exclusive. \n";
   print_header ~channel:stderr "Options: \n";
   let build_name long short append_long append_short =
     Printf.sprintf "--%s%s%s" long append_long

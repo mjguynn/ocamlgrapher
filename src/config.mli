@@ -4,73 +4,28 @@
     the command line.*)
 type t
 
-(** [from_cmdline default_x_span default_y_span default_quality
-    default_output_file ic argv] takes an argv-style list of args [argv]
-    and uses it to construct a [Config.t]. It follows the
+(** [from_cmdline default_x_bounds default_y_bounds default_quality
+    default_output_file input_channel argv] takes an argv-style list of
+    args [argv] and uses it to construct a [Config.t]. It follows the
     {{:https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html}
-    GNU Program Argument Syntax Conventions}. It recognizes the
-    following options:
+    GNU Program Argument Syntax Conventions}. To identify the flags,
+    options, and arguments it recognizes, consult the output of the
+    [help] function.
 
-    "-g", "--graph": Make [Graph] the command to be executed.
+    On success, returns [Ok c], where [c] is the program configuration
+    which corresponds to the command line. On failure, returns
+    [Error e], where [e] is a descriptive error message.
 
-    "-p", "--points": Make [Points] the command to be executed.
+    [default_x_bounds], [default_y_bounds], [default_quality], and
+    [default_output_file] are subsituted if the user did not specify
+    them on the command line.
 
-    "-r", "--roots": Make [Roots] the command to be executed.
+    [input_channel] represents an input stream to read from. Outside of
+    test suites, it should probably be [stdin].
 
-    "-e", "--extrema": Make [Extrema] the command to be executed.
-
-    "--x-min=[num]": Set minimum value on X axis
-
-    "--x-max=[num]": Set maximum value on X axis
-
-    "--y-min=[num]": Set minimum value on Y axis
-
-    "--y-max=[num]": Set maximum value on Y axis
-
-    "--aspect-ratio=[num]": Set aspect ratio of a square unit on the
-    graph.
-
-    "-q [num]", "--quality=[num]": The number of "steps" in the graph.
-    num > 0
-
-    "-o [file]", "--output=[file]": Write output to [file].
-
-    If "-h" or "--help" is present on the command line, program help
-    will be printed to stderr, and then the program will instantly
-    terminate with an error code of 0.
-
-    There must be at least one argument unpaired to an option; all such
-    arguments are treated as equations. If no equations are supplied, an
-    error message is returned.
-
-    If one or both components of the X or Y bounds are unspecified on
-    the command line, the returned representation shall inherit their
-    values from the [default_x_bounds] and [default_y_bounds]
-    parameters. Similarly, if the number of steps is unspecified on the
-    command line, the returned representation shall use [default_steps]
-    steps, and if no output file is specified on the command line, the
-    returned representation shall use [default_output_file]. Requires:
-    [default_steps] >= 1.
-
-    If no aspect ratio was specified, [from_cmdline] pretends that the
-    user specified an aspect ratio of 1. The aspect ratio must be finite
-    and > 0. Specifying multiple aspect ratios on the command line is an
-    error.
-
-    If no command option is provided on the command line, the returned
-    representation will have [Graph] as the command.
-
-    Duplicate options are disallowed, and will cause an error message to
-    be returned. Conflicting options (-g, -p, -r, -e) will also cause an
-    error message to be returned.
-
-    If the commands are invalid in another way (unknown command, etc) an
-    error message will be returned.
-
-    [istream] represents an input stream to read from. Outside of test
-    suites, it should probably be [stdin].
-
-    [argv] must have at least one entry.*)
+    [argv] expects to have at least one entry, the first entry being the
+    program itself as executed on the command line (i.e.
+    ["./ocamlgrapher"])*)
 val from_cmdline :
   float * float ->
   float * float ->
