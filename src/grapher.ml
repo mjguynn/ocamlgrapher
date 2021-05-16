@@ -69,30 +69,31 @@ let add_plot label segments g =
   in
   { g with plots = { label; segments; color } :: g.plots }
 
-let plot_info_height s g =
-  header_height s
-  + max (body_min_height s)
-      ((List.length g.plots + 1) * label_vertical_spacing s)
+let plot_info_height styles plots =
+  let body_computed_height =
+    (List.length plots + 1) * label_vertical_spacing styles
+  in
+  header_height styles
+  + max (body_min_height styles) body_computed_height
 
-let plot_info_width s g =
+let plot_info_width s plots =
   let font_size = float_of_int (label_font_size s) in
   (* rough approximation *)
   let char_width = int_of_float (font_size *. 0.6) in
   let max_label_chars =
     List.fold_left
       (fun max_len { label } -> max max_len (String.length label))
-      0 g.plots
+      0 plots
   in
   max (body_min_width s)
     (label_indent s + (char_width * max_label_chars))
 
-let make_plot_label s i eq =
+let make_plot_label styles index eq =
   let col = hsl_string_of_hsv eq.color in
-  let x = string_of_int (label_indent s) in
-  let y =
-    ((i + 1) * label_vertical_spacing s) + header_height s
-    |> string_of_int
-  in
+  let x = string_of_int (label_indent styles) in
+  (* vertical offset from header divider *)
+  let header_offset = (index + 1) * label_vertical_spacing styles in
+  let y = string_of_int (header_offset + header_height styles) in
   make_group []
     [
       make_circle "plot_info_disc" [ ("fill", col) ] x y "10";
@@ -275,10 +276,12 @@ let to_svg filename g =
         Io.print_error (e ^ "\n");
         exit 1
   in
-  (* set up graph *)
-  let height = plot_info_height styles g in
-  let plot_info_width = plot_info_width styles g in
+  (* total height of the resulting SVG *)
+  let height = plot_info_height styles g.plots in
+  (* width of the plot info box *)
+  let plot_info_width = plot_info_width styles g.plots in
   let default_ratio = span g.x_bounds /. span g.y_bounds in
+  (* width of the graph part (not the whole image )*)
   let graph_width =
     int_of_float (float_of_int height *. default_ratio *. g.ratio)
   in
