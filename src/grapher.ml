@@ -123,8 +123,7 @@ let make_plot_info styles plots width height =
     ]
 
 let graph_viewbox g =
-  Printf.sprintf "%f %f %f %f" (fst g.x_bounds)
-    (-.snd g.y_bounds)
+  Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
 
 (** [make_segment color segment] draws the list of points [segment] so
@@ -220,27 +219,23 @@ let get_grid_pos
                (x_range /. y_range *. float_of_int y_max_line_count))))
   )
 
-(* helper method that returns a make_polyline command. For this, graphs
-   the vertical gridlines. *)
-let rec vert_grids_draw (x1, x2) (y1, y2) vert_coords acc =
-  match vert_coords with
-  | [] -> acc
-  | h :: tail ->
-      vert_grids_draw (x1, x2) (y1, y2) tail
-        (make_polyline "graph_gridline" [] [ (h, y1); (h, y2) ] :: acc)
-
-(* helper method that returns a make_polyline command. For this, graphs
-   the horizontal gridlines. *)
-let rec hor_grids_draw (x1, x2) (y1, y2) hor_coords vert_coords acc =
-  match hor_coords with
-  | [] -> vert_grids_draw (x1, x2) (y1, y2) vert_coords acc
-  | h :: tail ->
-      hor_grids_draw (x1, x2) (y1, y2) tail vert_coords
-        (make_polyline "graph_gridline" [] [ (x1, h); (x2, h) ] :: acc)
+(** [make_gridlines (x1, x2) (y1, y2)] creates an element representing
+    the gridlines of a graph with X bounds (x1, x2) and Y bounds (y1,
+    y2). Requires: x2 > x1, y2 > y1, and all inputs are finite.*)
+let make_gridlines (x1, x2) (y1, y2) =
+  let make_line f =
+    List.fold_left
+      (fun acc v -> make_polyline "graph_gridline" [] (f v) :: acc)
+      []
+  in
+  let make_horiz_lines = make_line (fun y -> [ (x1, y); (x2, y) ]) in
+  let make_vert_lines = make_line (fun x -> [ (x, y1); (x, y2) ]) in
+  let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
+  make_group []
+    (List.flatten [ make_horiz_lines hbars; make_vert_lines vbars ])
 
 let make_graph g x w h =
   let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
-  let background = Item ("rect", [ ("class", "graph_background") ]) in
   let axes =
     make_group []
       [
@@ -257,15 +252,18 @@ let make_graph g x w h =
       ("preserveAspectRatio", "none");
       ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")");
     ]
-    (let hor_bars, vert_bars = get_grid_pos x1 x2 y1 y2 in
-     background
-     :: hor_grids_draw (x1, x2) (y1, y2) hor_bars vert_bars []
-     @ (axes :: List.map make_plot g.plots)
-     @ [
-         make_region_border "graph_border"
-           [ ("id", "graph-border") ]
-           (x1, -.y1) (x2, -.y2);
-       ])
+    [
+      (* graph BG (not really necessary, but why not have one)*)
+      Item ("rect", [ ("class", "graph_background") ]);
+      (* gridlines *)
+      make_gridlines g.x_bounds g.y_bounds;
+      (* axes (draw on top of gridlines) *)
+      axes;
+      (* the actual plots *)
+      make_group [] (List.map make_plot g.plots);
+      (* border for the graph (draw on top of everything) *)
+      make_region_border "graph_border" [] (x1, y1) (x2, y2);
+    ]
 
 (** [safe_load_styles filename] attempts to load the stylesheet in
     [filename]. On success, returns the appropriate [Graphstyles.t]; on
