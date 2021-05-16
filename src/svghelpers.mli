@@ -57,3 +57,9 @@ val make_region_border :
     the XML attributes in [attributes].*)
 val make_group :
   Xmldom.attribute list -> Xmldom.element list -> Xmldom.element
+
+(** [make_svg attributes elems] creates a single embedded SVG containing
+    all the elements in [elems]. The SVG inherits the XML attributes in
+    [attributes].*)
+val make_svg :
+  Xmldom.attribute list -> Xmldom.element list -> Xmldom.element

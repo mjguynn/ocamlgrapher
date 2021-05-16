@@ -111,19 +111,17 @@ let make_plot_info s g w h =
     make_polyline "plot_info_border" []
       [ (0., hh); (float_of_int w, hh) ]
   in
-  Container
-    ( "svg",
-      [ ("width", string_of_int w); ("height", string_of_int h) ],
-      [
-        background;
-        header;
-        divider;
-        make_region_border "plot_info_border"
-          [ ("id", "plot-info-border") ]
-          (0., 0.)
-          (float_of_int w, float_of_int h);
-      ]
-      @ labels )
+  ( make_svg [ ("width", string_of_int w); ("height", string_of_int h) ],
+    [
+      background;
+      header;
+      divider;
+      make_region_border "plot_info_border"
+        [ ("id", "plot-info-border") ]
+        (0., 0.)
+        (float_of_int w, float_of_int h);
+    ]
+    @ labels )
 
 let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds)
@@ -251,26 +249,24 @@ let make_graph g x w h =
         make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
       ]
   in
-  (* X & Y Axis *)
-  Container
-    ( "svg",
-      [
-        ("x", string_of_int x);
-        ("width", string_of_int w);
-        ("height", string_of_int h);
-        ("viewBox", graph_viewbox g);
-        ("preserveAspectRatio", "none");
-        ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")");
-      ],
-      let hor_bars, vert_bars = get_grid_pos x1 x2 y1 y2 in
-      background
-      :: hor_grids_draw (x1, x2) (y1, y2) hor_bars vert_bars []
-      @ (axes :: List.map make_plot g.plots)
-      @ [
-          make_region_border "graph_border"
-            [ ("id", "graph-border") ]
-            (x1, -.y1) (x2, -.y2);
-        ] )
+  make_svg
+    [
+      ("x", string_of_int x);
+      ("width", string_of_int w);
+      ("height", string_of_int h);
+      ("viewBox", graph_viewbox g);
+      ("preserveAspectRatio", "none");
+      ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")");
+    ]
+    (let hor_bars, vert_bars = get_grid_pos x1 x2 y1 y2 in
+     background
+     :: hor_grids_draw (x1, x2) (y1, y2) hor_bars vert_bars []
+     @ (axes :: List.map make_plot g.plots)
+     @ [
+         make_region_border "graph_border"
+           [ ("id", "graph-border") ]
+           (x1, -.y1) (x2, -.y2);
+       ])
 
 let to_svg filename g =
   (* load stylesheet, create DOM element *)
@@ -281,25 +277,21 @@ let to_svg filename g =
         Io.print_error (e ^ "\n");
         exit 1
   in
-  let styles_elem =
-    Container ("style", [], [ Text (raw_stylesheet styles) ])
-  in
   (* set up graph *)
   let height = plot_info_height styles g in
   let plot_info_width = plot_info_width styles g in
-  let plot_info = make_plot_info styles g plot_info_width height in
   let default_ratio = span g.x_bounds /. span g.y_bounds in
   let graph_width =
     int_of_float (float_of_int height *. default_ratio *. g.ratio)
   in
-  let graph = make_graph g plot_info_width graph_width height in
-  let dom =
-    Container
-      ( "svg",
-        [ ("xmlns", "http://www.w3.org/2000/svg") ],
-        [ styles_elem; plot_info; graph ] )
-  in
   (* begin export *)
   let f = open_out filename in
-  output_xml f dom;
+  make_svg
+    [ ("xmlns", "http://www.w3.org/2000/svg") ]
+    [
+      Container ("style", [], [ Text (raw_stylesheet styles) ]);
+      make_plot_info styles g plot_info_width height;
+      make_graph g plot_info_width graph_width height;
+    ]
+  |> output_xml f;
   close_out f

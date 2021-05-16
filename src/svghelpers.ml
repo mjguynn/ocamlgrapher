@@ -19,6 +19,8 @@ let make_polyline c atts points =
 
 let make_group atts elems = Container ("g", atts, elems)
 
+let make_svg atts elems = Container ("svg", atts, elems)
+
 let make_region_border c atts (x1, y1) (x2, y2) =
   make_group atts
     [
