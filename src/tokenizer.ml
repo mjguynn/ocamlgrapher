@@ -3,7 +3,7 @@
 open Defs
 
 (** [unit_token_map] is a map which maps single-character tokens that
-    are part of the equation grammar to their respective type
+    are part of the equation grammar to their respective variant
     representations. *)
 let unit_token_map =
   [
@@ -21,7 +21,7 @@ let unit_token_map =
   ]
 
 (** [alpha_token_map] is a map which maps multi-character tokens that
-    are part of the equation grammar to their respective type
+    are part of the equation grammar to their respective variant
     representations. *)
 let alpha_token_map =
   [
@@ -48,34 +48,34 @@ let syntax_error error =
   raise (Invalid_argument ("Syntax error: " ^ error))
 
 (** [is_numerical_subtoken ch] is [true] if [ch] is a numerical
-    character, and [false] otherwise *)
+    character, and [false] otherwise. *)
 let is_numerical_subtoken ch =
   let code = Char.code ch in
   code = 46 || (code < 58 && code > 47)
 
 (** [is_alpha_subtoken ch] is [true] if [ch] is a valid non-numerical
-    character, and [false] otherwise *)
+    character, and [false] otherwise. *)
 let is_alpha_subtoken ch =
   let code = Char.code ch in
   code < 123 && code > 96
 
 (** [is_starting_alpha_subtoken ch] is [true] if [ch] is a substring of
-    a valid key contained in [alpha_token_map], and [false] otherwise *)
+    a valid key contained in [alpha_token_map], and [false] otherwise. *)
 let is_starting_alpha_subtoken ch =
   List.exists (function tok, _ -> tok.[0] = ch) alpha_token_map
 
 (** [is_unit_token ch] is [true] if [ch] is a valid key contained in
-    [unit_token_map], and [false] otherwise *)
+    [unit_token_map], and [false] otherwise. *)
 let is_unit_token ch =
   List.exists (function tok, _ -> tok = ch) unit_token_map
 
 (** [is_alpha_token ch] is [true] if [ch] is a valid key contained in
-    [alpha_token_map], and [false] otherwise *)
+    [alpha_token_map], and [false] otherwise. *)
 let is_alpha_token ch =
   List.exists (function tok, _ -> tok = ch) alpha_token_map
 
-(** [extract_alpha_token str] is the is the type representation of the
-    token [str] *)
+(** [extract_alpha_token str] is the is the variant representation of
+    the token [str]. *)
 let extract_alpha_token str =
   match List.assoc_opt str alpha_token_map with
   | Some tok -> tok
@@ -85,14 +85,14 @@ let extract_alpha_token str =
 
 (** [should_accumulate cur acc] is [true] if [cur] is a substring of a
     valid token that should be accumulated in order to tokenize later,
-    and [false] otherwise *)
+    and [false] otherwise. *)
 let should_accumulate cur acc =
   (is_numerical_subtoken cur && is_numerical_subtoken acc)
   || (is_alpha_subtoken cur && is_starting_alpha_subtoken acc)
 
 (** [should_lex cur acc] is [true] if [cur] is itself a valid token that
-    should be tokenized into its type representation, and [false]
-    otherwise *)
+    should be tokenized into its variant representation, and [false]
+    otherwise. *)
 let should_lex cur acc =
   (is_numerical_subtoken cur && is_starting_alpha_subtoken acc)
   || (is_alpha_subtoken cur && is_numerical_subtoken acc)
@@ -100,11 +100,11 @@ let should_lex cur acc =
      && (is_numerical_subtoken acc || is_starting_alpha_subtoken acc)
 
 (** [add_token token tokens] updated [tokens] with [token] appended to
-    itself *)
+    itself. *)
 let add_token token tokens = tokens := token :: !tokens
 
 (** [lex tokens_str acc tokens] lexes [tokens_str] into a list of token
-    types contained in [tokens] *)
+    types contained in [tokens]. *)
 let rec lex tokens_str acc tokens =
   if String.length tokens_str <> 0 then
     let hd = tokens_str.[0] in
@@ -119,7 +119,7 @@ let rec lex tokens_str acc tokens =
 
 (** [update_tokens acc hd tl starting_acc tokens] adds the appropriate
     token type to [tokens] depending on what type of tokens [hd] and
-    [tl] contain *)
+    [tl] contain. *)
 and update_tokens acc hd tl starting_acc tokens =
   if is_alpha_token acc || should_lex hd starting_acc then begin
     if is_numerical_subtoken starting_acc then
@@ -135,7 +135,7 @@ and update_tokens acc hd tl starting_acc tokens =
        failure]"
 
 (** [lex_non_empty acc hd tl tokens] lexes [hd] and [tl] appropriately
-    depending on what type of tokens they contain *)
+    depending on what type of tokens they contain. *)
 and lex_non_empty acc hd tl tokens =
   if hd <> ' ' then
     if String.length acc <> 0 then
@@ -143,16 +143,20 @@ and lex_non_empty acc hd tl tokens =
       update_tokens acc hd tl starting_acc tokens
     else if is_numerical_subtoken hd || is_starting_alpha_subtoken hd
     then lex tl (Char.escaped hd) tokens
-    else
-      match List.assoc_opt hd unit_token_map with
-      | Some tok ->
-          add_token tok tokens;
-          lex tl "" tokens
-      | None ->
-          syntax_error
-            "unknown character or symbol found. [unit token assoc \
-             failure]"
+    else process_unit_token hd tl tokens
   else lex tl acc tokens
+
+(** [process_unit_token hd tl tokens] matches [hd] to the map in
+    [unit_token_map] and adds the corresponding variant token to
+    [tokens]. Raises: [Invalid_argument] if [hd] is not in the map. *)
+and process_unit_token hd tl tokens =
+  match List.assoc_opt hd unit_token_map with
+  | Some tok ->
+      add_token tok tokens;
+      lex tl "" tokens
+  | None ->
+      syntax_error
+        "unknown character or symbol found. [unit token assoc failure]"
 
 let tokenize equation_str =
   let tokens = ref [] in
