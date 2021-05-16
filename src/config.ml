@@ -82,6 +82,8 @@ let print_rule_info (rule, desc) =
   in
   Printf.eprintf "\t%-28s: " name;
   Io.print_detail ~channel:stderr (desc ^ "\n")
+  (* manually tested *)
+  [@@coverage off]
 
 let help errc =
   let open Io in
@@ -233,6 +235,7 @@ let string_of_command = function
   | Points -> "List points satisfying"
   | Roots -> "List the roots of"
   | Extrema -> "List the extrema of"
+  [@@coverage off]
 
 let to_string cfg =
   let x0, x1 = cfg.x_bounds in
@@ -250,4 +253,5 @@ let to_string cfg =
   ^
   if cfg.command = Graph then ", outputting to " ^ cfg.output_file
   else ""
+  (* manually tested *)
   [@@coverage off]
