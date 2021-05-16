@@ -71,9 +71,7 @@ let test_mode name flag =
 
 let cmdline_rules = [ Defs.Opt ("testing", Some 't') ]
 
-let suite =
-  "ocamlgrapher [Config] and [Cmdline] test suite"
-  >:::
+let all_tests =
   let open Config in
   [
     (* Valid Cases *)
@@ -220,5 +218,3 @@ let suite =
             [| "./ocamlgrapher"; "-t"; "hey=you" |]
         |> Result.get_ok |> Cmdline.options ) );
   ]
-
-let _ = run_test_tt_main suite

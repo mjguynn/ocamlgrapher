@@ -23,152 +23,86 @@ let samples_test name bounds steps exp_output =
   name >:: fun _ ->
   assert_equal ~cmp:close_enough exp_output (make_samples bounds steps)
 
-let suite =
-  "Numerical Methods Suite"
-  >::: [
-         limiter_test "limiter: return empty list" (-10.0, 10.0)
-           (0.0, 0.0)
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [];
-         limiter_test "limiter basic" (-10.0, 10.0) (-1.0, 1.0)
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [ (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7) ];
-         limiter_test "limiter: point equal to lower range limit"
-           (-10.0, 10.0) (-0.5, 0.5)
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [ (-0.5, 0.4); (0.0, -0.5) ];
-         limiter_test "limiter: point equal to upper range limit"
-           (-10.0, 10.0) (-1.0, 0.4)
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [ (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7) ];
-         limiter_test "limiter: upper limit = lower limit, point within"
-           (-10.0, 10.0) (-0.5, -0.5)
-           [
-             (1.0, 2.3);
-             (0.5, 0.4);
-             (0.0, -0.5);
-             (-0.5, -0.7);
-             (-1.0, -1.7);
-           ]
-           [ (0.0, -0.5) ];
-         root_test "no roots"
-           [
-             (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.5); (0.5, 0.7); (1.0, 1.7);
-           ]
-           [];
-         root_test "empty input" [] [];
-         root_test "one root"
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [ -0.25 ];
-         root_test "two roots"
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, 0.7);
-             (1.0, 1.7);
-           ]
-           [ -0.25; 0.25 ];
-         root_test "one root"
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [ -0.25 ];
-         root_test "root is in the list"
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, 0.0);
-             (0.5, -0.7);
-             (1.0, -1.7);
-           ]
-           [ 0.0 ];
-         root_test "root is the last item in the list"
-           [ (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.0) ]
-           [ 0.0 ];
-         max_test "Maximum"
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, 0.7);
-             (1.0, 1.7);
-           ]
-           [ (-1.0, 2.3) ];
-         max_test "Maximum: multiple"
-           [
-             (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
-           ]
-           [
-             (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
-           ];
-         min_test "Minimum"
-           [
-             (-1.0, 2.3);
-             (-0.5, 0.4);
-             (0.0, -0.5);
-             (0.5, 0.7);
-             (1.0, 1.7);
-           ]
-           [ (0.0, -0.5) ];
-         min_test "Minimum: multiple"
-           [
-             (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
-           ]
-           [
-             (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3);
-           ];
-         samples_test "one sample" (0.0, 1.0) 1 [ 1.0 ];
-         samples_test "two samples" (0.0, 1.0) 2 [ 0.5; 1.0 ];
-         samples_test "three samples" (0.0, 1.0) 3
-           [ 1.0 /. 3.0; 2.0 /. 3.0; 1.0 ];
-         samples_test "negative & positive bounds for samples"
-           (-1.0, 1.0) 4 [ -0.5; 0.0; 0.5; 1.0 ];
-         (* exception testing *)
-         ( "limiter invalid x bounds" >:: fun _ ->
-           assert_raises Invalid_bounds (fun () ->
-               limiter (8.0, 7.0) (6.0, 7.0) []) );
-         ( "limiter invalid y bounds" >:: fun _ ->
-           assert_raises Invalid_bounds (fun () ->
-               limiter (-7.0, 7.0) (~-.infinity, 7.0) []) );
-         ( "min_output no points" >:: fun _ ->
-           assert_raises No_points (fun () -> max_output []) );
-         ( "max_output no points" >:: fun _ ->
-           assert_raises No_points (fun () -> min_output []) );
-       ]
-
-let _ = run_test_tt_main suite
+let all_tests =
+  [
+    limiter_test "limiter: return empty list" (-10.0, 10.0) (0.0, 0.0)
+      [
+        (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7); (1.0, -1.7);
+      ]
+      [];
+    limiter_test "limiter basic" (-10.0, 10.0) (-1.0, 1.0)
+      [
+        (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7); (1.0, -1.7);
+      ]
+      [ (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7) ];
+    limiter_test "limiter: point equal to lower range limit"
+      (-10.0, 10.0) (-0.5, 0.5)
+      [
+        (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7); (1.0, -1.7);
+      ]
+      [ (-0.5, 0.4); (0.0, -0.5) ];
+    limiter_test "limiter: point equal to upper range limit"
+      (-10.0, 10.0) (-1.0, 0.4)
+      [
+        (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7); (1.0, -1.7);
+      ]
+      [ (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7) ];
+    limiter_test "limiter: upper limit = lower limit, point within"
+      (-10.0, 10.0) (-0.5, -0.5)
+      [
+        (1.0, 2.3); (0.5, 0.4); (0.0, -0.5); (-0.5, -0.7); (-1.0, -1.7);
+      ]
+      [ (0.0, -0.5) ];
+    root_test "no roots"
+      [ (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.5); (0.5, 0.7); (1.0, 1.7) ]
+      [];
+    root_test "empty input" [] [];
+    root_test "one root"
+      [
+        (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7); (1.0, -1.7);
+      ]
+      [ -0.25 ];
+    root_test "two roots"
+      [ (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, 0.7); (1.0, 1.7) ]
+      [ -0.25; 0.25 ];
+    root_test "one root"
+      [
+        (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, -0.7); (1.0, -1.7);
+      ]
+      [ -0.25 ];
+    root_test "root is in the list"
+      [ (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.0); (0.5, -0.7); (1.0, -1.7) ]
+      [ 0.0 ];
+    root_test "root is the last item in the list"
+      [ (-1.0, 2.3); (-0.5, 0.4); (0.0, 0.0) ]
+      [ 0.0 ];
+    max_test "Maximum"
+      [ (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, 0.7); (1.0, 1.7) ]
+      [ (-1.0, 2.3) ];
+    max_test "Maximum: multiple"
+      [ (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3) ]
+      [ (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3) ];
+    min_test "Minimum"
+      [ (-1.0, 2.3); (-0.5, 0.4); (0.0, -0.5); (0.5, 0.7); (1.0, 1.7) ]
+      [ (0.0, -0.5) ];
+    min_test "Minimum: multiple"
+      [ (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3) ]
+      [ (-1.0, 2.3); (-0.5, 2.3); (0.0, 2.3); (0.5, 2.3); (1.0, 2.3) ];
+    samples_test "one sample" (0.0, 1.0) 1 [ 1.0 ];
+    samples_test "two samples" (0.0, 1.0) 2 [ 0.5; 1.0 ];
+    samples_test "three samples" (0.0, 1.0) 3
+      [ 1.0 /. 3.0; 2.0 /. 3.0; 1.0 ];
+    samples_test "negative & positive bounds for samples" (-1.0, 1.0) 4
+      [ -0.5; 0.0; 0.5; 1.0 ];
+    (* exception testing *)
+    ( "limiter invalid x bounds" >:: fun _ ->
+      assert_raises Invalid_bounds (fun () ->
+          limiter (8.0, 7.0) (6.0, 7.0) []) );
+    ( "limiter invalid y bounds" >:: fun _ ->
+      assert_raises Invalid_bounds (fun () ->
+          limiter (-7.0, 7.0) (~-.infinity, 7.0) []) );
+    ( "min_output no points" >:: fun _ ->
+      assert_raises No_points (fun () -> max_output []) );
+    ( "max_output no points" >:: fun _ ->
+      assert_raises No_points (fun () -> min_output []) );
+  ]

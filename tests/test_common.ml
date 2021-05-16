@@ -153,15 +153,8 @@ let oob_tests =
     test_oob "nonexistent point" (-5.0, 5.0) (-5.0, 5.0) None true;
   ]
 
-let suite =
-  "ocamlgrapher [Common] test suite"
-  >::: List.flatten
-         [
-           starts_with_tests;
-           drop_tests;
-           split_tests;
-           trunc_tests;
-           oob_tests;
-         ]
-
-let _ = run_test_tt_main suite
+let all_tests =
+  List.flatten
+    [
+      starts_with_tests; drop_tests; split_tests; trunc_tests; oob_tests;
+    ]
