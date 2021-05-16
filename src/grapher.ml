@@ -69,13 +69,19 @@ let add_plot label segments g =
   in
   { g with plots = { label; segments; color } :: g.plots }
 
-let plot_info_height styles plots =
+(** [svg_height styles plots] calculates the optimal height for the SVG
+    as a whole, given that the SVG uses stylesheet [styles] and will
+    visualize only the plots in [plots].*)
+let svg_height styles plots =
   let body_computed_height =
     (List.length plots + 1) * label_vertical_spacing styles
   in
   header_height styles
   + max (body_min_height styles) body_computed_height
 
+(** [plot_info_width styles plots] calculates the optimal width for the
+    plot info box, given that the SVG uses stylesheet [styles] and will
+    visualize only the plots in [plots].*)
 let plot_info_width s plots =
   let font_size = float_of_int (label_font_size s) in
   (* rough approximation *)
@@ -88,6 +94,11 @@ let plot_info_width s plots =
   max (body_min_width s)
     (label_indent s + (char_width * max_label_chars))
 
+(** [make_plot_label styles index eq] creates an SVG element serving as
+    a label for the equation [eq], given that [eq] was the [index]-th
+    equation specified by the user (and thus at the [index]-th position
+    in the equation list). The label is positioned and formatted
+    according to [styles]. *)
 let make_plot_label styles index eq =
   let col = hsl_string_of_hsv eq.color in
   let x = string_of_int (label_indent styles) in
@@ -100,6 +111,13 @@ let make_plot_label styles index eq =
       make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
     ]
 
+(** [make_plot_info styles plots width height] creates an info box
+    containing a list of all the graphed relations in [plots] and their
+    corresponding colors. It may also contain other information. It has
+    a width of [width] pixels and a height of [height] pixels. It is
+    formatted according to [styles]. Requires: the values for [width]
+    and [height] were derived from [styles] using [plot_info_width] and
+    [svg_height].*)
 let make_plot_info styles plots width height =
   (* width & height as float *)
   let w_flt, h_flt = (float_of_int width, float_of_int height) in
@@ -139,14 +157,15 @@ let make_segment color segment =
     [ ("stroke", hsl_string_of_hsv color) ]
     segment
 
-(** [make_plot p] creates an element representing the graph of plot p.*)
+(** [make_plot p] creates an element representing the graph of plot [p].*)
 let make_plot p =
   List.map (make_segment p.color) p.segments |> make_group []
 
 (** [get_grid_pos x_min x_max y_min y_max] returns a tuple of float
-    lists, with the first float list being the positions to draw the
-    vertical lines and the second float list being the positions to draw
-    the horizontal lines *)
+    lists [(horiz,vert)], where [horiz] is a list of Y coordinates to
+    draw each horizontal gridline at and [vert] is a list of X
+    coordinates to draw each vertical gridline at. Requires:
+    [x_min < x_max], [y_min < y_max], all inputs are finite. *)
 let get_grid_pos
     (x_min : float)
     (x_max : float)
@@ -225,7 +244,7 @@ let get_grid_pos
 
 (** [make_gridlines (x1, x2) (y1, y2)] creates an element representing
     the gridlines of a graph with X bounds (x1, x2) and Y bounds (y1,
-    y2). Requires: x2 > x1, y2 > y1, and all inputs are finite.*)
+    y2). Requires: [x2 > x1], [y2 > y1], and all inputs are finite.*)
 let make_gridlines (x1, x2) (y1, y2) =
   let make_line f =
     List.fold_left
@@ -238,6 +257,10 @@ let make_gridlines (x1, x2) (y1, y2) =
   make_group []
     (List.flatten [ make_horiz_lines hbars; make_vert_lines vbars ])
 
+(** [make_graph g x_offset width height] creates an SVG element
+    representing a visual graph of [g]. The element is offset from the
+    left on the X axis by [x_offset] pixels, and has a width of [width]
+    pixels and height of [height] pixels.*)
 let make_graph g x w h =
   let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
   let axes =
@@ -283,13 +306,13 @@ let safe_load_styles filename =
 let to_svg filename g =
   let styles = safe_load_styles "graph_styles.css" in
   (* total height of the resulting SVG *)
-  let height = plot_info_height styles g.plots in
+  let svg_height = svg_height styles g.plots in
   (* width of the plot info box *)
   let plot_info_width = plot_info_width styles g.plots in
   let default_ratio = span g.x_bounds /. span g.y_bounds in
   (* width of the graph part (not the whole image )*)
   let graph_width =
-    int_of_float (float_of_int height *. default_ratio *. g.ratio)
+    int_of_float (float_of_int svg_height *. default_ratio *. g.ratio)
   in
   (* begin export *)
   let f = open_out filename in
@@ -297,8 +320,8 @@ let to_svg filename g =
     [ ("xmlns", "http://www.w3.org/2000/svg") ]
     [
       Container ("style", [], [ Text (raw_stylesheet styles) ]);
-      make_plot_info styles g.plots plot_info_width height;
-      make_graph g plot_info_width graph_width height;
+      make_plot_info styles g.plots plot_info_width svg_height;
+      make_graph g plot_info_width graph_width svg_height;
     ]
   |> output_xml f;
   close_out f

@@ -4,8 +4,8 @@
 type t
 
 (** [create (x_min, x_max) (y_min, y_max) aspect_ratio] creates a new,
-    empty graph that views the area [x_min, x_max] X [y_min, y_max]. The
-    aspect ratio of a square unit on the graph is determined by
+    empty graph that views the area [(x_min, x_max)] X [(y_min, y_max)].
+    The aspect ratio of a square unit on the graph is determined by
     [aspect_ratio].
 
     Requires: [x_min < x_max], [y_min < y_max], and
