@@ -130,8 +130,6 @@ let graph_viewbox g =
     (-.snd g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
 
-let invert_y = List.map (fun (x, y) -> (x, ~-.y))
-
 (** [make_segment color segment] draws the list of points [segment] so
     that each point in the list is connected to the next point with a
     straight line. The drawn line has color [color] and has class
@@ -139,7 +137,7 @@ let invert_y = List.map (fun (x, y) -> (x, ~-.y))
 let make_segment color segment =
   make_polyline "graph_path"
     [ ("stroke", hsl_string_of_hsv color) ]
-    (invert_y segment)
+    segment
 
 (** [make_plot p] creates an element representing the graph of plot p.*)
 let make_plot p =
@@ -216,7 +214,7 @@ let get_grid_pos
 
   let x_range = abs_floor x_max -. abs_floor x_min in
   let y_range = abs_floor y_max -. abs_floor y_min in
-  ( increment_to_coords (0. -. y_min) (0. -. y_max)
+  ( increment_to_coords y_max y_min
       (compute_increment y_range y_max_line_count),
     increment_to_coords x_max x_min
       (compute_increment x_range
@@ -250,7 +248,7 @@ let make_graph g x w h =
     make_group []
       [
         make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-        make_polyline "graph_axis" [] [ (0., -.y1); (0., -.y2) ];
+        make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
       ]
   in
   (* X & Y Axis *)
@@ -262,6 +260,7 @@ let make_graph g x w h =
         ("height", string_of_int h);
         ("viewBox", graph_viewbox g);
         ("preserveAspectRatio", "none");
+        ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")");
       ],
       let hor_bars, vert_bars = get_grid_pos x1 x2 y1 y2 in
       background
