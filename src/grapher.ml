@@ -12,13 +12,15 @@ type hsv = float * float * float
 (** [hsl_string_of_hsv hsv] creates a hue-saturation-lightness string
     (according to the CSS3 specification) corresponding to the HSV color
     [hsv]*)
-let hsl_string_of_hsv (h, sv, v) =
+let hsl_string_of_hsv (h, s, v) =
   (* This formula was taken from Wikipedia and translated into OCaml *)
-  let l = v *. (1. -. (sv /. 2.)) in
-  let sl =
+  (* l = lightness *)
+  let l = v *. (1. -. (s /. 2.)) in
+  (* s' = saturation for the HSL color *)
+  let s' =
     if l = 0. || l = 1. then 0. else (v -. l) /. Float.min l (1. -. l)
   in
-  Printf.sprintf "hsl(%f, %f%%, %f%%)" (h *. 360.) (sl *. 100.)
+  Printf.sprintf "hsl(%f, %f%%, %f%%)" (h *. 360.) (s' *. 100.)
     (l *. 100.)
 
 (** [hsv_step hsv] is a state machine which takes [hsv] and outputs a
@@ -30,9 +32,9 @@ let hsv_step (h, s, v) =
   (* PATTERN: hue changes first, then saturation, and finally value *)
   let h' = h +. step in
   if h' > 1. then
-    let h'' = h' -. 1. in
+    let h_rotated = h' -. 1. in
     let s' = s -. step in
-    if s' < 0. then (h'', 1., v /. 2.) else (h'', s', v)
+    if s' < 0. then (h_rotated, 1., v /. 2.) else (h_rotated, s', v)
   else (h', s, v)
 
 (** A [plot] contains information about a plot of one or more continous
