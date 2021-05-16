@@ -94,13 +94,11 @@ let make_plot_label s i eq =
     ((i + 1) * label_vertical_spacing s) + header_height s
     |> string_of_int
   in
-  Container
-    ( "g",
-      [],
-      [
-        make_circle "plot_info_disc" [ ("fill", col) ] x y "10";
-        make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
-      ] )
+  make_group []
+    [
+      make_circle "plot_info_disc" [ ("fill", col) ] x y "10";
+      make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
+    ]
 
 let make_plot_info s g w h =
   let labels = List.mapi (make_plot_label s) (List.rev g.plots) in
@@ -132,18 +130,20 @@ let graph_viewbox g =
     (-.snd g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
 
-let invert_y = List.map (fun (x, y) -> (x, -.y))
+let invert_y = List.map (fun (x, y) -> (x, ~-.y))
 
+(** [make_segment color segment] draws the list of points [segment] so
+    that each point in the list is connected to the next point with a
+    straight line. The drawn line has color [color] and has class
+    ["graph_path"].*)
+let make_segment color segment =
+  make_polyline "graph_path"
+    [ ("stroke", hsl_string_of_hsv color) ]
+    (invert_y segment)
+
+(** [make_plot p] creates an element representing the graph of plot p.*)
 let make_plot p =
-  Container
-    ( "g",
-      [],
-      List.map
-        (fun l ->
-          make_polyline "graph_path"
-            [ ("stroke", hsl_string_of_hsv p.color) ]
-            (invert_y l))
-        p.segments )
+  List.map (make_segment p.color) p.segments |> make_group []
 
 (** [get_grid_pos x_min x_max y_min y_max] returns a tuple of float
     lists, with the first float list being the positions to draw the
@@ -247,13 +247,11 @@ let make_graph g x w h =
   let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
   let background = Item ("rect", [ ("class", "graph_background") ]) in
   let axes =
-    Container
-      ( "g",
-        [ ("id", "graph-axes") ],
-        [
-          make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-          make_polyline "graph_axis" [] [ (0., -.y1); (0., -.y2) ];
-        ] )
+    make_group []
+      [
+        make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
+        make_polyline "graph_axis" [] [ (0., -.y1); (0., -.y2) ];
+      ]
   in
   (* X & Y Axis *)
   Container

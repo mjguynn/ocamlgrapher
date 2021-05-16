@@ -17,17 +17,17 @@ let make_polyline c atts points =
   in
   Item ("polyline", atts @ [ ("class", c); ("points", coords) ])
 
+let make_group atts elems = Container ("g", atts, elems)
+
 let make_region_border c atts (x1, y1) (x2, y2) =
-  Container
-    ( "g",
-      atts,
-      [
-        (* left *)
-        make_polyline c [] [ (x1, y1); (x1, y2) ];
-        (* right *)
-        make_polyline c [] [ (x2, y1); (x2, y2) ];
-        (* top *)
-        make_polyline c [] [ (x1, y1); (x2, y1) ];
-        (* bottom *)
-        make_polyline c [] [ (x1, y2); (x2, y2) ];
-      ] )
+  make_group atts
+    [
+      (* left *)
+      make_polyline c [] [ (x1, y1); (x1, y2) ];
+      (* right *)
+      make_polyline c [] [ (x2, y1); (x2, y2) ];
+      (* top *)
+      make_polyline c [] [ (x1, y1); (x2, y1) ];
+      (* bottom *)
+      make_polyline c [] [ (x1, y2); (x2, y2) ];
+    ]
