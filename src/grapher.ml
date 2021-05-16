@@ -267,15 +267,19 @@ let make_graph g x w h =
            (x1, -.y1) (x2, -.y2);
        ])
 
+(** [safe_load_styles filename] attempts to load the stylesheet in
+    [filename]. On success, returns the appropriate [Graphstyles.t]; on
+    failure, prints an error message to stderr and terminates execution
+    with error code 1.*)
+let safe_load_styles filename =
+  match load filename with
+  | Ok s -> s
+  | Error e ->
+      Io.print_error (e ^ "\n");
+      exit 1
+
 let to_svg filename g =
-  (* load stylesheet, create DOM element *)
-  let styles =
-    match load "graph_styles.css" with
-    | Ok s -> s
-    | Error e ->
-        Io.print_error (e ^ "\n");
-        exit 1
-  in
+  let styles = safe_load_styles "graph_styles.css" in
   (* total height of the resulting SVG *)
   let height = plot_info_height styles g.plots in
   (* width of the plot info box *)
