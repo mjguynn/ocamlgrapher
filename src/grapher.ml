@@ -75,13 +75,12 @@ let plot_info_height s g =
       ((List.length g.plots + 1) * label_vertical_spacing s)
 
 let plot_info_width s g =
+  let font_size = float_of_int (label_font_size s) in
   (* rough approximation *)
-  let char_width =
-    int_of_float (float_of_int (label_font_size s) *. 0.6)
-  in
+  let char_width = int_of_float (font_size *. 0.6) in
   let max_label_chars =
     List.fold_left
-      (fun maxlen eq -> max maxlen (String.length eq.label))
+      (fun max_len { label } -> max max_len (String.length label))
       0 g.plots
   in
   max (body_min_width s)
@@ -100,28 +99,27 @@ let make_plot_label s i eq =
       make_text "plot_info_label" [ ("fill", col) ] x y eq.label;
     ]
 
-let make_plot_info s g w h =
-  let labels = List.mapi (make_plot_label s) (List.rev g.plots) in
-  let background =
-    Item ("rect", [ ("class", "plot_info_background") ])
-  in
-  let header = make_text "plot_info_header" [] "0" "0" "Relations" in
-  let hh = float_of_int (Graphstyles.header_height s) in
-  let divider =
-    make_polyline "plot_info_border" []
-      [ (0., hh); (float_of_int w, hh) ]
-  in
-  ( make_svg [ ("width", string_of_int w); ("height", string_of_int h) ],
+let make_plot_info styles plots width height =
+  (* width & height as float *)
+  let w_flt, h_flt = (float_of_int width, float_of_int height) in
+  (* header height as float *)
+  let hh_flt = float_of_int (Graphstyles.header_height styles) in
+  make_svg
+    [ ("width", string_of_int width); ("height", string_of_int height) ]
     [
-      background;
-      header;
-      divider;
-      make_region_border "plot_info_border"
-        [ ("id", "plot-info-border") ]
-        (0., 0.)
-        (float_of_int w, float_of_int h);
+      (* background *)
+      Item ("rect", [ ("class", "plot_info_background") ]);
+      (* header text *)
+      make_text "plot_info_header" [] "0" "0" "Relations";
+      (* header divider *)
+      make_polyline "plot_info_border" []
+        [ (0., hh_flt); (w_flt, hh_flt) ];
+      (* border for the equation box *)
+      make_region_border "plot_info_border" [] (0., 0.) (w_flt, h_flt);
+      (* all the actual labels *)
+      make_group []
+        (List.mapi (make_plot_label styles) (List.rev plots));
     ]
-    @ labels )
 
 let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds)
@@ -290,7 +288,7 @@ let to_svg filename g =
     [ ("xmlns", "http://www.w3.org/2000/svg") ]
     [
       Container ("style", [], [ Text (raw_stylesheet styles) ]);
-      make_plot_info styles g plot_info_width height;
+      make_plot_info styles g.plots plot_info_width height;
       make_graph g plot_info_width graph_width height;
     ]
   |> output_xml f;
