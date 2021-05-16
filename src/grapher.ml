@@ -122,6 +122,10 @@ let make_plot_info styles plots width height =
         (List.mapi (make_plot_label styles) (List.rev plots));
     ]
 
+(** [graph_viewbox g] creates a coordinate system for an SVG element
+    such that the SVG element's top-left coordinate is the top-left
+    point within the bounds of [g] and its bottom-right coordinate is
+    the bottom-right point within the bounds of [g], etc.*)
 let graph_viewbox g =
   Printf.sprintf "%f %f %f %f" (fst g.x_bounds) (fst g.y_bounds)
     (span g.x_bounds) (span g.y_bounds)
