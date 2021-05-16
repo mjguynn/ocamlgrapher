@@ -48,8 +48,8 @@ type plot = {
 (** AF: Let [(x1, x2) = x_bounds] and [(y1, y2) = y_bounds]. Then an
     instance of type [t] represents a graph of the plots [plots] on a
     window spanning [x1..x2] on the X-axis and [y1..y2] on the Y-axis.
-
-    RI: [x2 >= x1] and [y2 >= y1]. *)
+    [ratio] is the aspect ratio of a single square unit on the graph.
+    RI: [x2 >= x1], [y2 >= y1], [ratio > 0], [ratio] is finite.*)
 type t = {
   plots : plot list;
   x_bounds : bounds;
