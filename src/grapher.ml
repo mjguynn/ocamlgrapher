@@ -211,7 +211,7 @@ let get_grid_pos
                 if error <> 0. then
                   generate_increments (increment :: acc) (n - 1)
                 else [ increment ]
-              else generate_increments acc (n - 1) )
+              else generate_increments acc (n - 1))
     in
     List.hd (List.rev (generate_increments [] line_count))
   in
@@ -259,6 +259,32 @@ let make_gridlines (x1, x2) (y1, y2) =
   make_group []
     (List.flatten [ make_horiz_lines hbars; make_vert_lines vbars ])
 
+(** [make_gridlines_label (x1, x2) (y1, y2)] creates an element
+    representing the labels of the gridlines of a graph with X bounds
+    (x1, x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and
+    all inputs are finite. *)
+let make_gridlines_label (x1, x2) (y1, y2) =
+  let make_horiz_label =
+    List.fold_left
+      (fun acc y ->
+        make_text "graph_gridline_label" [] "0" (string_of_float y)
+          (string_of_float y)
+        :: acc)
+      []
+  in
+
+  let make_vert_label =
+    List.fold_left
+      (fun acc x ->
+        make_text "graph_gridline_label" [] (string_of_float x) "0"
+          (string_of_float x)
+        :: acc)
+      []
+  in
+  let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
+  make_group []
+    (List.flatten [ make_horiz_label hbars; make_vert_label vbars ])
+
 (** [make_graph g x_offset width height] creates an SVG element
     representing a visual graph of [g]. The element is offset from the
     left on the X axis by [x_offset] pixels, and has a width of [width]
@@ -286,6 +312,8 @@ let make_graph g x w h =
         Item ("rect", [ ("class", "graph_background") ]);
         (* gridlines *)
         make_gridlines g.x_bounds g.y_bounds;
+        (* gridlines labels *)
+        make_gridlines_label g.x_bounds g.y_bounds;
         (* axes (draw on top of gridlines) *)
         axes;
         (* the actual plots *)
