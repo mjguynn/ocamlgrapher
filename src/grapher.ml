@@ -300,7 +300,12 @@ let make_graph g x w h =
 
        See: https://www.w3.org/TR/SVG2/struct.html#SVGElement *)
     [ ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")") ]
-    [ graph_view ]
+    [
+      Comment
+        "svg element should support transform, but this is broken in \
+         Chromium; we wrap the graph view as a workaround";
+      graph_view;
+    ]
 
 (** [safe_load_styles filename] attempts to load the stylesheet in
     [filename]. On success, returns the appropriate [Graphstyles.t]; on
