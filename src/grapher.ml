@@ -266,6 +266,7 @@ let float_to_rounded_int fl_list =
   fl_list
   |> List.map (fun fl -> Float.to_int (Float.round fl))
   |> List.sort_uniq compare
+  |> List.filter (fun x -> x <> 0)
 
 (** [make_gridlines_label (x1, x2) (y1, y2)] creates an element
     representing the labels of the gridlines of a graph with X bounds
