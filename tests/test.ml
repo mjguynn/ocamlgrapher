@@ -71,7 +71,9 @@ open OUnit2
 
     We also occasionally try each of these commands with different
     bounds on the X and Y axes and different aspect ratios, as those
-    have been sources of bugs in the past. *)
+    have been sources of bugs in the past. Finally, we tested the 
+    resulting SVGs on Chrome, Firefox, Edge, and Safari to ensure 
+    that they were consistent. *)
 
 let suite =
   "OCamlGrapher Test Suite"

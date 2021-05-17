@@ -1,0 +1,1 @@
+To count LOC, running `cloc src/*.ml* tests/*.ml` is sufficient. There's no significant embedded data.
