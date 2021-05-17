@@ -332,7 +332,11 @@ let to_svg filename g =
   (* begin export *)
   let f = open_out filename in
   make_svg
-    [ ("xmlns", "http://www.w3.org/2000/svg") ]
+    [
+      ("xmlns", "http://www.w3.org/2000/svg");
+      ("width", string_of_int (plot_info_width + graph_width));
+      ("height", string_of_int svg_height);
+    ]
     [
       Container ("style", [], [ Text (raw_stylesheet styles) ]);
       make_plot_info styles g.plots plot_info_width svg_height;
