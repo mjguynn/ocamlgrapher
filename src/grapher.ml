@@ -259,6 +259,14 @@ let make_gridlines (x1, x2) (y1, y2) =
   make_group []
     (List.flatten [ make_horiz_lines hbars; make_vert_lines vbars ])
 
+(** [float_to_rounded_int fl_list] takes in a float list. Converts every
+    float to nearest whole number and converts that number to an
+    integer. Returns the int list.*)
+let float_to_rounded_int fl_list =
+  fl_list
+  |> List.map (fun fl -> Float.to_int (Float.round fl))
+  |> List.sort_uniq compare
+
 (** [make_gridlines_label (x1, x2) (y1, y2)] creates an element
     representing the labels of the gridlines of a graph with X bounds
     (x1, x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and
@@ -267,8 +275,9 @@ let make_gridlines_label (x1, x2) (y1, y2) =
   let make_horiz_label =
     List.fold_left
       (fun acc y ->
-        make_text "graph_gridline_label" [] "0" (string_of_float y)
-          (string_of_float (-1. *. y))
+        make_text "graph_gridline_label" [] "0"
+          (string_of_int (-1 * y))
+          (string_of_int y)
         :: acc)
       []
   in
@@ -276,14 +285,20 @@ let make_gridlines_label (x1, x2) (y1, y2) =
   let make_vert_label =
     List.fold_left
       (fun acc x ->
-        make_text "graph_gridline_label" [] (string_of_float x) "0"
-          (string_of_float x)
+        make_text "graph_gridline_label" [] (string_of_int x) "0"
+          (string_of_int x)
         :: acc)
       []
   in
   let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
+  let hbars_truncated = float_to_rounded_int hbars in
+  let vbars_truncated = float_to_rounded_int vbars in
   make_group []
-    (List.flatten [ make_horiz_label hbars; make_vert_label vbars ])
+    (List.flatten
+       [
+         make_horiz_label hbars_truncated;
+         make_vert_label vbars_truncated;
+       ])
 
 (** [make_graph g x_offset width height] creates an SVG element
     representing a visual graph of [g]. The element is offset from the
