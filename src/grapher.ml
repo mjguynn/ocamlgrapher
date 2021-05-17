@@ -272,27 +272,35 @@ let make_graph g x w h =
         make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
       ]
   in
-  make_svg
-    [
-      ("x", string_of_int x);
-      ("width", string_of_int w);
-      ("height", string_of_int h);
-      ("viewBox", graph_viewbox g);
-      ("preserveAspectRatio", "none");
-      ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")");
-    ]
-    [
-      (* graph BG (not really necessary, but why not have one)*)
-      Item ("rect", [ ("class", "graph_background") ]);
-      (* gridlines *)
-      make_gridlines g.x_bounds g.y_bounds;
-      (* axes (draw on top of gridlines) *)
-      axes;
-      (* the actual plots *)
-      make_group [] (List.map make_plot g.plots);
-      (* border for the graph (draw on top of everything) *)
-      make_region_border "graph_border" [] (x1, y1) (x2, y2);
-    ]
+  let graph_view =
+    make_svg
+      [
+        ("x", string_of_int x);
+        ("width", string_of_int w);
+        ("height", string_of_int h);
+        ("viewBox", graph_viewbox g);
+        ("preserveAspectRatio", "none");
+      ]
+      [
+        (* graph BG (not really necessary, but why not have one)*)
+        Item ("rect", [ ("class", "graph_background") ]);
+        (* gridlines *)
+        make_gridlines g.x_bounds g.y_bounds;
+        (* axes (draw on top of gridlines) *)
+        axes;
+        (* the actual plots *)
+        make_group [] (List.map make_plot g.plots);
+        (* border for the graph (draw on top of everything) *)
+        make_region_border "graph_border" [] (x1, y1) (x2, y2);
+      ]
+  in
+  make_group
+    (* Here, the SVG wrapped is wrapped in transformed <g> because
+       Chromium is bugged and doesn't support transform on SVG.
+
+       See: https://www.w3.org/TR/SVG2/struct.html#SVGElement *)
+    [ ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")") ]
+    [ graph_view ]
 
 (** [safe_load_styles filename] attempts to load the stylesheet in
     [filename]. On success, returns the appropriate [Graphstyles.t]; on
