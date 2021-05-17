@@ -268,7 +268,7 @@ let make_gridlines_label (x1, x2) (y1, y2) =
     List.fold_left
       (fun acc y ->
         make_text "graph_gridline_label" [] "0" (string_of_float y)
-          (string_of_float y)
+          (string_of_float (-1. *. y))
         :: acc)
       []
   in
