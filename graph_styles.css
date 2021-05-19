@@ -73,6 +73,7 @@
 .graph_gridline_label
 {
   font-family: consolas;
+  font-size:0.5px;
   stroke: rgb(0, 0, 0);
   stroke-width: 0.5px;
   vector-effect: non-scaling-stroke;
