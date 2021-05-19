@@ -262,7 +262,13 @@ let make_gridline_step atts spacing f (lst, count) v =
   (make_polyline style [] coords :: new_lst, count + 1)
 
 let make_gridlines font_size spacing f lst =
-  let atts = [ ("font-size", ff_float_str font_size) ] in
+  let atts =
+    [
+      ("font-size", ff_float_str font_size);
+      (* stroke specified as Safari bugfix *)
+      ("stroke-width", ff_float_str (font_size *. 0.05));
+    ]
+  in
   List.fold_left (make_gridline_step atts spacing f) ([], 0) lst |> fst
 
 let horiz_gridline_info (x1, x2) font_size v =
