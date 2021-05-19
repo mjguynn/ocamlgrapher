@@ -82,7 +82,7 @@ let print_points eq =
 let print_extrema eq =
   Io.print_header ("Approximate maximums for " ^ eq.text ^ ": \n");
   eq.query_data |> max_output |> print_point_list;
-  Io.print_header ("Approximate minimums " ^ eq.text ^ ": \n");
+  Io.print_header ("Approximate minimums for " ^ eq.text ^ ": \n");
   eq.query_data |> min_output |> print_point_list
 
 (** Executes OCamlgrapher using [config]. *)
