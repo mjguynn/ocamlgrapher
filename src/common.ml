@@ -39,7 +39,7 @@ let regular_float f =
 (** [valid_bounds (a, b)] returns whether the bounds [a..b] are valid,
     where valid bounds are those bounds where [a] and [b] are *finite*
     and [a<=b]. *)
-let valid_bounds (a, b) = regular_float a && regular_float b && a <= b
+let valid_bounds (a, b) = regular_float a && regular_float b && a < b
 
 (** [in_bounds v (a, b)] returns whether [v] is contained within the
     bounds [a..b]. Requires: [(a, b)] is valid according to

@@ -150,6 +150,10 @@ let all_tests =
       [| "y=x"; "--x-min=" |];
     test_config_error "Invalid x Bounds"
       [| "y=x"; "--x-min=7"; "--x-max=6" |];
+    test_config_error "Invalid x Bounds (eq)"
+      [| "y=x"; "--x-min=6"; "--x-max=6" |];
+    test_config_error "Invalid y Bounds (eq)"
+      [| "y=x"; "--y-min=6"; "--y-max=6" |];
     test_config_error "Invalid x Min (string)"
       [| "y=x"; "--x-min=THE" |];
     test_config_error "Invalid x Min (-inf)" [| "y=x"; "--x-min=-inf" |];

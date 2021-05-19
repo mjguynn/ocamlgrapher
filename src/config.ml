@@ -54,9 +54,13 @@ let cmdline_info =
     ( Opt ("output", Some 'o'),
       "The name of the file which the graph is outputted to." );
     (Opt ("x-min", None), "Set the minimum bound on the X axis.");
-    (Opt ("x-max", None), "Set the maximum bound on the X axis.");
+    ( Opt ("x-max", None),
+      "Set the maximum bound on the X axis. Must be greater than \
+       --x-min." );
     (Opt ("y-min", None), "Set the minimum bound on the Y axis.");
-    (Opt ("y-max", None), "Set the maxmimum bound on the Y axis.");
+    ( Opt ("y-max", None),
+      "Set the maxmimum bound on the Y axis. Must be greater than \
+       --y-min." );
     ( Opt ("aspect-ratio", None),
       "Set the aspect ratio of a *single square unit* on the graph. \
        Must be finite and > 0. Default is 1." );
@@ -177,7 +181,7 @@ let extract_bounds cmdline (default_min, default_max) dim =
     else
       Error
         ( "Invalid bounds on " ^ dim
-        ^ ", ensure min <= max and min, max are finite." )
+        ^ ", ensure min < max and min, max are finite." )
   with Bad_assume s -> Error s
 
 (** [extract_command cmdline] identitifies and returns the command from
