@@ -163,16 +163,14 @@ let make_segment color segment =
 let make_plot p =
   List.map (make_segment p.color) p.segments |> make_group []
 
-(** [get_grid_pos x_min x_max y_min y_max] returns a tuple of float
-    lists [(horiz,vert)], where [horiz] is a list of Y coordinates to
-    draw each horizontal gridline at and [vert] is a list of X
+(** [get_grid_pos (x_min, x_max) (y_min, y_max)] returns a tuple of
+    float lists [(horiz,vert)], where [horiz] is a list of Y coordinates
+    to draw each horizontal gridline at and [vert] is a list of X
     coordinates to draw each vertical gridline at. Requires:
     [x_min < x_max], [y_min < y_max], all inputs are finite. *)
 let get_grid_pos
-    (x_min : float)
-    (x_max : float)
-    (y_min : float)
-    (y_max : float) : float list * float list =
+    ((x_min, x_max) : float * float)
+    ((y_min, y_max) : float * float) : float list * float list =
   let y_max_line_count = 20 in
 
   let abs_floor (num : float) : float =
@@ -244,21 +242,6 @@ let get_grid_pos
                (x_range /. y_range *. float_of_int y_max_line_count))))
   )
 
-(** [make_gridlines (x1, x2) (y1, y2)] creates an element representing
-    the gridlines of a graph with X bounds (x1, x2) and Y bounds (y1,
-    y2). Requires: [x2 > x1], [y2 > y1], and all inputs are finite.*)
-let make_gridlines (x1, x2) (y1, y2) =
-  let make_line f =
-    List.fold_left
-      (fun acc v -> make_polyline "graph_gridline" [] (f v) :: acc)
-      []
-  in
-  let make_horiz_lines = make_line (fun y -> [ (x1, y); (x2, y) ]) in
-  let make_vert_lines = make_line (fun x -> [ (x, y1); (x, y2) ]) in
-  let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
-  make_group []
-    (List.flatten [ make_horiz_lines hbars; make_vert_lines vbars ])
-
 (** [float_to_rounded_int fl_list] takes in a float list. Converts every
     float to nearest whole number and converts that number to an
     integer. Returns the int list.*)
@@ -272,11 +255,14 @@ let float_to_rounded_int fl_list =
     representing the labels of the gridlines of a graph with X bounds
     (x1, x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and
     all inputs are finite. *)
-let make_gridlines_label (x1, x2) (y1, y2) =
+let make_gridlines_label x_b y_b =
+  let attrs =
+    [ ("font-size", string_of_float (0.03 *. span y_b) ^ "0px") ]
+  in
   let make_horiz_label =
     List.fold_left
       (fun acc y ->
-        make_text "graph_gridline_label" [] "0"
+        make_text "graph_gridline_label" attrs "0"
           (string_of_int (-1 * y))
           (string_of_int y)
         :: acc)
@@ -286,12 +272,12 @@ let make_gridlines_label (x1, x2) (y1, y2) =
   let make_vert_label =
     List.fold_left
       (fun acc x ->
-        make_text "graph_gridline_label" [] (string_of_int x) "0"
+        make_text "graph_gridline_label" attrs (string_of_int x) "0"
           (string_of_int x)
         :: acc)
       []
   in
-  let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
+  let hbars, vbars = get_grid_pos x_b y_b in
   let hbars_truncated = float_to_rounded_int hbars in
   let vbars_truncated = float_to_rounded_int vbars in
   make_group []
@@ -299,6 +285,76 @@ let make_gridlines_label (x1, x2) (y1, y2) =
        [
          make_horiz_label hbars_truncated;
          make_vert_label vbars_truncated;
+       ])
+
+(** [float_to_string fl] converts the float to a string. FireFox accepts
+    "2.0" and "2" , however "2." is not acceptable. This method makes
+    sure that the last character in a string is a number.*)
+let float_to_string fl =
+  let fl_string = string_of_float fl in
+  let fl_lst = String.split_on_char '.' fl_string in
+  let last_char = List.hd (List.rev fl_lst) in
+  match last_char with
+  | "" -> string_of_int (Float.to_int fl)
+  | _ -> fl_string
+
+(** [make_grid_label zero_axis position] make a label at the position.
+    Notice the [zero_axis] variable. See function below on the
+    particulars of that variable.*)
+let make_grid_label zero_axis position =
+  let attr = [] in
+  match zero_axis with
+  | "y" ->
+      make_text "graph_gridline_label" attr "0"
+        (float_to_string (-1. *. position))
+        (float_to_string position)
+  | "x" ->
+      make_text "graph_gridline_label" attr
+        (float_to_string position)
+        "0"
+        (float_to_string position)
+  | _ -> failwith "axis undefined"
+
+(** [make_gridline_labels_v2 grid_positions label zero_axis acc] returns
+    the labels of the gridlines. Only 1 in every 2 gridlines is actually
+    labeled. The [zero_axis] variable is a string that represents what
+    axis the gridlines are put across. Ex: if the gridlines are
+    horizontal, then [zero_axis] is "y", since horizontal gridlines are
+    put across the y-axis. *)
+let rec make_gridline_labels_v2
+    (grid_positions : float list)
+    (label : bool)
+    (zero_axis : string)
+    acc =
+  match (grid_positions, label) with
+  | [], _ -> acc
+  | h :: tail, false -> make_gridline_labels_v2 tail true zero_axis acc
+  | h :: tail, true ->
+      make_gridline_labels_v2 tail false zero_axis
+        (make_grid_label zero_axis h :: acc)
+
+(** [make_gridlines (x1, x2) (y1, y2)] creates an element representing
+    the gridlines and the gridline labels of a graph with X bounds (x1,
+    x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and all
+    inputs are finite.*)
+let make_gridlines (x1, x2) (y1, y2) =
+  let make_line f =
+    List.fold_left
+      (fun acc v -> make_polyline "graph_gridline" [] (f v) :: acc)
+      []
+  in
+  let make_horiz_lines = make_line (fun y -> [ (x1, y); (x2, y) ]) in
+  let make_vert_lines = make_line (fun x -> [ (x, y1); (x, y2) ]) in
+  let hbars, vbars = get_grid_pos (x1, x2) (y1, y2) in
+  let hbars_no_zero = List.filter (fun y -> not (fpeq y 0.)) hbars in
+  let vbars_no_zero = List.filter (fun x -> not (fpeq x 0.)) vbars in
+  make_group []
+    (List.flatten
+       [
+         make_horiz_lines hbars;
+         make_vert_lines vbars;
+         make_gridline_labels_v2 hbars_no_zero true "y" [];
+         make_gridline_labels_v2 vbars_no_zero true "x" [];
        ])
 
 (** [make_graph g x_offset width height] creates an SVG element
@@ -326,10 +382,10 @@ let make_graph g x w h =
       [
         (* graph BG (not really necessary, but why not have one)*)
         Item ("rect", [ ("class", "graph_background") ]);
-        (* gridlines *)
+        (* gridlines and gridline labels *)
         make_gridlines g.x_bounds g.y_bounds;
         (* gridlines labels *)
-        make_gridlines_label g.x_bounds g.y_bounds;
+        (*make_gridlines_label g.x_bounds g.y_bounds;*)
         (* axes (draw on top of gridlines) *)
         axes;
         (* the actual plots *)

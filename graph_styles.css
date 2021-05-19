@@ -2,7 +2,8 @@
    Certain attributes are handled by ocamlgrapher. */
 :root {
   /* Do NOT edit the names of these variables! 
-     They are parsed by OCamlgrapher. 
+     They are parsed by OCamlgrapher.
+     They must use pixel units (end in px), and must be ints. 
 	 You may add your own variables. */
   --header-height: 60px;
   --body-min-width: 220px;
@@ -72,9 +73,9 @@
 .graph_gridline_label
 {
   font-family: consolas;
-  font-size: 3%;
+  font-size:0.5px;
   stroke: rgb(0, 0, 0);
-  stroke-width: 1px;
+  stroke-width: 0.5px;
   vector-effect: non-scaling-stroke;
   transform: scaleY(-1); /* graph itself has "inverted" Y, cancel that out */
 }
