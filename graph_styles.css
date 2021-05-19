@@ -73,7 +73,7 @@
 {
   font-family: consolas;
   stroke: rgb(0, 0, 0);
-  stroke-width: 1px;
+  stroke-width: 0.5px;
   vector-effect: non-scaling-stroke;
   transform: scaleY(-1); /* graph itself has "inverted" Y, cancel that out */
 }
