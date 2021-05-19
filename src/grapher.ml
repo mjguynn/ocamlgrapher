@@ -163,16 +163,14 @@ let make_segment color segment =
 let make_plot p =
   List.map (make_segment p.color) p.segments |> make_group []
 
-(** [get_grid_pos x_min x_max y_min y_max] returns a tuple of float
-    lists [(horiz,vert)], where [horiz] is a list of Y coordinates to
-    draw each horizontal gridline at and [vert] is a list of X
+(** [get_grid_pos (x_min, x_max) (y_min, y_max)] returns a tuple of
+    float lists [(horiz,vert)], where [horiz] is a list of Y coordinates
+    to draw each horizontal gridline at and [vert] is a list of X
     coordinates to draw each vertical gridline at. Requires:
     [x_min < x_max], [y_min < y_max], all inputs are finite. *)
 let get_grid_pos
-    (x_min : float)
-    (x_max : float)
-    (y_min : float)
-    (y_max : float) : float list * float list =
+    ((x_min, x_max) : float * float)
+    ((y_min, y_max) : float * float) : float list * float list =
   let y_max_line_count = 20 in
 
   let abs_floor (num : float) : float =
@@ -211,7 +209,7 @@ let get_grid_pos
                 if error <> 0. then
                   generate_increments (increment :: acc) (n - 1)
                 else [ increment ]
-              else generate_increments acc (n - 1))
+              else generate_increments acc (n - 1) )
     in
     List.hd (List.rev (generate_increments [] line_count))
   in
@@ -255,7 +253,7 @@ let make_gridlines (x1, x2) (y1, y2) =
   in
   let make_horiz_lines = make_line (fun y -> [ (x1, y); (x2, y) ]) in
   let make_vert_lines = make_line (fun x -> [ (x, y1); (x, y2) ]) in
-  let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
+  let hbars, vbars = get_grid_pos (x1, x2) (y1, y2) in
   make_group []
     (List.flatten [ make_horiz_lines hbars; make_vert_lines vbars ])
 
@@ -272,11 +270,15 @@ let float_to_rounded_int fl_list =
     representing the labels of the gridlines of a graph with X bounds
     (x1, x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and
     all inputs are finite. *)
-let make_gridlines_label (x1, x2) (y1, y2) =
+let make_gridlines_label x_b y_b =
+  let dynamic_range = min (span x_b) (span y_b) in
+  let attrs =
+    [ ("font-size", string_of_float (0.03 *. dynamic_range) ^ "0px") ]
+  in
   let make_horiz_label =
     List.fold_left
       (fun acc y ->
-        make_text "graph_gridline_label" [] "0"
+        make_text "graph_gridline_label" attrs "0"
           (string_of_int (-1 * y))
           (string_of_int y)
         :: acc)
@@ -286,12 +288,12 @@ let make_gridlines_label (x1, x2) (y1, y2) =
   let make_vert_label =
     List.fold_left
       (fun acc x ->
-        make_text "graph_gridline_label" [] (string_of_int x) "0"
+        make_text "graph_gridline_label" attrs (string_of_int x) "0"
           (string_of_int x)
         :: acc)
       []
   in
-  let hbars, vbars = get_grid_pos x1 x2 y1 y2 in
+  let hbars, vbars = get_grid_pos x_b y_b in
   let hbars_truncated = float_to_rounded_int hbars in
   let vbars_truncated = float_to_rounded_int vbars in
   make_group []
