@@ -10,7 +10,8 @@ open OUnit2
     {{:../tests/test_numericalmethods.ml} test_numericalmethods.ml}),
     and most functions in [Cmdline] were tested indirectly by testing
     [Config]. Whenever something was indirectly tested, we ensured that
-    we had 100% code coverage for it.
+    we had 100% code coverage for it. We used a mixture of opaque-box and
+    glass-box testing. 
 
     Certain modules & functions are not tested by this test suite. These
     are:
