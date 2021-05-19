@@ -55,6 +55,14 @@ type token =
   | Function of m_function
   | EOF
 
+(** [function_type] is either a function in terms of x, [FunctionX], a
+    function in terms of y, [FunctionY], or an unknown function
+    [FunctionUnknown], and carries the corresponding tokenized equation. *)
+type function_type =
+  | FunctionX of token list
+  | FunctionY of token list
+  | FunctionUnknown
+
 (** [parse_rule] represents a rule that should be respected while
     parsing. A [Flag] rule represents an option that takes no
     parameters. A [Opt] rule represents an option that takes no

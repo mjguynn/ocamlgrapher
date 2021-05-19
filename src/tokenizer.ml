@@ -158,7 +158,24 @@ and process_unit_token hd tl tokens =
       syntax_error
         "unknown character or symbol found. [unit token assoc failure]"
 
+let reverse_token_list is_rev tokens =
+  if is_rev then List.rev tokens else tokens
+
+let determine_function_type is_rev tokens =
+  match tokens with
+  | h1 :: h2 :: t -> (
+      match (h1, h2) with
+      | Variable X, Operator Equals ->
+          FunctionY (reverse_token_list is_rev tokens)
+      | Variable Y, Operator Equals ->
+          FunctionX (reverse_token_list is_rev tokens)
+      | _ -> FunctionUnknown)
+  | _ -> failwith "impossible"
+
 let tokenize equation_str =
   let tokens = ref [] in
   lex equation_str "" tokens;
-  List.rev !tokens
+  let function_type = determine_function_type true !tokens in
+  if function_type = FunctionUnknown then
+    determine_function_type false (List.rev !tokens)
+  else function_type

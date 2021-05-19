@@ -1,6 +1,6 @@
 (** Contains functions for evaluating a tokenized equation. *)
 
-(** [compute_f_of_x equation x] is the numerical y-value output of [x]
-    passed into the function of [equation]. Raises: [Invalid_argument]
-    if [equation] is not a valid function. *)
-val compute_f_of_x : Defs.token list -> float -> float
+(** [compute_f equation input] is the numerical y-value output of
+    [input] passed into the function of [equation]. Raises:
+    [Invalid_argument] if [equation] is not a valid function. *)
+val compute_f : Defs.function_type -> float -> float
