@@ -65,8 +65,15 @@
 }
 .graph_gridline
 {
-  stroke: #DDD;
-  stroke-width: 1.3px;
+  stroke: #DADADA;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  fill: none;
+}
+.graph_gridline_bold
+{
+  stroke: #CCC;
+  stroke-width: 1.5px;
   vector-effect: non-scaling-stroke;
   fill: none;
 }
