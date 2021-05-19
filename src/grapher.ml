@@ -271,9 +271,8 @@ let float_to_rounded_int fl_list =
     (x1, x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and
     all inputs are finite. *)
 let make_gridlines_label x_b y_b =
-  let dynamic_range = min (span x_b) (span y_b) in
   let attrs =
-    [ ("font-size", string_of_float (0.03 *. dynamic_range) ^ "0px") ]
+    [ ("font-size", string_of_float (0.03 *. span y_b) ^ "0px") ]
   in
   let make_horiz_label =
     List.fold_left
