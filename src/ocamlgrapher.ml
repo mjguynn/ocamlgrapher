@@ -33,12 +33,19 @@ let process_equation text steps x_b y_b =
     || (oob p && oob (Some (x, y)) && oob n)
   in
   try
-    let tokens = Tokenizer.tokenize text in
+    let bounds, f =
+      match Tokenizer.tokenize text with
+      | FunctionX _ as toks ->
+          (x_b, fun x -> (x, Parser.compute_f toks x))
+      | FunctionY _ as toks ->
+          (y_b, fun y -> (Parser.compute_f toks y, y))
+      | FunctionUnknown ->
+          Io.print_error
+            ("Could not understand the equation " ^ text ^ "\n");
+          exit 1
+    in
     let graph_data =
-      let computed =
-        make_samples x_b steps
-        |> List.map (fun x -> (x, Parser.compute_f_of_x tokens x))
-      in
+      let computed = make_samples bounds steps |> List.map f in
       split should_split computed
     in
     let query_data = graph_data |> List.flatten |> limiter x_b y_b in
