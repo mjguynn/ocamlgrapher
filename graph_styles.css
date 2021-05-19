@@ -2,7 +2,8 @@
    Certain attributes are handled by ocamlgrapher. */
 :root {
   /* Do NOT edit the names of these variables! 
-     They are parsed by OCamlgrapher. 
+     They are parsed by OCamlgrapher.
+     They must use pixel units (end in px), and must be ints. 
 	 You may add your own variables. */
   --header-height: 60px;
   --body-min-width: 220px;
