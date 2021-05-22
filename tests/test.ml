@@ -10,8 +10,8 @@ open OUnit2
     {{:../tests/test_numericalmethods.ml} test_numericalmethods.ml}),
     and most functions in [Cmdline] were tested indirectly by testing
     [Config]. Whenever something was indirectly tested, we ensured that
-    we had 100% code coverage for it. We used a mixture of opaque-box and
-    glass-box testing. 
+    we had 100% code coverage for it. We used a mixture of opaque-box
+    and glass-box testing.
 
     Certain modules & functions are not tested by this test suite. These
     are:
@@ -21,7 +21,7 @@ open OUnit2
       multiple modules, including tested ones.
     - [Grapher], [Graphstyles], [Svghelpers]: While it would be possible
       to property-based unit tests for these modules, writing standard
-      "equality of output" unit tests would be infeasable. This is
+      "equality of output" unit tests would be infeasible. This is
       because their expected results are only required to look correct.
       By design, these two modules have free reign as to how the SVG
       file is written and structured. As an example, currently the
@@ -72,9 +72,9 @@ open OUnit2
 
     We also occasionally try each of these commands with different
     bounds on the X and Y axes and different aspect ratios, as those
-    have been sources of bugs in the past. Finally, we tested the 
-    resulting SVGs on Chrome, Firefox, Edge, and Safari to ensure 
-    that they were consistent. *)
+    have been sources of bugs in the past. Finally, we tested the
+    resulting SVGs on Chrome, Firefox, Edge, and Safari to ensure that
+    they were consistent. *)
 
 let suite =
   "OCamlGrapher Test Suite"

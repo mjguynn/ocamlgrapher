@@ -186,17 +186,16 @@ let compute_error (increment : float) : float =
   abs_float (Float.round increment -. increment)
 
 let rec generate_increments range acc line_count selected_increment =
-  match line_count with
-  | 2 -> acc
-  | n -> (
-      match selected_increment with
-      | increment, error ->
-          if increment < range && increment <> 0. then
-            if error <> 0. then
-              generate_increments range (increment :: acc) (n - 1)
-                selected_increment
-            else [ increment ]
-          else generate_increments range acc (n - 1) selected_increment)
+  let filter_increments n =
+    match selected_increment with
+    | increment, error ->
+        if increment < range && increment <> 0. && error <> 0. then
+          generate_increments range (increment :: acc) (n - 1)
+            selected_increment
+        else if increment < range && increment <> 0. then [ increment ]
+        else generate_increments range acc (n - 1) selected_increment
+  in
+  match line_count with 2 -> acc | n -> filter_increments n
 
 let compute_increment range line_count =
   let increment_base_1 = log10 (range /. float_of_int line_count) in
