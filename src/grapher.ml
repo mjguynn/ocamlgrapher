@@ -251,15 +251,15 @@ let ff_float_str fl =
   | Some i when i = String.length s - 1 -> String.sub s 0 i
   | _ -> s
 
-let make_gridline_step atts spacing f (lst, count) v =
+let make_gridline_step atts spacing f ((lines, labels), count) v =
   let x, y, text, coords = f v in
-  let new_lst, style =
+  let new_labels, style =
     if count mod spacing = 0 then
-      ( make_text "graph_gridline_label" atts x y text :: lst,
+      ( make_text "graph_gridline_label" atts x y text :: labels,
         "graph_gridline_bold" )
-    else (lst, "graph_gridline")
+    else (labels, "graph_gridline")
   in
-  (make_polyline style [] coords :: new_lst, count + 1)
+  ((make_polyline style [] coords :: lines, new_labels), count + 1)
 
 let make_gridlines font_size spacing f lst =
   let atts =
@@ -269,7 +269,8 @@ let make_gridlines font_size spacing f lst =
       ("stroke-width", ff_float_str (font_size *. 0.05));
     ]
   in
-  List.fold_left (make_gridline_step atts spacing f) ([], 0) lst |> fst
+  List.fold_left (make_gridline_step atts spacing f) (([], []), 0) lst
+  |> fst
 
 let horiz_gridline_info (x1, x2) font_size v =
   let s = ff_float_str v in
@@ -288,9 +289,10 @@ let vert_gridline_info (y1, y2) font_size v =
   let y = font_size in
   (ff_float_str x, ff_float_str y, s, [ (v, y1); (v, y2) ])
 
-(** [make_gridlines (x1, x2) (y1, y2)] creates an element representing
-    the gridlines and the gridline labels of a graph with X bounds (x1,
-    x2) and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and all
+(** [make_gridlines (x1, x2) (y1, y2)] returns [(ll, la)] where [ll] is
+    an element representing the gridlines and [la] is an element
+    representing the gridline labels of a graph with X bounds (x1, x2)
+    and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and all
     inputs are finite.*)
 let make_gridlines x_b y_b =
   let no_zero = List.filter (fun v -> not (fpeq v 0.)) in
@@ -298,12 +300,14 @@ let make_gridlines x_b y_b =
   let font_size, spacing = (0.03 *. span y_b, 2) in
   let fh = horiz_gridline_info x_b font_size in
   let fv = vert_gridline_info y_b font_size in
-  List.flatten
-    [
-      make_gridlines font_size spacing fh (no_zero horiz_pre);
-      make_gridlines font_size spacing fv (no_zero vert_pre);
-    ]
-  |> make_group []
+  let hlines, hlabels =
+    make_gridlines font_size spacing fh (no_zero horiz_pre)
+  in
+  let vlines, vlabels =
+    make_gridlines font_size spacing fv (no_zero vert_pre)
+  in
+  ( make_group [] (List.rev_append hlines vlines),
+    make_group [] (List.rev_append hlabels vlabels) )
 
 (** [make_graph g x_offset width height] creates an SVG element
     representing a visual graph of [g]. The element is offset from the
@@ -318,6 +322,7 @@ let make_graph g x w h =
         make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
       ]
   in
+  let gridlines, gridlabels = make_gridlines g.x_bounds g.y_bounds in
   let graph_view =
     make_svg
       [
@@ -330,14 +335,14 @@ let make_graph g x w h =
       [
         (* graph BG (not really necessary, but why not have one)*)
         Item ("rect", [ ("class", "graph_background") ]);
-        (* gridlines and gridline labels *)
-        make_gridlines g.x_bounds g.y_bounds;
-        (* gridlines labels *)
-        (*make_gridlines_label g.x_bounds g.y_bounds;*)
+        (* gridlines *)
+        gridlines;
         (* axes (draw on top of gridlines) *)
         axes;
         (* the actual plots *)
         make_group [] (List.map make_plot g.plots);
+        (* gridline labels *)
+        gridlabels;
         (* border for the graph (draw on top of everything) *)
         make_region_border "graph_border" [] (x1, y1) (x2, y2);
       ]
