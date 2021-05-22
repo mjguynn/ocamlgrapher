@@ -169,13 +169,14 @@ let determine_function_type is_rev tokens =
           FunctionY (reverse_token_list is_rev tokens)
       | Variable Y, Operator Equals ->
           FunctionX (reverse_token_list is_rev tokens)
-      | _ -> FunctionUnknown)
+      | _ -> FunctionUnknown (reverse_token_list is_rev tokens))
   | _ -> failwith "impossible"
 
 let tokenize equation_str =
   let tokens = ref [] in
   lex equation_str "" tokens;
   let function_type = determine_function_type true !tokens in
-  if function_type = FunctionUnknown then
-    determine_function_type false (List.rev !tokens)
-  else function_type
+  match function_type with
+  | FunctionUnknown _ ->
+      determine_function_type false (List.rev !tokens)
+  | _ -> function_type

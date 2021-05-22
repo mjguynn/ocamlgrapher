@@ -61,7 +61,7 @@ type token =
 type function_type =
   | FunctionX of token list
   | FunctionY of token list
-  | FunctionUnknown
+  | FunctionUnknown of token list
 
 (** [parse_rule] represents a rule that should be respected while
     parsing. A [Flag] rule represents an option that takes no

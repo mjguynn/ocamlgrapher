@@ -39,7 +39,7 @@ let process_equation text steps x_b y_b =
           (x_b, fun x -> (x, Parser.compute_f toks x))
       | FunctionY _ as toks ->
           (y_b, fun y -> (Parser.compute_f toks y, y))
-      | FunctionUnknown ->
+      | FunctionUnknown _ ->
           Io.print_error
             ("Could not understand the equation " ^ text ^ "\n");
           exit 1
