@@ -2,139 +2,149 @@
 
 open Defs
 
-let compute_f equation input =
-  let tokens =
-    match equation with
-    | FunctionX lst | FunctionY lst -> Array.of_list lst
-    | _ -> failwith "impossible"
-  in
+let get_tokens equation =
+  match equation with
+  | FunctionX lst | FunctionY lst -> Array.of_list lst
+  | _ -> failwith "impossible"
 
-  let is_function_x =
-    match equation with
-    | FunctionX _ -> true
-    | FunctionY _ -> false
-    | _ -> failwith "impossible"
-  in
+let get_function_type equation =
+  match equation with
+  | FunctionX _ -> true
+  | FunctionY _ -> false
+  | _ -> failwith "impossible"
 
-  let index = ref 0 in
+let peek tokens index =
+  if !index < Array.length tokens then tokens.(!index) else EOF
 
-  let peek () =
-    if !index < Array.length tokens then tokens.(!index) else EOF
-  in
+let peek_check token tokens index = token = peek tokens index
 
-  let peek_check token = token = peek () in
+let next tokens index =
+  if Bool.not (peek_check EOF tokens index) then index := !index + 1
 
-  let next () = if Bool.not (peek_check EOF) then index := !index + 1 in
+let consume token tokens index =
+  if peek_check token tokens index then next tokens index
+  else
+    Tokenizer.syntax_error
+      "expected character not found. [consume failure]"
 
-  let consume token =
-    if peek_check token then next ()
-    else
+let get_f_output f expr =
+  match f with
+  | Ln -> log expr
+  | Log -> log10 expr
+  | Sqrt -> sqrt expr
+  | Abs -> abs_float expr
+  | Sin -> sin expr
+  | Cos -> cos expr
+  | Tan -> tan expr
+  | Sec -> 1. /. cos expr
+  | Csc -> 1. /. sin expr
+  | Cot -> 1. /. tan expr
+  | Arcsin -> asin expr
+  | Arccos -> acos expr
+  | Arctan -> atan expr
+  | Arcsec -> acos (1. /. expr)
+  | Arccsc -> asin (1. /. expr)
+  | Arccot -> atan (1. /. expr)
+
+let rec parse_elem tokens index input is_function_x =
+  match peek tokens index with
+  | Parentheses LParen ->
+      next tokens index;
+      let expr = parse_expr tokens index input is_function_x in
+      consume (Parentheses RParen) tokens index;
+      expr
+  | Function f ->
+      next tokens index;
+      consume (Parentheses LParen) tokens index;
+      let f_output =
+        get_f_output f (parse_expr tokens index input is_function_x)
+      in
+      consume (Parentheses RParen) tokens index;
+      f_output
+  | Variable X | Variable Y ->
+      if is_function_x then consume (Variable X) tokens index
+      else consume (Variable Y) tokens index;
+      input
+  | Constant c -> (
+      next tokens index;
+      match c with
+      | Pi -> Float.pi
+      | E -> 2.71828182845904523
+      | Number n -> n)
+  | _ ->
       Tokenizer.syntax_error
-        "expected character not found. [consume failure]"
-  in
+        "expected character not found. [parse elem failure]"
 
-  let rec parse_elem () =
-    match peek () with
-    | Parentheses LParen ->
-        next ();
-        let expr = parse_expr () in
-        consume (Parentheses RParen);
-        expr
-    | Function f ->
-        next ();
-        consume (Parentheses LParen);
-        let expr = parse_expr () in
-        let f_output =
-          match f with
-          | Ln -> log expr
-          | Log -> log10 expr
-          | Sqrt -> sqrt expr
-          | Abs -> abs_float expr
-          | Sin -> sin expr
-          | Cos -> cos expr
-          | Tan -> tan expr
-          | Sec -> 1. /. cos expr
-          | Csc -> 1. /. sin expr
-          | Cot -> 1. /. tan expr
-          | Arcsin -> asin expr
-          | Arccos -> acos expr
-          | Arctan -> atan expr
-          | Arcsec -> acos (1. /. expr)
-          | Arccsc -> asin (1. /. expr)
-          | Arccot -> atan (1. /. expr)
-        in
-        consume (Parentheses RParen);
-        f_output
-    | Variable X | Variable Y ->
-        if is_function_x then consume (Variable X)
-        else consume (Variable Y);
-        input
-    | Constant c -> (
-        next ();
-        match c with
-        | Pi -> Float.pi
-        | E -> 2.71828182845904523
-        | Number n -> n)
-    | _ ->
-        Tokenizer.syntax_error
-          "expected character not found. [parse elem failure]"
-  and parse_expr () =
-    let term = ref (parse_term ()) in
-    while peek_check (Operator Plus) || peek_check (Operator Minus) do
-      if peek_check (Operator Plus) then begin
-        next ();
-        term := !term +. parse_term ()
-      end
-      else begin
-        next ();
-        term := !term -. parse_term ()
-      end
-    done;
-    !term
-  and parse_term () =
-    let factor = ref (parse_factor ()) in
-    while peek_check (Operator Times) || peek_check (Operator Divide) do
-      if peek_check (Operator Times) then begin
-        next ();
-        factor := !factor *. parse_factor ()
-      end
-      else begin
-        next ();
-        factor := !factor /. parse_factor ()
-      end
-    done;
-    !factor
-  and parse_factor () =
-    if peek_check (Operator Minus) then begin
-      next ();
-      -1. *. parse_factor ()
+and parse_expr tokens index input is_function_x =
+  let term = ref (parse_term tokens index input is_function_x) in
+  while
+    peek_check (Operator Plus) tokens index
+    || peek_check (Operator Minus) tokens index
+  do
+    if peek_check (Operator Plus) tokens index then begin
+      next tokens index;
+      term := !term +. parse_term tokens index input is_function_x
     end
-    else parse_group ()
-  and parse_group () =
-    let elem = parse_elem () in
-    match peek () with
-    | Operator Exponent ->
-        next ();
-        elem ** parse_elem ()
-    | Operator _ | Parentheses RParen | EOF -> elem
-    | _ -> elem *. parse_group ()
-  in
-
-  let parse_equation () =
-    if peek_check (if is_function_x then Variable Y else Variable X)
-    then begin
-      next ();
-      consume (Operator Equals);
-      let expr = parse_expr () in
-      consume EOF;
-      expr
+    else begin
+      next tokens index;
+      term := !term -. parse_term tokens index input is_function_x
     end
-    else
-      let expr = parse_expr () in
-      consume (Operator Equals);
-      consume (if is_function_x then Variable Y else Variable X);
-      consume EOF;
-      expr
-  in
+  done;
+  !term
 
-  parse_equation ()
+and parse_term tokens index input is_function_x =
+  let factor = ref (parse_factor tokens index input is_function_x) in
+  while
+    peek_check (Operator Times) tokens index
+    || peek_check (Operator Divide) tokens index
+  do
+    if peek_check (Operator Times) tokens index then begin
+      next tokens index;
+      factor := !factor *. parse_factor tokens index input is_function_x
+    end
+    else begin
+      next tokens index;
+      factor := !factor /. parse_factor tokens index input is_function_x
+    end
+  done;
+  !factor
+
+and parse_factor tokens index input is_function_x =
+  if peek_check (Operator Minus) tokens index then begin
+    next tokens index;
+    -1. *. parse_factor tokens index input is_function_x
+  end
+  else parse_group tokens index input is_function_x
+
+and parse_group tokens index input is_function_x =
+  let elem = parse_elem tokens index input is_function_x in
+  match peek tokens index with
+  | Operator Exponent ->
+      next tokens index;
+      elem ** parse_elem tokens index input is_function_x
+  | Operator _ | Parentheses RParen | EOF -> elem
+  | _ -> elem *. parse_group tokens index input is_function_x
+
+let compute_f equation input =
+  let tokens = get_tokens equation in
+  let is_function_x = get_function_type equation in
+  let index = ref 0 in
+  if
+    peek_check
+      (if is_function_x then Variable Y else Variable X)
+      tokens index
+  then begin
+    next tokens index;
+    consume (Operator Equals) tokens index;
+    let expr = parse_expr tokens index input is_function_x in
+    consume EOF tokens index;
+    expr
+  end
+  else
+    let expr = parse_expr tokens index input is_function_x in
+    consume (Operator Equals) tokens index;
+    consume
+      (if is_function_x then Variable Y else Variable X)
+      tokens index;
+    consume EOF tokens index;
+    expr
