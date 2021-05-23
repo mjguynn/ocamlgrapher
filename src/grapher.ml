@@ -292,68 +292,59 @@ let make_gridlines x_b y_b r =
   let no_zero = List.filter (fun v -> not (fpeq v 0.)) in
   let horiz_pre, vert_pre = get_grid_pos x_b y_b in
   let font_size, spacing = (0.03 *. span y_b, 2) in
-  let fh = horiz_gridline_info x_b font_size in
-  let fv = vert_gridline_info y_b font_size r in
+  let f_h = horiz_gridline_info x_b font_size in
+  let f_v = vert_gridline_info y_b font_size r in
   let hlines, hlabels =
-    make_gridlines font_size spacing r fh (no_zero horiz_pre)
+    make_gridlines font_size spacing r f_h (no_zero horiz_pre)
   in
   let vlines, vlabels =
-    make_gridlines font_size spacing r fv (no_zero vert_pre)
+    make_gridlines font_size spacing r f_v (no_zero vert_pre)
   in
   ( make_group [] (List.rev_append hlines vlines),
     make_group [] (List.rev_append hlabels vlabels) )
+
+let make_graph_components graph =
+  let (x1, x2), (y1, y2) = (graph.x_bounds, graph.y_bounds) in
+  let gridlines, gridlabels =
+    make_gridlines graph.x_bounds graph.y_bounds graph.ratio
+  in
+  [
+    (* graph BG (not really necessary, but why not have one)*)
+    Item ("rect", [ ("class", "graph_background") ]);
+    gridlines;
+    (*axes*)
+    make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
+    make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
+    (* the actual plots *)
+    make_group [] (List.map make_plot graph.plots);
+    gridlabels;
+    (* border for the graph (draw on top of everything) *)
+    make_region_border "graph_border" [] (x1, y1) (x2, y2);
+  ]
 
 (** [make_graph g x_offset width height] creates an SVG element
     representing a visual graph of [g]. The element is offset from the
     left on the X axis by [x_offset] pixels, and has a width of [width]
     pixels and height of [height] pixels.*)
 let make_graph g x w h =
-  let (x1, x2), (y1, y2) = (g.x_bounds, g.y_bounds) in
-  let axes =
-    make_group []
-      [
-        make_polyline "graph_axis" [] [ (x1, 0.); (x2, 0.) ];
-        make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
-      ]
-  in
-  let gridlines, gridlabels =
-    make_gridlines g.x_bounds g.y_bounds g.ratio
-  in
-  let graph_view =
-    make_svg
-      [
-        ("x", string_of_int x);
-        ("width", string_of_int w);
-        ("height", string_of_int h);
-        ("viewBox", graph_viewbox g);
-        ("preserveAspectRatio", "none");
-      ]
-      [
-        (* graph BG (not really necessary, but why not have one)*)
-        Item ("rect", [ ("class", "graph_background") ]);
-        (* gridlines *)
-        gridlines;
-        (* axes (draw on top of gridlines) *)
-        axes;
-        (* the actual plots *)
-        make_group [] (List.map make_plot g.plots);
-        (* gridline labels *)
-        gridlabels;
-        (* border for the graph (draw on top of everything) *)
-        make_region_border "graph_border" [] (x1, y1) (x2, y2);
-      ]
-  in
   make_group
     (* Here, the SVG wrapped is wrapped in transformed <g> because
-       Chromium is bugged and doesn't support transform on SVG.
-
-       See: https://www.w3.org/TR/SVG2/struct.html#SVGElement *)
+       Chromium is bugged and doesn't support transform on SVG. See:
+       https://www.w3.org/TR/SVG2/struct.html#SVGElement *)
     [ ("transform", "matrix(1 0 0 -1 0 " ^ string_of_int h ^ ")") ]
     [
       Comment
         "svg element should support transform, but this is broken in \
          Chromium; we wrap the graph view as a workaround";
-      graph_view;
+      make_svg
+        [
+          ("x", string_of_int x);
+          ("width", string_of_int w);
+          ("height", string_of_int h);
+          ("viewBox", graph_viewbox g);
+          ("preserveAspectRatio", "none");
+        ]
+        (make_graph_components g);
     ]
 
 (** [safe_load_styles filename] attempts to load the stylesheet in
