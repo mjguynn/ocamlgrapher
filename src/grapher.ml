@@ -179,41 +179,38 @@ let increment_to_coords pos_bound neg_bound increment =
     (convert_half ( > ) [ 0. ] pos_bound increment)
     (convert_half ( < ) [ 0. ] neg_bound (0. -. increment))
 
-let abs_floor (num : float) : float =
-  if num > 0. then floor num else ceil num
-
 let compute_error (increment : float) : float =
   abs_float (Float.round increment -. increment)
 
-let rec generate_increments range acc line_count selected_increment =
-  let filter_increments n =
+let compute_increment range line_count =
+  let rec generate_increments acc line_count_c =
+    (* possible increment of multiple of 10^n *)
+    let increment_1 = log10 (range /. float_of_int line_count_c) in
+    (* possible increment of multiple of 2(10^n) *)
+    let increment_2 = increment_1 -. log10 2. in
+    (* possible increment of multiple of 5(10^n) *)
+    let increment_5 = increment_1 -. log10 5. in
+    let error_1 = compute_error increment_1 in
+    let error_2 = compute_error increment_2 in
+    let error_5 = compute_error increment_5 in
+    let selected_increment =
+      if error_1 < error_2 && error_1 < error_5 then
+        (10. ** Float.round increment_1, error_1)
+      else if error_2 < error_1 && error_2 < error_5 then
+        (2. *. (10. ** Float.round increment_2), error_2)
+      else (5. *. (10. ** Float.round increment_5), error_5)
+    in
     match selected_increment with
     | increment, error ->
-        if increment < range && increment <> 0. && error <> 0. then
-          generate_increments range (increment :: acc) (n - 1)
-            selected_increment
-        else if increment < range && increment <> 0. then [ increment ]
-        else generate_increments range acc (n - 1) selected_increment
+        if line_count_c <= 2 then
+          if List.length acc = 0 then [ increment ] else acc
+        else if increment < range && increment <> 0. then
+          if error <> 0. then
+            generate_increments (increment :: acc) (line_count_c - 1)
+          else [ increment ]
+        else generate_increments acc (line_count_c - 1)
   in
-  match line_count with 2 -> acc | n -> filter_increments n
-
-let compute_increment range line_count =
-  let increment_base_1 = log10 (range /. float_of_int line_count) in
-  let increment_base_2 = increment_base_1 -. log10 2. in
-  let increment_base_5 = increment_base_1 -. log10 5. in
-  let error_base_1 = compute_error increment_base_1 in
-  let error_base_2 = compute_error increment_base_2 in
-  let error_base_5 = compute_error increment_base_5 in
-  let selected_increment =
-    if error_base_1 < error_base_2 && error_base_1 < error_base_5 then
-      (10. ** Float.round increment_base_1, error_base_1)
-    else if error_base_2 < error_base_1 && error_base_2 < error_base_5
-    then (2. *. (10. ** Float.round increment_base_2), error_base_2)
-    else (5. *. (10. ** Float.round increment_base_5), error_base_5)
-  in
-  List.hd
-    (List.rev
-       (generate_increments range [] line_count selected_increment))
+  List.hd (List.rev (generate_increments [] line_count))
 
 (** [get_grid_pos (x_min, x_max) (y_min, y_max)] returns a tuple of
     float lists [(horiz,vert)], where [horiz] is a list of Y coordinates
@@ -224,9 +221,8 @@ let get_grid_pos
     ((x_min, x_max) : float * float)
     ((y_min, y_max) : float * float) : float list * float list =
   let y_max_line_count = 20 in
-
-  let x_range = abs_floor x_max -. abs_floor x_min in
-  let y_range = abs_floor y_max -. abs_floor y_min in
+  let x_range = x_max -. x_min in
+  let y_range = y_max -. y_min in
   ( increment_to_coords y_max y_min
       (compute_increment y_range y_max_line_count),
     increment_to_coords x_max x_min
