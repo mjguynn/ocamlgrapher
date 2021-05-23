@@ -81,7 +81,6 @@
 {
   font-family: consolas, monospace;
   stroke: rgb(0, 0, 0);
-  transform: scaleY(-1); /* graph itself has "inverted" Y, cancel that out */
   user-select: none;
 }
 .graph_background

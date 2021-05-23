@@ -51,7 +51,7 @@ let process_equation text steps x_b y_b =
     let query_data = graph_data |> List.flatten |> limiter x_b y_b in
     { text; graph_data; query_data }
   with Invalid_argument s ->
-    Io.print_error (s ^ "\n");
+    Io.print_error (text ^ ": " ^ s ^ "\n");
     { text; graph_data = []; query_data = [] }
 
 (** [print_point_list] prints a list of points to stdout, with each

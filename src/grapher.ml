@@ -255,12 +255,14 @@ let make_gridline_step atts spacing f ((lines, labels), count) v =
   in
   ((make_polyline style [] coords :: lines, new_labels), count + 1)
 
-let make_gridlines font_size spacing f lst =
+let make_gridlines font_size spacing ratio f lst =
   let atts =
     [
       ("font-size", ff_float_str font_size);
       (* stroke specified as Safari bugfix *)
       ("stroke-width", ff_float_str (font_size *. 0.05));
+      (* we need to invert the Y scale, and adjust for aspect ratio. 0*)
+      ("transform", Printf.sprintf "scale(%f, -1)" (1. /. ratio));
     ]
   in
   List.fold_left (make_gridline_step atts spacing f) (([], []), 0) lst
@@ -275,30 +277,32 @@ let horiz_gridline_info (x1, x2) font_size v =
   let y = ~-.(v -. (font_size *. 0.35)) in
   (ff_float_str x, ff_float_str y, s, [ (x1, v); (x2, v) ])
 
-let vert_gridline_info (y1, y2) font_size v =
+let vert_gridline_info (y1, y2) font_size ratio v =
   let s = ff_float_str v in
   (* the math here roughly centers the X position on the gridline *)
-  let x = v -. (float_of_int (String.length s) *. font_size *. 0.25) in
+  let x =
+    (v *. ratio) -. (float_of_int (String.length s) *. font_size *. 0.25)
+  in
   (* y offset of font_size places text under the X axis *)
   let y = font_size in
   (ff_float_str x, ff_float_str y, s, [ (v, y1); (v, y2) ])
 
-(** [make_gridlines (x1, x2) (y1, y2)] returns [(ll, la)] where [ll] is
-    an element representing the gridlines and [la] is an element
+(** [make_gridlines (x1, x2) (y1, y2) ratio] returns [(ll, la)] where
+    [ll] is an element representing the gridlines and [la] is an element
     representing the gridline labels of a graph with X bounds (x1, x2)
-    and Y bounds (y1, y2). Requires: [x2 > x1], [y2 > y1], and all
-    inputs are finite.*)
-let make_gridlines x_b y_b =
+    and Y bounds (y1, y2) and aspect ratio [ratio]. Requires: [x2 > x1],
+    [y2 > y1], [+inf > aspect > 0] and all inputs are finite.*)
+let make_gridlines x_b y_b r =
   let no_zero = List.filter (fun v -> not (fpeq v 0.)) in
   let horiz_pre, vert_pre = get_grid_pos x_b y_b in
   let font_size, spacing = (0.03 *. span y_b, 2) in
   let fh = horiz_gridline_info x_b font_size in
-  let fv = vert_gridline_info y_b font_size in
+  let fv = vert_gridline_info y_b font_size r in
   let hlines, hlabels =
-    make_gridlines font_size spacing fh (no_zero horiz_pre)
+    make_gridlines font_size spacing r fh (no_zero horiz_pre)
   in
   let vlines, vlabels =
-    make_gridlines font_size spacing fv (no_zero vert_pre)
+    make_gridlines font_size spacing r fv (no_zero vert_pre)
   in
   ( make_group [] (List.rev_append hlines vlines),
     make_group [] (List.rev_append hlabels vlabels) )
@@ -316,7 +320,9 @@ let make_graph g x w h =
         make_polyline "graph_axis" [] [ (0., y1); (0., y2) ];
       ]
   in
-  let gridlines, gridlabels = make_gridlines g.x_bounds g.y_bounds in
+  let gridlines, gridlabels =
+    make_gridlines g.x_bounds g.y_bounds g.ratio
+  in
   let graph_view =
     make_svg
       [
