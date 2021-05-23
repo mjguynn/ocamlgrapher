@@ -1,10 +1,10 @@
 (** Implementation of module [Io]. *)
 
-(** [style o s] returns the escape code for the virtual text formatting
-    sequence [s] if [o] is a virtual terminal. Otherwise, it returns the
-    empty string. Ex: [style "96" = "\x1b\[96m"]. *)
-let style o s =
-  if Unix.isatty (Unix.descr_of_out_channel o) then "\x1b[" ^ s ^ "m"
+(** [style c s] returns the escape code for the virtual text formatting
+    sequence [s] if channel [c] is a virtual terminal. Otherwise, it
+    returns the empty string. Ex: [style "96" = "\x1b\[96m"]. *)
+let style c s =
+  if Unix.isatty (Unix.descr_of_out_channel c) then "\x1b[" ^ s ^ "m"
   else ""
 
 let print_header ?channel:(c = stdout) s =

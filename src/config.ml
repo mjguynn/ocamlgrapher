@@ -81,8 +81,8 @@ let print_rule_info (rule, desc) =
   in
   let name =
     match rule with
-    | Flag (f, s) -> build_name f s "" ""
-    | Opt (o, s) -> build_name o s "=<...>" " <...>"
+    | Flag (flag, c) -> build_name flag c "" ""
+    | Opt (opt, c) -> build_name opt c "=<...>" " <...>"
   in
   Printf.eprintf "\t%-28s: " name;
   Io.print_detail ~channel:stderr (desc ^ "\n")
@@ -181,7 +181,7 @@ let extract_bounds cmdline (default_min, default_max) dim =
     else
       Error
         ( "Invalid bounds on " ^ dim
-        ^ ", ensure min < max and min, max are finite." )
+        ^ ", ensure min < max & min, max are finite." )
   with Bad_assume s -> Error s
 
 (** [extract_command cmdline] identitifies and returns the command from

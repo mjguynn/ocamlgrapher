@@ -38,7 +38,7 @@ type element =
 (** [output_xml f ?tab_level:tl dom] writes the abstract DOM tree [dom]
     to the file [f] as XML with an indentation of [tl] tabs.*)
 let rec output_xml f ?tab_level:(tl = 0) =
-  let string_of_attributes =
+  let string_of_atts =
     List.fold_left
       (fun acc (k, v) -> Printf.sprintf "%s %s=\"%s\"" acc k v)
       ""
@@ -47,9 +47,9 @@ let rec output_xml f ?tab_level:(tl = 0) =
   function
   | Text s -> Printf.fprintf f "%s" s
   | Comment s -> Printf.fprintf f "%s<!--%s-->" tabs s
-  | Item (e, o) ->
-      Printf.fprintf f "%s<%s %s/>\n" tabs e (string_of_attributes o)
-  | Container (e, o, c) ->
-      Printf.fprintf f "%s<%s %s>\n" tabs e (string_of_attributes o);
-      List.iter (output_xml ~tab_level:(tl + 1) f) c;
-      Printf.fprintf f "%s</%s>\n" tabs e
+  | Item (elem, atts) ->
+      Printf.fprintf f "%s<%s %s/>\n" tabs elem (string_of_atts atts)
+  | Container (elem, atts, children) ->
+      Printf.fprintf f "%s<%s %s>\n" tabs elem (string_of_atts atts);
+      List.iter (output_xml ~tab_level:(tl + 1) f) children;
+      Printf.fprintf f "%s</%s>\n" tabs elem

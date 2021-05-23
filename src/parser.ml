@@ -15,7 +15,7 @@ let get_function_type equation =
 
 let string_token_map =
   List.merge
-    (fun x y -> 0)
+    (fun _ _ -> 0)
     (List.map (fun (k, v) -> (Char.escaped k, v)) Defs.unit_token_map)
     Defs.alpha_token_map
 
@@ -42,8 +42,8 @@ let consume token tokens index =
   if peek_check token tokens index then next tokens index
   else
     Tokenizer.syntax_error
-      ("Expected " ^ string_of_token token ^ " but found "
-      ^ string_of_token (peek tokens index))
+      ( "Expected " ^ string_of_token token ^ " but found "
+      ^ string_of_token (peek tokens index) )
 
 let get_f_output f expr =
   match f with
@@ -88,7 +88,7 @@ let rec parse_elem tokens index input is_function_x =
       match c with
       | Pi -> Float.pi
       | E -> 2.71828182845904523
-      | Number n -> n)
+      | Number n -> n )
   | unknown ->
       Tokenizer.syntax_error
         ("Expected expression but found " ^ string_of_token unknown)

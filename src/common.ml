@@ -12,10 +12,10 @@ type bounds = float * float
 (** [points] represents a list of points. *)
 type points = point list
 
-(** [starts_with str sub] returns whether [str] starts with [sub]. All
-    strings start with the empty string.*)
-let rec starts_with str sub =
-  try String.sub str 0 (String.length sub) = sub
+(** [starts_with str substr] returns whether [str] starts with [substr].
+    All strings start with the empty string.*)
+let rec starts_with str substr =
+  try String.sub str 0 (String.length substr) = substr
   with Invalid_argument s -> false
 
 (** [drop str n] returns [str] without the first [n] characters. If
@@ -25,20 +25,20 @@ let drop str n =
 
 (** [prepend_assoc key x] takes an association list where keys are
     mapped to a list. Then, for all keys = [key], [x] is cons-ed onto
-    the list.*)
+    that key's list.*)
 let prepend_assoc key x =
   List.map (fun (k, v) -> (k, if k = key then x :: v else v))
 
 (** [span (min, max)] is syntactic sugar for [max -. min]. *)
 let span (min, max) = max -. min [@@coverage off]
 
-(** [regular_float f] returns true if [f] is NOT infinite or NaN.*)
-let regular_float f =
-  classify_float f <> FP_infinite && classify_float f <> FP_nan
+(** [regular_float flt] returns true if [f] is not infinite and not NaN.*)
+let regular_float flt =
+  classify_float flt <> FP_infinite && classify_float flt <> FP_nan
 
 (** [valid_bounds (a, b)] returns whether the bounds [a..b] are valid,
     where valid bounds are those bounds where [a] and [b] are *finite*
-    and [a<=b]. *)
+    and [a<b]. *)
 let valid_bounds (a, b) = regular_float a && regular_float b && a < b
 
 (** [in_bounds v (a, b)] returns whether [v] is contained within the
