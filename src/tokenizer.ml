@@ -2,48 +2,6 @@
 
 open Defs
 
-(** [unit_token_map] is a map which maps single-character tokens that
-    are part of the equation grammar to their respective variant
-    representations. *)
-let unit_token_map =
-  [
-    ('=', Operator Equals);
-    ('+', Operator Plus);
-    ('-', Operator Minus);
-    ('*', Operator Times);
-    ('/', Operator Divide);
-    ('^', Operator Exponent);
-    ('(', Parentheses LParen);
-    (')', Parentheses RParen);
-    ('x', Variable X);
-    ('y', Variable Y);
-    ('e', Constant E);
-  ]
-
-(** [alpha_token_map] is a map which maps multi-character tokens that
-    are part of the equation grammar to their respective variant
-    representations. *)
-let alpha_token_map =
-  [
-    ("sqrt", Function Sqrt);
-    ("abs", Function Abs);
-    ("ln", Function Ln);
-    ("log", Function Log);
-    ("pi", Constant Pi);
-    ("sin", Function Sin);
-    ("cos", Function Cos);
-    ("tan", Function Tan);
-    ("sec", Function Sec);
-    ("csc", Function Csc);
-    ("cot", Function Cot);
-    ("arcsin", Function Arcsin);
-    ("arccos", Function Arccos);
-    ("arctan", Function Arctan);
-    ("arcsec", Function Arcsec);
-    ("arccsc", Function Arccsc);
-    ("arccot", Function Arccot);
-  ]
-
 let syntax_error error =
   raise (Invalid_argument ("Syntax error: " ^ error))
 
@@ -81,7 +39,7 @@ let extract_alpha_token str =
   | Some tok -> tok
   | None ->
       syntax_error
-        "unknown character or symbol found. [alpha token assoc failure]"
+        ("found unrecognized character sequence \"" ^ str ^ "\"")
 
 (** [should_accumulate cur acc] is [true] if [cur] is a substring of a
     valid token that should be accumulated in order to tokenize later,
@@ -131,8 +89,7 @@ and update_tokens acc hd tl starting_acc tokens =
     lex tl (acc ^ Char.escaped hd) tokens
   else
     syntax_error
-      "unknown character or symbol found. [non-unit (sub)token assoc \
-       failure]"
+      ("found unexpected character \"" ^ Char.escaped hd ^ "\"")
 
 (** [lex_non_empty acc hd tl tokens] lexes [hd] and [tl] appropriately
     depending on what type of tokens they contain. *)
@@ -156,7 +113,7 @@ and process_unit_token hd tl tokens =
       lex tl "" tokens
   | None ->
       syntax_error
-        "unknown character or symbol found. [unit token assoc failure]"
+        ("found unrecognized character \"" ^ Char.escaped hd ^ "\"")
 
 let reverse_token_list is_rev tokens =
   if is_rev then List.rev tokens else tokens

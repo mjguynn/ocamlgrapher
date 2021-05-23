@@ -55,6 +55,48 @@ type token =
   | Function of m_function
   | EOF
 
+(** [unit_token_map] is a map which maps single-character tokens that
+    are part of the equation grammar to their respective variant
+    representations. *)
+let unit_token_map =
+  [
+    ('=', Operator Equals);
+    ('+', Operator Plus);
+    ('-', Operator Minus);
+    ('*', Operator Times);
+    ('/', Operator Divide);
+    ('^', Operator Exponent);
+    ('(', Parentheses LParen);
+    (')', Parentheses RParen);
+    ('x', Variable X);
+    ('y', Variable Y);
+    ('e', Constant E);
+  ]
+
+(** [alpha_token_map] is a map which maps multi-character tokens that
+    are part of the equation grammar to their respective variant
+    representations. *)
+let alpha_token_map =
+  [
+    ("sqrt", Function Sqrt);
+    ("abs", Function Abs);
+    ("ln", Function Ln);
+    ("log", Function Log);
+    ("pi", Constant Pi);
+    ("sin", Function Sin);
+    ("cos", Function Cos);
+    ("tan", Function Tan);
+    ("sec", Function Sec);
+    ("csc", Function Csc);
+    ("cot", Function Cot);
+    ("arcsin", Function Arcsin);
+    ("arccos", Function Arccos);
+    ("arctan", Function Arctan);
+    ("arcsec", Function Arcsec);
+    ("arccsc", Function Arccsc);
+    ("arccot", Function Arccot);
+  ]
+
 (** [function_type] is either a function in terms of x, [FunctionX], a
     function in terms of y, [FunctionY], or an unknown function
     [FunctionUnknown], and carries the corresponding tokenized equation. *)
