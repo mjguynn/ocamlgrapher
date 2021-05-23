@@ -17,7 +17,7 @@ let limiter x_b y_b points =
 let diff_signs (a : float) (b : float) : bool =
   let pos_to_neg = a >= 0. && b <= 0. in
   let neg_to_pos = a <= 0. && b >= 0. in
-  if pos_to_neg || neg_to_pos then true else false
+  pos_to_neg || neg_to_pos
 
 (* helper to estimate the roots *)
 let rec root_est_help
@@ -30,8 +30,8 @@ let rec root_est_help
       if Common.fpeq y 0. then
         match t with
         | [] -> root_est_help (x, y) (x :: acc) t
-        | (x_next, y_next) :: tt ->
-            root_est_help (x_next, y_next) (x :: acc) tt
+        | (x_next, y_next) :: t' ->
+            root_est_help (x_next, y_next) (x :: acc) t'
       else if diff_signs ycur y then
         root_est_help (x, y) ((0.5 *. (x +. xcur)) :: acc) t
       else root_est_help (x, y) acc t
