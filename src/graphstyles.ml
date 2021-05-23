@@ -20,11 +20,10 @@ type t = {
     OK, then it returns [Ok s]; otherwise, it returns an [Error e] where
     [e] is an error message about what part of the RI was violated.*)
 let rep_ok s =
-  let check_var str = function
-    | Error e -> Error e
-    | Ok s ->
+  let check_var str res =
+    Result.bind res (fun s ->
         if List.mem_assoc str s.variables then Ok s
-        else Error ("Stylesheet missing required variable " ^ str)
+        else Error ("Stylesheet missing required variable " ^ str))
   in
   Ok s
   |> check_var "header-height"
