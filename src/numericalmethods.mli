@@ -1,8 +1,8 @@
-(** Methods which analyze and transform lists of points. *)
+(** Methods which analyze, transform, and/or create lists of points. *)
 open Common
 
 (** [Invalid_bounds] means that the bounds passed to a function are
-    invalid, such as if you passed (a1, a2) and a1 >= a2.*)
+    invalid, such as if you passed [(a1, a2)] and [a1 >= a2].*)
 exception Invalid_bounds
 
 (** [No_points] means that a function requiring a list of one or more
@@ -10,9 +10,9 @@ exception Invalid_bounds
 exception No_points
 
 (** [limiter (x1, x2) (y1, y2) points] returns [points] but without any
-    point (x,y) where (x < x1), (x > x2), (y < y1), or (y > y2). Raises
-    [Invalid_bounds] if the lower limit is strictly greater than upper
-    limit. *)
+    point [(x,y)] where [(x < x1)], [(x > x2)], [(y < y1)], or
+    [(y > y2)]. Raises [Invalid_bounds] if the lower limit is strictly
+    greater than upper limit. *)
 val limiter : bounds -> bounds -> points -> points
 
 (** [root_estimator fun_output] estimates the roots of the function from

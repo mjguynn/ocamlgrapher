@@ -6,8 +6,8 @@
     [c=stdout].*)
 val print_header : ?channel:out_channel -> string -> unit
 
-(** [print_detail ?channel:c s] prints [s] to channel [c]. Less
-    noticable styling is used if [c] is a virtual terminal. By default,
+(** [print_detail ?channel:c s] prints [s] to channel [c]. Muted, dull
+    styling is used if [c] is a virtual terminal. By default,
     [c=stdout].*)
 val print_detail : ?channel:out_channel -> string -> unit
 

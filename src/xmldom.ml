@@ -21,7 +21,7 @@ type attribute = string * string
     A [Item t atts] represents a DOM "item" -- that is, a DOM element
     with tag [t] and attributes [atts] which cannot contain other
     elements. For example, [Item "img" \[("src", "here.png")\]]
-    corresponds to <img src="here.png" /> in XML.
+    corresponds to <code><img src="here.png" /></code> in XML.
 
     An [Container t atts elems] represents a DOM "container" -- that is,
     a DOM element with tag [t] and attributes [atts] which may contain

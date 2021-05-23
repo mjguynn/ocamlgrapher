@@ -112,7 +112,7 @@ let help errc =
     Otherwise, returns an [Error] result with an error message.*)
 let extract_equations cmdline =
   match arguments cmdline with
-  | [] -> Error "No equation provided (provide exactly one)"
+  | [] -> Error "No equation provided"
   | eqs -> Ok (List.rev eqs)
 
 (** [extract_output cmdline]: if one output file [f] was specified on

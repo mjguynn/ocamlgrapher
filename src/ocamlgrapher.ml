@@ -1,4 +1,5 @@
-(** Entry point for ocamlgrapher. *)
+(** Contains the entry point for ocamlgrapher and high-level
+    functionality relating to the operation of the program. *)
 
 open Config
 open Common
@@ -8,11 +9,12 @@ open Numericalmethods
     formula is specified by [text] using the rules defined in
     [Tokenizer] and [Parser]. [graph_data] is a list of point lists,
     where each point list represents a single continuous segment of the
-    function evaluated over an arbitrary domin, where connecting one
-    point to the next point in the list with a line would form a
-    reasonable approximation to the function. [query_data] is a list of
-    points satisfying [graph_data] on the same (arbitary) domain but
-    with all points outside a given arbitrary range discarded.*)
+    function evaluated over an arbitrary domain or range, where
+    connecting one point to the next point in the list with a line would
+    form a reasonable approximation to the function. [query_data] is a
+    list of points satisfying [graph_data] on the same (arbitary)
+    domain/range but with all points outside of the given bounds
+    discarded.*)
 type equation = {
   text : string;
   graph_data : points list;
@@ -86,7 +88,7 @@ let print_extrema eq =
   eq.query_data |> min_output |> print_point_list
 
 (** Executes OCamlgrapher using [config]. *)
-let main_grapher (config : Config.t) =
+let main_execute (config : Config.t) =
   let x_b, y_b = (x_bounds config, y_bounds config) in
   let processed =
     equations config
@@ -120,6 +122,6 @@ let main () =
       prerr_newline ();
       (* don't concat a "\n" onto the above string -- prerr_newline
          flushes output, which is required for correct ordering here*)
-      main_grapher cfg
+      main_execute cfg
 
 let () = main ()
