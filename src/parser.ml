@@ -13,6 +13,23 @@ let get_function_type equation =
   | FunctionY _ -> false
   | _ -> failwith "impossible"
 
+let string_token_map =
+  List.merge
+    (fun x y -> 0)
+    (List.map (fun (k, v) -> (Char.escaped k, v)) Defs.unit_token_map)
+    Defs.alpha_token_map
+
+let string_of_token token =
+  let rec get_key token list =
+    match list with
+    | (k, v) :: t -> if token = v then k else get_key token t
+    | [] -> failwith "token not found"
+  in
+  match token with
+  | Constant (Number n) -> "\"" ^ string_of_float n ^ "\""
+  | EOF -> "end of file"
+  | _ -> "\"" ^ get_key token string_token_map ^ "\""
+
 let peek tokens index =
   if !index < Array.length tokens then tokens.(!index) else EOF
 
@@ -25,7 +42,8 @@ let consume token tokens index =
   if peek_check token tokens index then next tokens index
   else
     Tokenizer.syntax_error
-      "expected character not found. [consume failure]"
+      ("expected " ^ string_of_token token ^ " but found "
+      ^ string_of_token (peek tokens index))
 
 let get_f_output f expr =
   match f with
@@ -71,9 +89,9 @@ let rec parse_elem tokens index input is_function_x =
       | Pi -> Float.pi
       | E -> 2.71828182845904523
       | Number n -> n)
-  | _ ->
+  | unknown ->
       Tokenizer.syntax_error
-        "expected character not found. [parse elem failure]"
+        ("expected equation term but found " ^ string_of_token unknown)
 
 and parse_expr tokens index input is_function_x =
   let term = ref (parse_term tokens index input is_function_x) in
