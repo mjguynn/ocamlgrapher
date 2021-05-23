@@ -17,7 +17,7 @@ let limiter x_b y_b points =
 let diff_signs (a : float) (b : float) : bool =
   let pos_to_neg = a >= 0. && b <= 0. in
   let neg_to_pos = a <= 0. && b >= 0. in
-  if pos_to_neg || neg_to_pos then true else false
+  pos_to_neg || neg_to_pos
 
 (* helper to estimate the roots *)
 let rec root_est_help
