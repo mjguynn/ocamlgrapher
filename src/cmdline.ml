@@ -37,8 +37,8 @@ type t = {
     [is_short_rule] would return false. *)
 let is_short_rule c =
   List.find_opt (function
-    | Flag (_, Some s) -> s = c
-    | Opt (_, Some s) -> s = c
+    | Flag (_, Some c') -> c = c'
+    | Opt (_, Some c') -> c = c'
     | _ -> false)
 
 (** [parse_short_arg token args acc] takes the current command line
