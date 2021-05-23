@@ -21,34 +21,33 @@ type equation = {
   query_data : points;
 }
 
+(** [should_discard x_b y_b prev (x, y) next] returns whether a point
+    should be discarded from the list of graphed points. It returns true
+    if [x] or [y] is inf/nan OR if [x] is outside of [x_b] or [y] is
+    outside of [y_b] and [prev] and [next] are outside of [x_b] X [y_b].*)
+let should_discard x_b y_b prev (x, y) next =
+  let oob = point_oob x_b y_b in
+  (not (regular_float x && regular_float y))
+  || (oob prev && oob (Some (x, y)) && oob next)
+
 (** [process_equation text samples x_bounds y_bounds] produces the
     [equation] object specified by [text] and evaluated with [steps]
     samples over [x_bounds] and [y_bounds]. Requires: [x_bounds] an
     [y_bounds] are valid bounds.*)
 let process_equation text steps x_b y_b =
-  (* split when: 1. number is irregular (inf/nan) OR 2. number is
-     outside the range and the preceding and following numbers are also
-     both outside the range *)
-  let should_split p (x, y) n =
-    let oob = point_oob x_b y_b in
-    (not (regular_float x && regular_float y))
-    || (oob p && oob (Some (x, y)) && oob n)
-  in
   try
-    let bounds, f =
+    let domain, make_points =
       match Tokenizer.tokenize text with
-      | FunctionX _ as toks ->
-          (x_b, fun x -> (x, Parser.compute_f toks x))
-      | FunctionY _ as toks ->
-          (y_b, fun y -> (Parser.compute_f toks y, y))
+      | FunctionX _ as tl -> (x_b, fun x -> (x, Parser.compute_f tl x))
+      | FunctionY _ as tl -> (y_b, fun y -> (Parser.compute_f tl y, y))
       | FunctionUnknown _ ->
-          Io.print_error
-            ("Could not understand the equation " ^ text ^ "\n");
+          Io.print_error ("Could not parse " ^ text ^ "\n");
           exit 1
     in
     let graph_data =
-      let computed = make_samples bounds steps |> List.map f in
-      split should_split computed
+      make_samples domain steps
+      |> List.map make_points
+      |> split (should_discard x_b y_b)
     in
     let query_data = graph_data |> List.flatten |> limiter x_b y_b in
     { text; graph_data; query_data }
@@ -87,7 +86,22 @@ let print_extrema eq =
   Io.print_header ("Approximate minimums for " ^ eq.text ^ ": \n");
   eq.query_data |> min_output |> print_point_list
 
-(** Executes OCamlgrapher using [config]. *)
+(** [make_graph config eqs] creates an SVG graph of the equations in
+    [eqs] using the program configuration [config] and prints the
+    filename of the resulting graph to [stdout].*)
+let make_graph config eqs =
+  List.fold_left
+    (fun graph eq -> Grapher.add_plot eq.text eq.graph_data graph)
+    (Grapher.create (x_bounds config) (y_bounds config) (ratio config))
+    eqs
+  |> Grapher.to_svg (output_file config);
+  (* flush stderr stream, required for correct ordering of the print
+     below if the user input an equation with an error *)
+  flush stderr;
+  (* print the output file to stdout so the user can pipe it *)
+  print_endline (output_file config)
+
+(** [main_execute config] executes OCamlgrapher using [config]. *)
 let main_execute (config : Config.t) =
   let x_b, y_b = (x_bounds config, y_bounds config) in
   let processed =
@@ -95,15 +109,7 @@ let main_execute (config : Config.t) =
     |> List.map (fun t -> process_equation t (steps config) x_b y_b)
   in
   match command config with
-  | Graph ->
-      List.fold_left
-        (fun g eq -> Grapher.add_plot eq.text eq.graph_data g)
-        (Grapher.create (x_bounds config) (y_bounds config)
-           (ratio config))
-        processed
-      |> Grapher.to_svg (output_file config);
-      (* print the output file to stdout so the user can pipe it *)
-      print_endline (output_file config)
+  | Graph -> make_graph config processed
   | Points -> List.iter print_points processed
   | Extrema -> List.iter print_extrema processed
   | Roots -> List.iter print_roots processed
