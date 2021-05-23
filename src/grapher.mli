@@ -23,5 +23,8 @@ val add_plot : string -> Common.points list -> t -> t
 (** [to_svg filename graph] outputs an SVG representing [graph] to
     [filename]. [filename] represents the name of the output SVG file,
     including extension. If any errors occur (for example, write access
-    denied) an unspecified exception will be thrown.*)
+    denied) an unspecified exception will be thrown. Requires that
+    [graph_styles.css] exists at the root of one of the program's
+    default search paths (i.e. in the same directory as the binary) and
+    is recognizable by [graphstyles.ml]. *)
 val to_svg : string -> t -> unit
