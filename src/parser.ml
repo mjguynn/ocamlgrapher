@@ -27,7 +27,7 @@ let string_of_token token =
   in
   match token with
   | Constant (Number n) -> "\"" ^ string_of_float n ^ "\""
-  | EOF -> "end of file"
+  | EOF -> "end of input"
   | _ -> "\"" ^ get_key token string_token_map ^ "\""
 
 let peek tokens index =
@@ -42,7 +42,7 @@ let consume token tokens index =
   if peek_check token tokens index then next tokens index
   else
     Tokenizer.syntax_error
-      ("expected " ^ string_of_token token ^ " but found "
+      ("Expected " ^ string_of_token token ^ " but found "
       ^ string_of_token (peek tokens index))
 
 let get_f_output f expr =
@@ -91,7 +91,7 @@ let rec parse_elem tokens index input is_function_x =
       | Number n -> n)
   | unknown ->
       Tokenizer.syntax_error
-        ("expected equation term but found " ^ string_of_token unknown)
+        ("Expected expression but found " ^ string_of_token unknown)
 
 and parse_expr tokens index input is_function_x =
   let term = ref (parse_term tokens index input is_function_x) in

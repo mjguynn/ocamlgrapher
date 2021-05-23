@@ -3,7 +3,7 @@
 open Defs
 
 let syntax_error error =
-  raise (Invalid_argument ("Syntax error: " ^ error))
+  raise (Invalid_argument ("Syntax Error: " ^ error))
 
 (** [is_numerical_subtoken ch] is [true] if [ch] is a numerical
     character, and [false] otherwise. *)
@@ -37,9 +37,7 @@ let is_alpha_token ch =
 let extract_alpha_token str =
   match List.assoc_opt str alpha_token_map with
   | Some tok -> tok
-  | None ->
-      syntax_error
-        ("found unrecognized character sequence \"" ^ str ^ "\"")
+  | None -> syntax_error ("Unknown character sequence \"" ^ str ^ "\"")
 
 (** [should_accumulate cur acc] is [true] if [cur] is a substring of a
     valid token that should be accumulated in order to tokenize later,
@@ -87,9 +85,7 @@ and update_tokens acc hd tl starting_acc tokens =
   end
   else if should_accumulate hd starting_acc then
     lex tl (acc ^ Char.escaped hd) tokens
-  else
-    syntax_error
-      ("found unexpected character \"" ^ Char.escaped hd ^ "\"")
+  else syntax_error ("Unexpected character \"" ^ Char.escaped hd ^ "\"")
 
 (** [lex_non_empty acc hd tl tokens] lexes [hd] and [tl] appropriately
     depending on what type of tokens they contain. *)
@@ -112,8 +108,7 @@ and process_unit_token hd tl tokens =
       add_token tok tokens;
       lex tl "" tokens
   | None ->
-      syntax_error
-        ("found unrecognized character \"" ^ Char.escaped hd ^ "\"")
+      syntax_error ("Unknown character \"" ^ Char.escaped hd ^ "\"")
 
 let reverse_token_list is_rev tokens =
   if is_rev then List.rev tokens else tokens
