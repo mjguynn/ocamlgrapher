@@ -10,8 +10,9 @@ open OUnit2
     {{:../tests/test_numericalmethods.ml} test_numericalmethods.ml}),
     and most functions in [Cmdline] were tested indirectly by testing
     [Config]. Whenever something was indirectly tested, we ensured that
-    we had 100% code coverage for it. We used a mixture of opaque-box
-    and glass-box testing.
+    we had 100% code coverage for it. We used a mixture of black-box and
+    white-box testing. We also employed regression testing -- if a test
+    case made our code break, we permanently added it to our test suite.
 
     Certain modules & functions are not tested by this test suite. These
     are:
@@ -25,14 +26,14 @@ open OUnit2
       because their expected results are only required to look correct.
       By design, these two modules have free reign as to how the SVG
       file is written and structured. As an example, currently the
-      grapher groups together all plot lines into a single
-      <code><g></code> element. It could also emit each plot line
-      individually. The visual result would be identical, but the SVG
-      would be structured differently, causing the unit test to fail. If
-      we had wrote equality based tests then we would have to spent a
-      lot of time updating our tests to address changes like these. We
-      don't believe that this is an efficient use of time compared to
-      performing more manual testing.
+      grapher groups together all plot lines into a single <g> element.
+      But it could also emit each plot line individually. The visual
+      result would be identical, but the SVG would be structured
+      differently, causing the unit test to fail. If we had wrote
+      equality based tests then we would have to spent a lot of time
+      updating our tests to address changes like these. We don't believe
+      that this is an efficient use of time compared to performing more
+      manual testing.
     - [Io]: Most functions in [Io] create stylized program output. Their
       specifications are deliberately very vague in order to allow us
       the freedom to freely change how the text appears. For example,
