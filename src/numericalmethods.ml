@@ -27,12 +27,12 @@ let rec root_est_help
   match output_list with
   | [] -> acc
   | (x, y) :: t ->
-      if Common.fpeq y 0. then refactor t acc x y
+      if Common.fpeq y 0. then perfect_root_help t acc x y
       else if diff_signs ycur y then
         root_est_help (x, y) ((0.5 *. (x +. xcur)) :: acc) t
       else root_est_help (x, y) acc t
 
-and refactor t acc x y =
+and perfect_root_help t acc x y =
   match t with
   | [] -> root_est_help (x, y) (x :: acc) t
   | (x_next, y_next) :: t' ->
