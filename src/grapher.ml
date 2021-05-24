@@ -174,12 +174,9 @@ let increment_to_coords pos_bound neg_bound increment =
             bound increment_c
     | _ -> failwith "Invalid list supplied"
   in
-  List.sort_uniq
-    (fun x y -> int_of_float (x -. y))
-    (List.merge
-       (fun x y -> 0)
-       (convert_half ( > ) [ 0. ] pos_bound increment)
-       (convert_half ( < ) [ 0. ] neg_bound (0. -. increment)))
+  convert_half ( < ) [ 0. ] neg_bound (0. -. increment)
+  @ (convert_half ( > ) [ 0. ] pos_bound increment |> List.rev)
+  |> List.sort_uniq Stdlib.compare
 
 let compute_error (increment : float) : float =
   abs_float (Float.round increment -. increment)
