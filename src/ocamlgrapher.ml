@@ -41,8 +41,7 @@ let process_equation text steps x_b y_b =
       | FunctionX _ as tl -> (x_b, fun x -> (x, Parser.compute_f tl x))
       | FunctionY _ as tl -> (y_b, fun y -> (Parser.compute_f tl y, y))
       | FunctionUnknown _ ->
-          Io.print_error ("Could not parse " ^ text ^ "\n");
-          exit 1
+          Tokenizer.syntax_error "Function of unknown variable"
     in
     let graph_data =
       make_samples domain steps
