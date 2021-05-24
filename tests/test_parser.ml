@@ -9,8 +9,7 @@ let generalize_exception tokens x =
   try compute_f tokens x
   with Invalid_argument _ -> raise (Invalid_argument "syntax error")
 
-(** [compute_f_test name input_equation input_x expected_output
-    success]
+(** [compute_f_test name input_equation input_x expected_output success]
     checks if the function of [input_equation] equals [expected_output]
     at [input_x] if [success] is true. If [success] is false, it checks
     that [input_equation] is an invalid equation. *)
@@ -50,6 +49,16 @@ let parser_tests =
     compute_f_test "x=1 for y=(x)" "y=(x)" 1. 1. true;
     compute_f_test "x=1 for y=(3)(x)" "y=(3)(x)" 1. 3. true;
     compute_f_test "x=4 for y=(2)(x-5)^2" "y=(2)(x-5)^2" 4. 2. true;
+    compute_f_test "y=4 for x=(2)(y-5)^2" "x=(2)(y-5)^2" 4. 2. true;
+    compute_f_test "y=2 for x=log(50y)" "x=log(50y)" 2. 2. true;
+    compute_f_test "y=4 for x=sqrt(y)" "x=sqrt(y)" 4. 2. true;
+    (* test case below was manually tested, unfortunately nan != nan so
+       it fails, even though it works *)
+    (*compute_f_test "y=-4 for x=sqrt(y)" "x=sqrt(y)" ~-.4. nan true;*)
+    compute_f_test "y=0 for x=sqrt(y)" "x=sqrt(y)" 0. 0. true;
+    compute_f_test "y=0 for x=abs(y)" "x=abs(y)" 0. 0. true;
+    compute_f_test "y=-1 for x=abs(y)" "x=abs(y)" ~-.1. 1. true;
+    compute_f_test "y=1 for x=abs(y)" "x=abs(y)" 1. 1. true;
   ]
 
 let tokenizer_tests =

@@ -5,13 +5,13 @@ open Defs
 let get_tokens equation =
   match equation with
   | FunctionX lst | FunctionY lst -> Array.of_list lst
-  | _ -> failwith "impossible"
+  | _ -> ( failwith "Impossible" [@coverage off] )
 
 let get_function_type equation =
   match equation with
   | FunctionX _ -> true
   | FunctionY _ -> false
-  | _ -> failwith "impossible"
+  | _ -> ( failwith "Impossible" [@coverage off] )
 
 let string_token_map =
   List.merge
