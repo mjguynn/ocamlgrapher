@@ -5,13 +5,13 @@ open Defs
 let get_tokens equation =
   match equation with
   | FunctionX lst | FunctionY lst -> Array.of_list lst
-  | _ -> ( failwith "Impossible" [@coverage off] )
+  | _ -> failwith "Impossible" [@coverage off]
 
 let get_function_type equation =
   match equation with
   | FunctionX _ -> true
   | FunctionY _ -> false
-  | _ -> ( failwith "Impossible" [@coverage off] )
+  | _ -> failwith "Impossible" [@coverage off]
 
 let string_token_map =
   List.merge
@@ -23,7 +23,7 @@ let string_of_token token =
   let rec get_key token list =
     match list with
     | (k, v) :: t -> if token = v then k else get_key token t
-    | [] -> failwith "token not found"
+    | [] -> failwith "token not found" [@coverage off]
   in
   match token with
   | Constant (Number n) -> "\"" ^ string_of_float n ^ "\""
@@ -42,8 +42,8 @@ let consume token tokens index =
   if peek_check token tokens index then next tokens index
   else
     Tokenizer.syntax_error
-      ( "Expected " ^ string_of_token token ^ " but found "
-      ^ string_of_token (peek tokens index) )
+      ("Expected " ^ string_of_token token ^ " but found "
+      ^ string_of_token (peek tokens index))
 
 let get_f_output f expr =
   match f with
@@ -88,7 +88,7 @@ let rec parse_elem tokens index input is_function_x =
       match c with
       | Pi -> Float.pi
       | E -> 2.71828182845904523
-      | Number n -> n )
+      | Number n -> n)
   | unknown ->
       Tokenizer.syntax_error
         ("Expected expression but found " ^ string_of_token unknown)

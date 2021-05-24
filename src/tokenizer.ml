@@ -122,7 +122,7 @@ let determine_function_type is_rev tokens =
       | Variable Y, Operator Equals ->
           FunctionX (reverse_token_list is_rev tokens)
       | _ -> FunctionUnknown (reverse_token_list is_rev tokens))
-  | _ -> failwith "impossible"
+  | _ -> FunctionUnknown (reverse_token_list is_rev tokens)
 
 let tokenize equation_str =
   let tokens = ref [] in
