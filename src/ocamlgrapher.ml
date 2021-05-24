@@ -41,7 +41,9 @@ let process_equation text steps x_b y_b =
       | FunctionX _ as tl -> (x_b, fun x -> (x, Parser.compute_f tl x))
       | FunctionY _ as tl -> (y_b, fun y -> (Parser.compute_f tl y, y))
       | FunctionUnknown _ ->
-          Tokenizer.syntax_error "Function of unknown variable"
+          Tokenizer.syntax_error
+            "Function of unknown variable. Please note that implicit \
+             functions are not supported."
     in
     let graph_data =
       make_samples domain steps
