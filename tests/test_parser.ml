@@ -27,6 +27,10 @@ let parser_tests =
   [
     compute_f_test "parse fail for y=3+x*3+" "y=3+x*3+" 0. 0. false;
     compute_f_test "parse fail for y=sin3" "y=sin3" 0. 0. false;
+    compute_f_test "parse fail for y=test" "y=test" 0. 0. false;
+    compute_f_test "parse fail for y=)(" "y=)(" 0. 0. false;
+    compute_f_test "parse fail for y=a(" "y=a(" 0. 0. false;
+    compute_f_test "parse fail for y=g" "y=g" 0. 0. false;
     compute_f_test "x=3 for x^2=y" "x^2=y" 3. 9. true;
     compute_f_test "y=3 for y^2=x" "y^2=x" 3. 9. true;
     compute_f_test "x=0 for 3^x=y" "3^x=y" 0. 1. true;
@@ -91,6 +95,8 @@ let tokenizer_tests =
     tokenize_test "Variable times number" "y*23425"
       (FunctionUnknown
          [ Variable Y; Operator Times; Constant (Number 23425.) ]);
+    tokenize_test "Function followed by number" "sin22"
+      (FunctionUnknown [ Function Sin; Constant (Number 22.) ]);
     tokenize_test "Single variable" "y" (FunctionUnknown [ Variable Y ]);
     tokenize_test
       "Implicit multiplication with constants and variables 1" "pix"

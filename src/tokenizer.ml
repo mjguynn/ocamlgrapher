@@ -51,8 +51,7 @@ let should_accumulate cur acc =
     should be tokenized into its variant representation, and [false]
     otherwise. *)
 let should_lex cur acc =
-  (is_numerical_subtoken cur && is_starting_alpha_subtoken acc)
-  || (is_alpha_subtoken cur && is_numerical_subtoken acc)
+  (is_alpha_subtoken cur && is_numerical_subtoken acc)
   || (is_unit_token cur && is_numerical_subtoken acc)
 
 (** [add_token token tokens] updated [tokens] with [token] appended to
@@ -121,7 +120,7 @@ let determine_function_type is_rev tokens =
           FunctionY (reverse_token_list is_rev tokens)
       | Variable Y, Operator Equals ->
           FunctionX (reverse_token_list is_rev tokens)
-      | _ -> FunctionUnknown (reverse_token_list is_rev tokens) )
+      | _ -> FunctionUnknown (reverse_token_list is_rev tokens))
   | _ -> FunctionUnknown (reverse_token_list is_rev tokens)
 
 let tokenize equation_str =
