@@ -9,13 +9,14 @@ let syntax_error error =
     character, and [false] otherwise. *)
 let is_numerical_subtoken ch =
   let code = Char.code ch in
-  code = 46 || (code < 58 && code > 47)
+  code = Char.code '.'
+  || (Char.code '0' <= code && code <= Char.code '9')
 
 (** [is_alpha_subtoken ch] is [true] if [ch] is a valid non-numerical
     character, and [false] otherwise. *)
 let is_alpha_subtoken ch =
   let code = Char.code ch in
-  code < 123 && code > 96
+  Char.code 'a' <= code && code <= Char.code 'z'
 
 (** [is_starting_alpha_subtoken ch] is [true] if [ch] is a substring of
     a valid key contained in [alpha_token_map], and [false] otherwise. *)
@@ -120,7 +121,7 @@ let determine_function_type is_rev tokens =
           FunctionY (reverse_token_list is_rev tokens)
       | Variable Y, Operator Equals ->
           FunctionX (reverse_token_list is_rev tokens)
-      | _ -> FunctionUnknown (reverse_token_list is_rev tokens))
+      | _ -> FunctionUnknown (reverse_token_list is_rev tokens) )
   | _ -> FunctionUnknown (reverse_token_list is_rev tokens)
 
 let tokenize equation_str =
