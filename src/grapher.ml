@@ -246,7 +246,7 @@ let ff_float_str fl =
 let make_gridline_step atts spacing f ((lines, labels), count) v =
   let x, y, text, coords = f v in
   let new_labels, style =
-    if count mod spacing = 0 then
+    if count mod spacing = 0 && v <> 0. then
       ( make_text "graph_gridline_label" atts x y text :: labels,
         "graph_gridline_bold" )
     else (labels, "graph_gridline")
@@ -291,16 +291,15 @@ let vert_gridline_info (y1, y2) font_size ratio v =
     and Y bounds (y1, y2) and aspect ratio [ratio]. Requires: [x2 > x1],
     [y2 > y1], [+inf > aspect > 0] and all inputs are finite.*)
 let make_gridlines x_b y_b r =
-  let no_zero = List.filter (fun v -> not (fpeq v 0.)) in
   let horiz_pre, vert_pre = get_grid_pos x_b y_b in
   let font_size, spacing = (0.03 *. span y_b, 2) in
   let f_h = horiz_gridline_info x_b font_size in
   let f_v = vert_gridline_info y_b font_size r in
   let hlines, hlabels =
-    make_gridlines font_size spacing r f_h (no_zero horiz_pre)
+    make_gridlines font_size spacing r f_h horiz_pre
   in
   let vlines, vlabels =
-    make_gridlines font_size spacing r f_v (no_zero vert_pre)
+    make_gridlines font_size spacing r f_v vert_pre
   in
   ( make_group [] (List.rev_append hlines vlines),
     make_group [] (List.rev_append hlabels vlabels) )
