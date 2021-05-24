@@ -5,8 +5,8 @@ open Parser
 let tokenize_test name input exp_output =
   name >:: fun _ -> assert_equal (tokenize input) exp_output
 
-let generalize_exception tokens x =
-  try compute_f tokens x
+let generalize_exception input_equation x =
+  try compute_f (tokenize input_equation) x
   with Invalid_argument _ -> raise (Invalid_argument "syntax error")
 
 (** [compute_f_test name input_equation input_x expected_output success]
@@ -21,7 +21,7 @@ let compute_f_test name input_equation input_x expected_output success =
       ~printer:string_of_float
   else
     assert_raises (Invalid_argument "syntax error") (fun () ->
-        generalize_exception (tokenize input_equation) input_x)
+        generalize_exception input_equation input_x)
 
 let parser_tests =
   [
@@ -74,6 +74,7 @@ let parser_tests =
       0. true;
     compute_f_test "x=0 for y=cot(x)" "y=cot(x)" 0. infinity true;
     compute_f_test "x=0 for y=csc(x+pi/2)" "y=csc(x+pi/2)" 0. 1. true;
+    compute_f_test "parse fail for y=test" "y=test" 0. 0. false;
   ]
 
 let tokenizer_tests =
