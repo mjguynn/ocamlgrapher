@@ -26,7 +26,9 @@ let compute_f_test name input_equation input_x expected_output success =
 let parser_tests =
   [
     compute_f_test "parse fail for y=3+x*3+" "y=3+x*3+" 0. 0. false;
+    compute_f_test "parse fail for y=sin3" "y=sin3" 0. 0. false;
     compute_f_test "x=3 for x^2=y" "x^2=y" 3. 9. true;
+    compute_f_test "y=3 for y^2=x" "y^2=x" 3. 9. true;
     compute_f_test "x=0 for 3^x=y" "3^x=y" 0. 1. true;
     compute_f_test "x=2 for y=-3^x" "y=-3^x" 2. (-9.) true;
     compute_f_test "x=9 for y=x+3+pi" "y=x+3+pi" 9. (12. +. Float.pi)
@@ -59,6 +61,19 @@ let parser_tests =
     compute_f_test "y=0 for x=abs(y)" "x=abs(y)" 0. 0. true;
     compute_f_test "y=-1 for x=abs(y)" "x=abs(y)" ~-.1. 1. true;
     compute_f_test "y=1 for x=abs(y)" "x=abs(y)" 1. 1. true;
+    compute_f_test "x=0 for y=cos(x)" "y=cos(x)" 0. 1. true;
+    compute_f_test "x=0 for y=tan(x)" "y=tan(x)" 0. 0. true;
+    compute_f_test "x=0 for y=sec(x)" "y=sec(x)" 0. 1. true;
+    compute_f_test "x=0 for y=arcsin(x)" "y=arcsin(x)" 0. 0. true;
+    compute_f_test "x=1 for y=arccos(x)" "y=arccos(x)" 1. 0. true;
+    compute_f_test "x=0 for y=arctan(x)" "y=arctan(x)" 0. 0. true;
+    compute_f_test "x=1 for y=arcsec(x)" "y=arcsec(x)" 1. 0. true;
+    compute_f_test "x=infinity for y=arccsc(x)" "y=arccsc(x)" infinity
+      0. true;
+    compute_f_test "x=infinity for y=arccot(x)" "y=arccot(x)" infinity
+      0. true;
+    compute_f_test "x=0 for y=cot(x)" "y=cot(x)" 0. infinity true;
+    compute_f_test "x=0 for y=csc(x+pi/2)" "y=csc(x+pi/2)" 0. 1. true;
   ]
 
 let tokenizer_tests =
@@ -75,6 +90,7 @@ let tokenizer_tests =
     tokenize_test "Variable times number" "y*23425"
       (FunctionUnknown
          [ Variable Y; Operator Times; Constant (Number 23425.) ]);
+    tokenize_test "Single variable" "y" (FunctionUnknown [ Variable Y ]);
     tokenize_test
       "Implicit multiplication with constants and variables 1" "pix"
       (FunctionUnknown [ Constant Pi; Variable X ]);

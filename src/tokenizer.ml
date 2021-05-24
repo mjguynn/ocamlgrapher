@@ -52,8 +52,7 @@ let should_accumulate cur acc =
 let should_lex cur acc =
   (is_numerical_subtoken cur && is_starting_alpha_subtoken acc)
   || (is_alpha_subtoken cur && is_numerical_subtoken acc)
-  || is_unit_token cur
-     && (is_numerical_subtoken acc || is_starting_alpha_subtoken acc)
+  || (is_unit_token cur && is_numerical_subtoken acc)
 
 (** [add_token token tokens] updated [tokens] with [token] appended to
     itself. *)
